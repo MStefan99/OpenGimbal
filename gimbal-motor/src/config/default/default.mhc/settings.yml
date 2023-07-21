@@ -1,0 +1,14 @@
+configName: default
+folderName: receiver
+format_version: v1.0
+frameworkPath: C:\Users\mikha\Harmony3
+processor: ATSAML21E16B
+projectName: receiver
+settings:
+  PackageFilter: bsp;core;csp;csp_apps_sam_l10_l11;csp_apps_sam_l21;dev_packs;quick_docs;usb;usb_apps_device
+  FORCE_OPTIMIZATION: 'false'
+  GENERATE_BACKUP: 'true'
+  TRUSTZONE: 'false'
+  CMSISPath: .\dev_packs\arm\CMSIS\5.8.0
+  MERGE_STRATEGY: USER_ALL
+  DFPPath: .\dev_packs\Microchip\SAML21_DFP\3.5.87\saml21b\atdf\ATSAML21E16B.atdf
