@@ -19,21 +19,17 @@ void util::init() { // TODO: move away
      *
      * OSC16M @ 8MHz
      * |
-     * |--> GCLK0 @ 8MHz
-     * |    |
-     * |    |--> MCLK @ 8MHz
-     * |    |
-     * |     `-> TCC @ 8MHz
-     * |
      * |--> GCLK1 @ 250KHz
      * |    |
-     *       `-> ADC @ 250KHz
+     *      `--> ADC @ 250KHz
      *
      * DFLL48M @ 48MHz
      * |
-     *  `-> GCLK2 @ 48MHz
+     * `--> GCLK0 @ 48MHz
      *      |
-     *       `-> GCLK_USB @ 48MHz
+     *      |--> MCLK @ 48MHz
+     *      |
+     *      `--> TCC @ 48MHz
      */
 
 
@@ -51,25 +47,22 @@ void util::init() { // TODO: move away
 
     // OSCCTRL config
     OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1) // Enable OSC16M
-            | OSCCTRL_OSC16MCTRL_FSEL_8; // Set frequency to 8MHz
+            | OSCCTRL_OSC16MCTRL_FSEL_16; // Set frequency to 8MHz
     OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE((calibration >> 26u) & 0x3f)
             | OSCCTRL_DFLLVAL_FINE(108); // Load calibration value
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
             | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
 
     // GLCK config
+    GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 2
+            | GCLK_GENCTRL_SRC_DFLL48M; // Set DFLL48M as a source
+    
     GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
             | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source
             | GCLK_GENCTRL_DIVSEL_DIV2 // Set division mode (2^(x+1))
             | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
     GCLK_REGS->GCLK_PCHCTRL[30] = GCLK_PCHCTRL_CHEN(1) // Enable ADC clock
             | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
-
-    GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 2
-            | GCLK_GENCTRL_SRC_DFLL48M // Set DFLL48M as a source
-            | GCLK_GENCTRL_OE(1); // Enable clock output
-    GCLK_REGS->GCLK_PCHCTRL[4] = GCLK_PCHCTRL_CHEN(1) // Enable USB clock
-            | GCLK_PCHCTRL_GEN_GCLK2; //Set GCLK2 as a clock source
 
     // NVIC config
     __DMB();
