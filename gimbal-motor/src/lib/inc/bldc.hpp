@@ -17,8 +17,10 @@
 namespace bldc {
     void init();
     
-    void setAngle(int16_t angle);
-    void beep(uint16_t frequency);
+    // Angle from 0 to 3600 (1/10th of a degree), power from 0 to 100
+    void setAngle(uint16_t angle, uint8_t power = 100);
+    void tone(uint16_t frequency);
+    void silent();
 }
 
 #endif	/* BLDC_HPP */

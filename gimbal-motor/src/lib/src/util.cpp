@@ -73,7 +73,7 @@ void util::init() { // TODO: move away
 
     // SysTick config
     SysTick->CTRL = 0;
-    SysTick->LOAD = 8000 - 1;
+    SysTick->LOAD = 48000 - 1;
     SysTick->CTRL = SysTick_CTRL_TICKINT_Msk
             | SysTick_CTRL_CLKSOURCE_Msk
             | SysTick_CTRL_ENABLE_Msk;

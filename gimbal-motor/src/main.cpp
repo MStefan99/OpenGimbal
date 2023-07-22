@@ -3,7 +3,7 @@
 
 #include "lib/inc/util.hpp"
 #include "lib/inc/data.hpp"
-#include "lib/inc/usb.hpp"
+#include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
 #include "lib/inc/dma.hpp"
 
@@ -12,11 +12,25 @@
 bool dataReady {false};
 
 
+void calibrate() {
+    bldc::setAngle(0, 100);
+    util::sleep(200);
+    bldc::setAngle(1000, 100);
+    util::sleep(200);
+    bldc::setAngle(0, 0);
+}
+
+
 int main() {
     util::init();
     
     dma::init();
     i2c::init();
+    bldc::init();
+    
+    if (data::poles == 0) {
+        calibrate();
+    }
 
     PORT_REGS->GROUP[0].PORT_DIRSET = 1;
 
@@ -34,9 +48,9 @@ int main() {
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
         
         uint16_t angle;
-        i2c::readRegister(0x36, 0x0e, reinterpret_cast<uint8_t*>(&angle), 2, [](bool success) {
-            dataReady = true;
-        });
+//        i2c::readRegister(0x36, 0x0e, reinterpret_cast<uint8_t*>(&angle), 2, [](bool success) {
+//            dataReady = true;
+//        });
         
         while (!dataReady) __WFI();
         dataReady = false;
