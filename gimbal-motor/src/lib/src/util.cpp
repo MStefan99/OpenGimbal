@@ -42,19 +42,21 @@ void util::init() { // TODO: move away
     while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
     // PM config
+    NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1) // Use NVM in manual write mode
+            | NVMCTRL_CTRLB_RWS(3); // Use 3 wait states for NVM
     PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2; // Enter PL2
     while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk)); // Wait for the transition to complete
 
     // OSCCTRL config
     OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1) // Enable OSC16M
-            | OSCCTRL_OSC16MCTRL_FSEL_16; // Set frequency to 8MHz
+            | OSCCTRL_OSC16MCTRL_FSEL_8; // Set frequency to 8MHz
     OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE((calibration >> 26u) & 0x3f)
             | OSCCTRL_DFLLVAL_FINE(108); // Load calibration value
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
             | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
 
     // GLCK config
-    GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 2
+    GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0
             | GCLK_GENCTRL_SRC_DFLL48M; // Set DFLL48M as a source
     
     GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
