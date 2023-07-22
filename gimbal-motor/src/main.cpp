@@ -9,19 +9,12 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
-/*
- * THIS FILE IS FOR INITIALIZATION ONLY!
- * 
- * Use the updates.cpp file for the main program logic
- */
-
 bool dataReady {false};
 
 
 int main() {
     util::init();
     
-//    data::load();
     dma::init();
     i2c::init();
 
