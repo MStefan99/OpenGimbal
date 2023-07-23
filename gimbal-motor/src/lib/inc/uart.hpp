@@ -17,7 +17,7 @@
 
 namespace uart {
     void init();
-	void send(uint8_t* data, uint8_t size, void (cb)(bool) = nullptr);
+	void send(uint8_t* data, uint8_t size = 1, void (cb)(bool) = nullptr, bool littleEndian = false);
 
 	uint8_t dataReceived();
 	uint8_t* getData();

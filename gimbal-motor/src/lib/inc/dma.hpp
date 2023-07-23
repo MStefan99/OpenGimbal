@@ -19,8 +19,6 @@
 #define DMA_CH_I2C_RX 1
 #define DMA_CH_UART_TX 2
 #define DMA_CH_UART_RX 3
-#define DMA_CH_SBUS_TX 4
-#define DMA_CH_SBUS_RX 5
 
 
 namespace dma {
@@ -36,25 +34,22 @@ namespace dma {
 		uint8_t* buf;
 		uint8_t len;
 		I2CTransferType type;
-		sercom_registers_t* sercom;
         void (*cb)(bool);
+		bool littleEndian;
 	}
 	I2CTransfer;
 
 	typedef struct __attribute__((packed)) {
 		uint8_t* buf;
 		uint8_t len;
-		sercom_registers_t* sercom;
         void (*cb)(bool);
+        bool littleEndian;
 	}
 	UARTTransfer;
-
 
 	void init();
 	void initI2C();
 	void initUART();
-	void initSBUS(uint8_t* rxBuf, uint16_t len);
-
 
 	void startTransfer(const I2CTransfer& transfer);
 	void startTransfer(const UARTTransfer& transfer);

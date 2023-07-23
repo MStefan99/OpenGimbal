@@ -3,22 +3,9 @@
 
 #define SERCOM_REGS SERCOM4_REGS
 
-
 static uint8_t incomingData[8]{};
 static uint8_t bytesReceived{0};
 static tl::allocator<uint8_t> byteAllocator {};
-
-
-extern "C" {
-
-
-	void SBUS_Handler() {
-		if (bytesReceived < 8) {
-			incomingData[bytesReceived++] = SERCOM_REGS->USART_INT.SERCOM_DATA;
-		}
-		SERCOM_REGS->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTENSET_RXC(1);
-	}
-}
 
 
 void uart::init() {
@@ -52,15 +39,15 @@ void uart::init() {
 }
 
 
-void uart::send(uint8_t* data, uint8_t size, void (*cb)(bool)) {
+void uart::send(uint8_t* data, uint8_t size, void (*cb)(bool), bool littleEndian) {
 	uint8_t* txBuf = byteAllocator.allocate(size);
 	util::copy(txBuf, data, size);
 
 	dma::startTransfer(dma::UARTTransfer{
 		.buf = txBuf,
 		.len = size,
-		.sercom = SERCOM_REGS,
-        .cb = cb
+        .cb = cb,
+        .littleEndian = littleEndian
 	});
 }
 

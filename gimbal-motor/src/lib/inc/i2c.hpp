@@ -19,11 +19,11 @@
 namespace i2c {
 	void init();
 
-	void write(uint8_t devAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr);
-	void read(uint8_t devAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr);
+	void write(uint8_t devAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr, bool littleEndian = false);
+	void read(uint8_t devAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr, bool littleEndian = false);
 
-	void writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr);
-	void readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr);
+	void writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr, bool littleEndian = false);
+	void readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size = 1, void (*cb)(bool) = nullptr, bool littleEndian = false);
 }
 
 #endif	/* I2C_H */

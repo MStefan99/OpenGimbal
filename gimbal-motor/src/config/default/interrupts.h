@@ -61,10 +61,8 @@ void Reset_Handler (void);
 void NonMaskableInt_Handler (void);
 void HardFault_Handler (void);
 void SysTick_Handler();
-void USB_Handler();
 
 void I2C_Handler();
-void SBUS_Handler();
 void DMA_Handler();
 
 #endif // INTERRUPTS_H
