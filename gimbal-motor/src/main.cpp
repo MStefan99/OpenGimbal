@@ -11,28 +11,33 @@
 
 bool dataReady {false};
 
-
 void calibrate() {
-    bldc::setAngle(0, 100);
-    util::sleep(200);
-    bldc::setAngle(1000, 100);
-    util::sleep(200);
-    bldc::setAngle(0, 0);
+    PORT_REGS->GROUP[0].PORT_OUTSET = 1;
+    bldc::applyTorque(0, 100);
+    PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
+    util::sleep(1000);
+    bldc::tone(500);
+    bldc::applyTorque(1200, 100);
+    util::sleep(500);
+    bldc::tone(1000);
+    util::sleep(500);
+    bldc::applyTorque(2400, 100);
+    util::sleep(500);
+    bldc::applyTorque(0, 0);
 }
-
 
 int main() {
     util::init();
-    
+
     dma::init();
     i2c::init();
     bldc::init();
+
+    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
     
     if (data::poles == 0) {
         calibrate();
     }
-
-    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
 
     // Temperature calibration values
     uint8_t tempR = NVMTEMP[0] & 0xff;
@@ -41,21 +46,17 @@ int main() {
     uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
     while (1) {
-        PORT_REGS->GROUP[0].PORT_OUTSET = 1;
+        //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+        //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+        //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
-//        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-//        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-//        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
-        
         uint16_t angle;
-//        i2c::readRegister(0x36, 0x0e, reinterpret_cast<uint8_t*>(&angle), 2, [](bool success) {
-//            dataReady = true;
-//        });
-        
+        //        i2c::readRegister(0x36, 0x0e, reinterpret_cast<uint8_t*>(&angle), 2, [](bool success) {
+        //            dataReady = true;
+        //        });
+
         while (!dataReady) __WFI();
         dataReady = false;
-        
-        PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 
     return 1;

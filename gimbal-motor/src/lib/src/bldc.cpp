@@ -68,18 +68,22 @@ void bldc::init() {
 
 static constexpr float SQRT3 = sqrtf(3);
 
-void bldc::setAngle(uint16_t angle, uint8_t power) {
+void bldc::applyTorque(uint16_t angle, uint8_t power) {
     if (power > 100) {
         power = 100;
     }
+    if (angle > 3600) {
+        angle %= 3600;
+    }
     
-    float fangle = angle / 477.4648292757;
+    float fangle = angle / 573.0f;
     
     float va = sinf(fangle);
     float vb = cosf(fangle);
     
-    uint16_t factor = power * 20;
-    uint16_t inv = 20 * (100 - power);
+    uint16_t powerMultiplier = (TCC0_REGS->TCC_PER + 1) / 100;
+    uint16_t factor = power * powerMultiplier;
+    uint16_t inv = powerMultiplier * (100 - power);
     
     TCC0_REGS->TCC_CCBUF[0] = (va + 1) / 2 * factor;
     TCC0_REGS->TCC_CCBUF[1] = TCC0_REGS->TCC_CCBUF[0] + inv;
@@ -92,7 +96,7 @@ void bldc::setAngle(uint16_t angle, uint8_t power) {
 }
 
 void bldc::tone(uint16_t frequency) {
-    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = 48000000 / frequency;
+    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = 48000000 / frequency - 1;
 }
 
 void bldc::silent() {
