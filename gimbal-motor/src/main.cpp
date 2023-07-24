@@ -10,11 +10,12 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
+// The total degrees for one full rotation
+static constexpr uint16_t fullRotation {4096};
+
 bool dataReady {false};
-uint16_t angle0 {0};
-uint16_t angle120 {0};
-uint8_t poles {7};
-uint16_t rev {585};
+uint16_t offset {0};
+uint8_t polePairs {0};
 
     // Temperature calibration values
 //    uint8_t tempR = NVMTEMP[0] & 0xff;
@@ -22,34 +23,40 @@ uint16_t rev {585};
 //    uint8_t tempH = (NVMTEMP[0] & 0xff0000) >> 12u;
 //    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
-void calibrate() {
-    uint16_t angle{0};
-
-    bldc::applyTorque(0, 100);
-    util::sleep(1000);
-
+uint16_t measureAngle() {
+    uint16_t angle;
+    
+    dataReady = false;
     as5600::getAngle(angle, [](bool success) {
         dataReady = true;
     });
     while (!dataReady) {
         __WFI();
     }
-    angle0 = util::switchEndianness(angle);
-//    angle = 0;
-//
-//    bldc::applyTorque(1200, 100);
-//    util::sleep(1000);
-//
-//    as5600::getAngle(angle);
-//    while (!angle) {
-//        __WFI();
-//    }
-//    angle120 = util::switchEndianness(angle);
-//    
-//    uint16_t diff = angle120 - angle0;
-//    rev = diff * 3;
-//    poles = 4096 / rev;
+    
+    return util::switchEndianness(angle);
+}
 
+void calibrate() {
+    bldc::applyTorque(0, 100);
+    util::sleep(1000);
+    
+    offset = measureAngle();
+    uint16_t angle {0};
+    uint16_t torqueAngle {0};
+    
+    do {
+        torqueAngle += 10;
+        
+        if (torqueAngle >= fullRotation) {
+            torqueAngle = 0;
+            ++polePairs;
+        }
+        bldc::applyTorque(torqueAngle, 100);
+        
+        angle = measureAngle();
+    } while (ABS(angle - offset) > 10 || polePairs == 0);
+    
     bldc::applyTorque(0, 0);
 }
 
@@ -61,32 +68,19 @@ int main() {
     bldc::init();
 
     PORT_REGS->GROUP[0].PORT_DIRSET = 1;
+    calibrate();
 
-    if (data::poles == 0) {
-        calibrate();
-    }
-
-    uint16_t angle;
     while (1) {
-        dataReady = false;
-        as5600::getAngle(angle, [](bool success) {
-            dataReady = true;
-        });
-
         //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
         //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
         //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
-        while (!dataReady) __WFI();
+        uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
-        angle = util::switchEndianness(angle);
-        int16_t pos = angle - angle0;
-        if (pos < 0) pos += 4096;
+        uint16_t eAngle = polePairs * (fullRotation + angle - offset) % fullRotation;
         
-        uint16_t eAngle = pos % rev * poles;
-
-        bldc::applyTorque(eAngle + 900, 100);
-       
+        bldc::applyTorque(eAngle + 1024, 100);
+        
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
 //        util::sleep(1);
     }

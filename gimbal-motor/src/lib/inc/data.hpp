@@ -16,7 +16,7 @@
 
 namespace data {    
     extern const uint8_t NVM_DATA[FLASH_PAGE_SIZE * 4];
-    extern const uint8_t& poles;
+//    extern const uint8_t& poles;
     
     void save();
 }

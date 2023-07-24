@@ -72,11 +72,11 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
     if (power > 100) {
         power = 100;
     }
-    if (angle > 3600) {
-        angle %= 3600;
+    if (angle >= 4096) {
+        angle %= 4096;
     }
     
-    float fangle = angle / 573.0f;
+    float fangle = angle / 652.0f;
     
     float va = sinf(fangle);
     float vb = cosf(fangle);

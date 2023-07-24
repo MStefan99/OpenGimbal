@@ -1,7 +1,7 @@
 #include "lib/inc/data.hpp"
 
 const uint8_t data::NVM_DATA[FLASH_PAGE_SIZE * 4] __attribute__((aligned(FLASH_PAGE_SIZE * 4),keep,space(prog))) = {0};
-const uint8_t& data::poles {data::NVM_DATA[0]};
+//const uint8_t& data::poles {data::NVM_DATA[0]};
 
 static void nvmWaitUntilReady();
 static void nvmRowErase(uint32_t address);
