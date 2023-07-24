@@ -37,11 +37,18 @@ uint16_t measureAngle() {
 }
 
 void calibrate() {
-    bldc::applyTorque(0, 100);
-    util::sleep(1000);
-    
-    offset = measureAngle();
     uint16_t angle {0};
+    uint16_t prevAngle {0};
+    
+    bldc::applyTorque(0, 100);
+    util::sleep(100);
+    
+    do {
+        prevAngle = angle;
+        angle = measureAngle();
+    } while (angle != prevAngle);
+    
+    offset = angle;
     uint16_t torqueAngle {0};
     
     if (!data::polePairs) {
@@ -59,9 +66,10 @@ void calibrate() {
             angle = measureAngle();
         } while (ABS(angle - offset) > 10 || polePairs == 0);
         
-    bldc::applyTorque(0, 0);
         data::write(data::polePairs, polePairs);
     }
+    
+    bldc::applyTorque(0, 0);
 }
 
 int main() {
