@@ -16,9 +16,9 @@
 
 namespace data {    
     extern const uint8_t NVM_DATA[FLASH_PAGE_SIZE * 4];
-//    extern const uint8_t& poles;
+    extern const uint8_t& polePairs;
     
-    void save();
+    void write(const uint8_t& addr, uint8_t& buf, uint8_t len = 1);
 }
 
 #endif	/* DATA_HPP */

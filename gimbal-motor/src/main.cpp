@@ -15,7 +15,6 @@ static constexpr uint16_t fullRotation {4096};
 
 bool dataReady {false};
 uint16_t offset {0};
-uint8_t polePairs {0};
 
     // Temperature calibration values
 //    uint8_t tempR = NVMTEMP[0] & 0xff;
@@ -45,19 +44,24 @@ void calibrate() {
     uint16_t angle {0};
     uint16_t torqueAngle {0};
     
-    do {
-        torqueAngle += 10;
+    if (!data::polePairs) {
+        uint8_t polePairs {0};
+
+        do {
+            torqueAngle += 10;
+
+            if (torqueAngle >= fullRotation) {
+                torqueAngle = 0;
+                ++polePairs;
+            }
+            bldc::applyTorque(torqueAngle, 100);
+
+            angle = measureAngle();
+        } while (ABS(angle - offset) > 10 || polePairs == 0);
         
-        if (torqueAngle >= fullRotation) {
-            torqueAngle = 0;
-            ++polePairs;
-        }
-        bldc::applyTorque(torqueAngle, 100);
-        
-        angle = measureAngle();
-    } while (ABS(angle - offset) > 10 || polePairs == 0);
-    
     bldc::applyTorque(0, 0);
+        data::write(data::polePairs, polePairs);
+    }
 }
 
 int main() {
@@ -77,7 +81,7 @@ int main() {
 
         uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
-        uint16_t eAngle = polePairs * (fullRotation + angle - offset) % fullRotation;
+        uint16_t eAngle = data::polePairs * (fullRotation + angle - offset) % fullRotation;
         
         bldc::applyTorque(eAngle + 1024, 100);
         
