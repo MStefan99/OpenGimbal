@@ -68,7 +68,7 @@ void bldc::init() {
 
 static constexpr float SQRT3 = sqrtf(3);
 
-void bldc::applyTorque(uint16_t angle, uint8_t power) {
+void bldc::applyTorque(uint16_t angle, uint16_t power) {
     if (power > 100) {
         power = 100;
     }

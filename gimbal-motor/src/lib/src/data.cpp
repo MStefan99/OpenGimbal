@@ -28,7 +28,7 @@ static void nvmPageWrite(const uint8_t* address) {
 void data::write(const uint8_t& addr, uint8_t& buf, uint8_t len) {
     uint8_t nvmCopy[sizeof data::NVM_DATA] {};
     
-    util::copy(nvmCopy, data::NVM_DATA, sizeof data::NVM_DATA);
+    util::copy(reinterpret_cast<uint32_t*>(nvmCopy), reinterpret_cast<const uint32_t*>(data::NVM_DATA), sizeof data::NVM_DATA / 4);
     util::copy(nvmCopy + (&addr - data::NVM_DATA), &buf, len);
     
     nvmRowErase(NVM_DATA);

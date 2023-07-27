@@ -60,9 +60,9 @@ namespace util {
 	void sleep(uint32_t ms);
 
     
-	template <class T>
-	void copy(T* dest, const T* src, size_t len = 1) {
-		for (size_t i{0}; i < len; ++i) {
+	template <class T, class S>
+	void copy(T* dest, const T* src, S len = 1) {
+		for (S i{0}; i < len; ++i) {
 			dest[i] = src[i];
 		}
 	}

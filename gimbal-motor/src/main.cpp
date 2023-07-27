@@ -12,6 +12,7 @@
 
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
+static uint16_t setAngle {2048};
 
 bool dataReady {false};
 uint16_t offset {0};
@@ -38,19 +39,15 @@ uint16_t measureAngle() {
 
 void calibrate() {
     uint16_t angle {0};
-    uint16_t prevAngle {0};
-    
     bldc::applyTorque(0, 100);
-    util::sleep(100);
     
     do {
-        prevAngle = angle;
+        util::sleep(2);
+        offset = angle;
         angle = measureAngle();
-    } while (angle != prevAngle);
-    
-    offset = angle;
-    uint16_t torqueAngle {0};
-    
+    } while (offset != angle);
+
+    uint16_t torqueAngle {0}; 
     if (!data::polePairs) {
         uint8_t polePairs {0};
 
@@ -90,11 +87,10 @@ int main() {
         uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         uint16_t eAngle = data::polePairs * (fullRotation + angle - offset) % fullRotation;
+        uint16_t dAngle = (fullRotation + angle - setAngle) % fullRotation;
         
-        bldc::applyTorque(eAngle + 1024, 100);
-        
+        bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072, ABS(angle - setAngle) / 2 + 55);
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
-//        util::sleep(1);
     }
 
     return 1;

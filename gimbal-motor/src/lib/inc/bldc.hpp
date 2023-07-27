@@ -18,7 +18,7 @@ namespace bldc {
     void init();
     
     // Angle from 0 to 3600 (1/10th of a degree), power from 0 to 100
-    void applyTorque(uint16_t angle, uint8_t power = 100);
+    void applyTorque(uint16_t angle, uint16_t power = 100);
     void tone(uint16_t frequency);
     void silent();
 }
