@@ -64,7 +64,8 @@ void calibrate() {
             angle = measureAngle();
         } while (ABS(angle - offset) > 10 || polePairs == 0);
         
-        data::write(data::polePairs, polePairs);
+        data::edit(data::polePairs, polePairs);
+        data::write();
     }
     
     bldc::applyTorque(0, 0);
