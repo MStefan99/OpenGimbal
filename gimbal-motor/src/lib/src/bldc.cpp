@@ -28,6 +28,45 @@ static uint8_t getPin(uint8_t channel) {
 
 static constexpr uint16_t silentPeriod {1999}; // 2000 possible values from 0 through 1999
 
+struct TrigTable {
+	int8_t table[1024];
+
+	constexpr TrigTable() : table() {
+		for (auto i = 0; i < 1024; ++i) {
+			table[i] = std::round(std::sin(i * M_PI / 2048) * 127);
+		}
+	}
+
+	constexpr float sin(uint16_t i) const {
+		if (i > 4096) {
+			i %= 4096;
+		}
+
+		if (i < 2048) {
+			return halfSin(i) / 127.0f;
+		} else {
+			return (-halfSin(i - 2048)) / 127.0f;
+		}
+	}
+
+	constexpr float cos(uint16_t i) const {
+		return sin(i + 1024);
+	}
+
+protected:
+    // i from 0 to 2047
+	inline constexpr int8_t halfSin(uint16_t i) const {
+		if (i < 1024) {
+			return table[i];
+		} else {
+			return table[2047 - i];
+		}
+	}
+};
+
+static constexpr auto trigTable = TrigTable();
+static constexpr float SQRT3 = sqrtf(3);
+
 void bldc::init() {
     // GLCK config
     GCLK_REGS->GCLK_PCHCTRL[25] = GCLK_PCHCTRL_CHEN(1) // Enable TCC[0:1] clock
@@ -66,20 +105,13 @@ void bldc::init() {
     }
 }
 
-static constexpr float SQRT3 = sqrtf(3);
-
 void bldc::applyTorque(uint16_t angle, uint16_t power) {
     if (power > 100) {
         power = 100;
     }
-    if (angle >= 4096) {
-        angle %= 4096;
-    }
     
-    float fangle = angle / 652.0f;
-    
-    float va = sinf(fangle);
-    float vb = cosf(fangle);
+    float va = trigTable.sin(angle);
+    float vb = trigTable.cos(angle);
     
     uint16_t powerMultiplier = (TCC0_REGS->TCC_PER + 1) / 100;
     uint16_t factor = power * powerMultiplier;

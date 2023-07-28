@@ -82,9 +82,9 @@ int main() {
     calibrate();
 
     while (1) {
-        //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-        //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-        //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
+//        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+//        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+//        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
         uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
