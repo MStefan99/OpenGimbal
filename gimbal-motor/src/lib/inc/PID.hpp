@@ -10,27 +10,39 @@
 
 #include "util.hpp"
 
-
+template <class T>
 struct PID {
 	PID() = default;
-	PID(float kp, float ki, float kd, float iLim, float outLim);
+	PID(T kp, T ki, T kd, T iLim);
+
+	T update(T sp, T val);
+
+	T kp {};
+	T ki {};
+	T kd {};
 	
-	void setParameters(float kp, float ki, float kd, float iLim, float outLim);
-
-	float update(float sp, float val);
-
+	T iLim {};
 
 protected:
-	float _kp {};
-	float _ki {};
-	float _kd {};
-	
-	float _iLim {};
-	float _outLim {};
-
-	float _prev {};
-	float _sum {};
+	T _prev {};
+	T _sum {};
 };
 
+template <class T>
+PID<T>::PID(T kp, T ki, T kd, T iLim):
+	kp {kp}, ki {ki}, kd {kd}, iLim {iLim} {
+	// Nothing to do
+}
+
+template <class T>
+T PID<T>::update(T val, T sp) {
+	T error {sp - val};
+	
+	_sum = CLAMP(-iLim, _sum + error, iLim);
+	T out = kp * error + ki * _sum + kd * (val - _prev);
+	_prev = val;
+	
+	return out;
+}
 
 #endif	/* PID_HPP */

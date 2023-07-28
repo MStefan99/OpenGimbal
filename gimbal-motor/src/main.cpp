@@ -5,14 +5,13 @@
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
-#include "lib/inc/dma.hpp"
 #include "lib/inc/as5600.hpp"
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
-static uint16_t setAngle {2048};
+static uint16_t setAngle {0};
 
 bool dataReady {false};
 uint16_t offset {0};
@@ -30,7 +29,9 @@ uint16_t measureAngle() {
     as5600::getAngle(angle, [](bool success) {
         dataReady = true;
     });
-    while (!dataReady) {
+    
+    auto startTime {util::getTickCount()};
+    while (!dataReady && util::getTickCount() - startTime < 5 ) {
         __WFI();
     }
     
@@ -86,10 +87,16 @@ int main() {
 
         uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
-        uint16_t eAngle = data::polePairs * (fullRotation + angle - offset) % fullRotation;
+        
+        // Calculating electrical angle from encoder reading
+        uint16_t eAngle = (data::polePairs * (fullRotation + angle - offset)) % fullRotation; 
+        // Difference between current and set angle
         uint16_t dAngle = (fullRotation + angle - setAngle) % fullRotation;
         
-        bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072, ABS(angle - setAngle) / 2 + 55);
+        // Applying torque perpendicular to the current rotor position
+        bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072,
+                // Applied power depends on distance from the setpoint
+                ABS(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) / 3 + 55); 
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 

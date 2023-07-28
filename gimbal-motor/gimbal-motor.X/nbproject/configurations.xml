@@ -203,7 +203,6 @@
       <logicalFolder name="f2" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/src/dma.cpp</itemPath>
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/PID.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/data.cpp</itemPath>
