@@ -37,19 +37,19 @@ struct TrigTable {
 		}
 	}
 
-	constexpr float sin(uint16_t i) const {
+	constexpr int8_t sin(uint16_t i) const {
 		if (i > 4096) {
 			i %= 4096;
 		}
 
 		if (i < 2048) {
-			return halfSin(i) / 127.0f;
+			return halfSin(i);
 		} else {
-			return (-halfSin(i - 2048)) / 127.0f;
+			return -halfSin(i - 2048);
 		}
 	}
 
-	constexpr float cos(uint16_t i) const {
+	constexpr int8_t cos(uint16_t i) const {
 		return sin(i + 1024);
 	}
 
@@ -65,7 +65,8 @@ protected:
 };
 
 static constexpr auto trigTable = TrigTable();
-static constexpr float SQRT3 = sqrtf(3);
+static constexpr uint16_t SQRT3 = sqrtf(3) * 128;
+static constexpr uint16_t MAX_VAL = 255 * 255;
 
 void bldc::init() {
     // GLCK config
@@ -79,16 +80,16 @@ void bldc::init() {
     TCC0_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1) | TCC_WAVE_POL3(1); // PWM generation
     TCC0_REGS->TCC_PER = silentPeriod;
     TCC0_REGS->TCC_CC[0] = 0;
-    TCC0_REGS->TCC_CC[1] = 0;
+    TCC0_REGS->TCC_CC[1] = silentPeriod;
     TCC0_REGS->TCC_CC[2] = 0;
-    TCC0_REGS->TCC_CC[3] = 0;
+    TCC0_REGS->TCC_CC[3] = silentPeriod;
     TCC0_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
 
     TCC1_REGS->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1); // Run while debugging
     TCC1_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1); // PWM generation
     TCC1_REGS->TCC_PER = silentPeriod;
     TCC1_REGS->TCC_CC[0] = 0;
-    TCC1_REGS->TCC_CC[1] = 0;
+    TCC1_REGS->TCC_CC[1] = silentPeriod;
     TCC1_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
 
     // PORT config
@@ -105,25 +106,21 @@ void bldc::init() {
     }
 }
 
-void bldc::applyTorque(uint16_t angle, uint16_t power) {
-    if (power > 100) {
-        power = 100;
-    }
+void bldc::applyTorque(uint16_t angle, uint8_t power) {    
+    int8_t va = trigTable.sin(angle);
+    int8_t vb = trigTable.cos(angle);
     
-    float va = trigTable.sin(angle);
-    float vb = trigTable.cos(angle);
+    uint16_t period = TCC0_REGS->TCC_PER + 1;
+    uint8_t factor = MAX_VAL / period + 1;
+    uint16_t inv = period - (static_cast<uint32_t>(period) * power / 255);
     
-    uint16_t powerMultiplier = (TCC0_REGS->TCC_PER + 1) / 100;
-    uint16_t factor = power * powerMultiplier;
-    uint16_t inv = powerMultiplier * (100 - power);
-    
-    TCC0_REGS->TCC_CCBUF[0] = (va + 1) / 2 * factor;
+    TCC0_REGS->TCC_CCBUF[0] = power * static_cast<uint16_t>(va + 127) / factor;
     TCC0_REGS->TCC_CCBUF[1] = TCC0_REGS->TCC_CCBUF[0] + inv;
     
-    TCC0_REGS->TCC_CCBUF[2] = ((-va + SQRT3 * vb) / 2 + 1) / 2 * factor;
+    TCC0_REGS->TCC_CCBUF[2] = power * (((-va + ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
     TCC0_REGS->TCC_CCBUF[3] = TCC0_REGS->TCC_CCBUF[2] + inv;
     
-    TCC1_REGS->TCC_CCBUF[0] = ((-va - SQRT3 * vb) / 2 + 1) / 2 * factor;
+    TCC1_REGS->TCC_CCBUF[0] = power * (((-va - ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
     TCC1_REGS->TCC_CCBUF[1] = TCC1_REGS->TCC_CCBUF[0] + inv;
 }
 

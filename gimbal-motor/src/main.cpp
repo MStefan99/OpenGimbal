@@ -40,7 +40,7 @@ uint16_t measureAngle() {
 
 void calibrate() {
     uint16_t angle {0};
-    bldc::applyTorque(0, 100);
+    bldc::applyTorque(0, 255);
     
     do {
         util::sleep(2);
@@ -59,7 +59,7 @@ void calibrate() {
                 torqueAngle = 0;
                 ++polePairs;
             }
-            bldc::applyTorque(torqueAngle, 100);
+            bldc::applyTorque(torqueAngle, 255);
 
             angle = measureAngle();
         } while (ABS(angle - offset) > 10 || polePairs == 0);
@@ -97,7 +97,7 @@ int main() {
         // Applying torque perpendicular to the current rotor position
         bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072,
                 // Applied power depends on distance from the setpoint
-                ABS(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) / 3 + 55); 
+                MIN(ABS(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 
