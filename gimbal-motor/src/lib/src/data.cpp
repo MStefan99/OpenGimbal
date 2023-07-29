@@ -32,8 +32,6 @@ void data::edit(const uint8_t& addr, uint8_t& buf, uint8_t len) {
         util::copy(reinterpret_cast<uint32_t*>(nvmCopy), reinterpret_cast<const uint32_t*>(data::NVM_DATA), sizeof data::NVM_DATA / 4);
     }
 
-    const uint8_t* dataAddr {NVM_DATA};
-    const uint8_t* valAddr {&addr};
     util::copy(nvmCopy + (&addr - data::NVM_DATA), &buf, len);
 }
 

@@ -52,12 +52,20 @@ void calibrate() {
     uint16_t torqueAngle {0}; 
     if (!data::options.polePairs) {
         uint8_t polePairs {0};
+        uint16_t lastPoleAngle {angle};
+        int8_t direction {0};
 
         do {
             torqueAngle += 10;
 
             if (torqueAngle >= fullRotation) {
                 torqueAngle = 0;
+                if (angle > lastPoleAngle) {
+                    ++direction;
+                } else {
+                    --direction;
+                }
+                lastPoleAngle = angle;
                 ++polePairs;
             }
             bldc::applyTorque(torqueAngle, 255);
@@ -65,8 +73,14 @@ void calibrate() {
             angle = measureAngle();
         } while (util::abs(angle - offset) > 10 || polePairs == 0);
         
-        bldc::applyTorque(0, 0);
+        if (direction > 0) {
+            direction = 1;
+        } else {
+            direction = -1;
+        }
+        
         data::edit(data::options.polePairs, polePairs);
+        data::edit(reinterpret_cast<const uint8_t&>(data::options.direction), reinterpret_cast<uint8_t&>(direction));
         data::write();
     }
     
@@ -91,14 +105,16 @@ int main() {
         uint16_t angle = measureAngle();
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         
-        // Calculating electrical angle from encoder reading
-        uint16_t eAngle = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation; 
-        // Difference between current and set angle
+        // Calculate electrical angle from encoder reading
+        uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
+        // Flip the angle if the motor polarity is reversed
+        uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW; 
+        // Calculate difference between current and set angle
         uint16_t dAngle = (fullRotation + angle - setAngle) % fullRotation;
         
-        // Applying torque perpendicular to the current rotor position
-        bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072,
-                // Applied power depends on distance from the setpoint
+        // Apply torque perpendicular to the current rotor position, taking polarity into account
+        bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
+                // Vary applied power depending on distance from the setpoint
                 util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
