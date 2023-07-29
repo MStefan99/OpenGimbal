@@ -26,8 +26,6 @@ static uint8_t getPin(uint8_t channel) {
     }
 }
 
-static constexpr uint16_t silentPeriod {1999}; // 2000 possible values from 0 through 1999
-
 struct TrigTable {
 	int8_t table[1024];
 
@@ -64,6 +62,7 @@ protected:
 	}
 };
 
+static constexpr uint16_t silentPeriod {1999}; // 2000 possible values from 0 through 1999
 static constexpr auto trigTable = TrigTable();
 static constexpr uint16_t SQRT3 = sqrtf(3) * 128;
 static constexpr uint16_t MAX_VAL = 255 * 255;
@@ -75,21 +74,23 @@ void bldc::init() {
     GCLK_REGS->GCLK_PCHCTRL[26] = GCLK_PCHCTRL_CHEN(1) // Enable TCC2 clock
             | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
 
+    uint16_t period {silentPeriod + 1};
+    
     // TCC config
     TCC0_REGS->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1); // Run while debugging
     TCC0_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1) | TCC_WAVE_POL3(1); // PWM generation
     TCC0_REGS->TCC_PER = silentPeriod;
     TCC0_REGS->TCC_CC[0] = 0;
-    TCC0_REGS->TCC_CC[1] = silentPeriod;
+    TCC0_REGS->TCC_CC[1] = period;
     TCC0_REGS->TCC_CC[2] = 0;
-    TCC0_REGS->TCC_CC[3] = silentPeriod;
+    TCC0_REGS->TCC_CC[3] = period;
     TCC0_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
 
     TCC1_REGS->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1); // Run while debugging
     TCC1_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1); // PWM generation
     TCC1_REGS->TCC_PER = silentPeriod;
     TCC1_REGS->TCC_CC[0] = 0;
-    TCC1_REGS->TCC_CC[1] = silentPeriod;
+    TCC1_REGS->TCC_CC[1] = period;
     TCC1_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
 
     // PORT config
@@ -113,13 +114,13 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
     uint16_t period = TCC0_REGS->TCC_PER + 1;
     uint8_t factor = MAX_VAL / period + 1;
     uint16_t inv = period - (static_cast<uint32_t>(period) * power / 255);
-    
+        
     TCC0_REGS->TCC_CCBUF[0] = power * static_cast<uint16_t>(va + 127) / factor;
     TCC0_REGS->TCC_CCBUF[1] = TCC0_REGS->TCC_CCBUF[0] + inv;
-    
+
     TCC0_REGS->TCC_CCBUF[2] = power * (((-va + ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
     TCC0_REGS->TCC_CCBUF[3] = TCC0_REGS->TCC_CCBUF[2] + inv;
-    
+
     TCC1_REGS->TCC_CCBUF[0] = power * (((-va - ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
     TCC1_REGS->TCC_CCBUF[1] = TCC1_REGS->TCC_CCBUF[0] + inv;
 }
