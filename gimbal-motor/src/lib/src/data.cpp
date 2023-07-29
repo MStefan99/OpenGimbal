@@ -1,7 +1,7 @@
 #include "lib/inc/data.hpp"
 
 const uint8_t data::NVM_DATA[FLASH_PAGE_SIZE * 4] __attribute__((aligned(FLASH_PAGE_SIZE * 4),keep,space(prog))) = {0};
-const uint8_t& data::polePairs {data::NVM_DATA[0]};
+const data::Options& data::options {*reinterpret_cast<const data::Options*>(data::NVM_DATA)};
 static uint8_t* nvmCopy {nullptr};
 
 static void nvmWaitUntilReady();
@@ -32,6 +32,8 @@ void data::edit(const uint8_t& addr, uint8_t& buf, uint8_t len) {
         util::copy(reinterpret_cast<uint32_t*>(nvmCopy), reinterpret_cast<const uint32_t*>(data::NVM_DATA), sizeof data::NVM_DATA / 4);
     }
 
+    const uint8_t* dataAddr {NVM_DATA};
+    const uint8_t* valAddr {&addr};
     util::copy(nvmCopy + (&addr - data::NVM_DATA), &buf, len);
 }
 
@@ -39,7 +41,6 @@ void data::write() {
     if (nvmCopy == nullptr) {
         return;
     }
-
 
     for (uint8_t row{0}; row < sizeof (data::NVM_DATA) / FLASH_PAGE_SIZE / 4; ++row) {
         uint16_t rowOffset = row * FLASH_PAGE_SIZE * 4;

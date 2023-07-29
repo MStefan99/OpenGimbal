@@ -17,7 +17,14 @@
 
 namespace data {    
     extern const uint8_t NVM_DATA[FLASH_PAGE_SIZE * 4];
-    extern const uint8_t& polePairs;
+    
+    typedef struct __attribute__((packed)) {
+        uint8_t polePairs;
+        int8_t direction;
+        uint16_t zeroOffset;
+    } Options;
+    
+    extern const Options& options;
     
     void edit(const uint8_t& addr, uint8_t& buf, uint8_t len = 1);
     void write();

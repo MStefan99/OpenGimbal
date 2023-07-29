@@ -32,7 +32,7 @@ uint16_t measureAngle() {
         dataReady = true;
     });
     
-    while (!dataReady && util::getTickCount() - startTime < 5 ) {
+    while (!dataReady && util::getTickCount() - startTime < 5) {
         __WFI();
     }
     
@@ -50,7 +50,7 @@ void calibrate() {
     } while (offset != angle);
 
     uint16_t torqueAngle {0}; 
-    if (!data::polePairs) {
+    if (!data::options.polePairs) {
         uint8_t polePairs {0};
 
         do {
@@ -65,7 +65,8 @@ void calibrate() {
             angle = measureAngle();
         } while (util::abs(angle - offset) > 10 || polePairs == 0);
         
-        data::edit(data::polePairs, polePairs);
+        bldc::applyTorque(0, 0);
+        data::edit(data::options.polePairs, polePairs);
         data::write();
     }
     
@@ -91,7 +92,7 @@ int main() {
         PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         
         // Calculating electrical angle from encoder reading
-        uint16_t eAngle = (data::polePairs * (fullRotation + angle - offset)) % fullRotation; 
+        uint16_t eAngle = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation; 
         // Difference between current and set angle
         uint16_t dAngle = (fullRotation + angle - setAngle) % fullRotation;
         
