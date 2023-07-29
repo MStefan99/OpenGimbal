@@ -26,11 +26,12 @@ uint16_t measureAngle() {
     uint16_t angle;
     
     dataReady = false;
+    auto startTime {util::getTickCount()};
+    
     as5600::getAngle(angle, [](bool success) {
         dataReady = true;
     });
     
-    auto startTime {util::getTickCount()};
     while (!dataReady && util::getTickCount() - startTime < 5 ) {
         __WFI();
     }
@@ -62,7 +63,7 @@ void calibrate() {
             bldc::applyTorque(torqueAngle, 255);
 
             angle = measureAngle();
-        } while (ABS(angle - offset) > 10 || polePairs == 0);
+        } while (util::abs(angle - offset) > 10 || polePairs == 0);
         
         data::edit(data::polePairs, polePairs);
         data::write();
@@ -97,7 +98,7 @@ int main() {
         // Applying torque perpendicular to the current rotor position
         bldc::applyTorque(dAngle > 2048? eAngle + 1024: eAngle + 3072,
                 // Applied power depends on distance from the setpoint
-                MIN(ABS(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
+                util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 
