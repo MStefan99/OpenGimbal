@@ -2,6 +2,7 @@
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
 #include "lib/inc/util.hpp"
+#include "lib/inc/input.hpp"
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
@@ -11,7 +12,11 @@
 
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
-static uint16_t setAngle {0};
+static uint16_t setAngle {2048};
+
+void input::onInput(uint16_t value) {
+    setAngle = value;
+}
 
 bool dataReady {false};
 uint16_t offset {0};
@@ -90,6 +95,7 @@ void calibrate() {
 int main() {
     util::init();
 
+    input::init();
     dma::init();
     i2c::init();
     bldc::init();

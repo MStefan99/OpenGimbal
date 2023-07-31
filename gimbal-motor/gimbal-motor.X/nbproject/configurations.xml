@@ -55,6 +55,7 @@
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/bldc.hpp</itemPath>
         <itemPath>../src/lib/inc/as5600.hpp</itemPath>
+        <itemPath>../src/lib/inc/input.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -208,6 +209,7 @@
         <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/bldc.cpp</itemPath>
         <itemPath>../src/lib/src/as5600.cpp</itemPath>
+        <itemPath>../src/lib/src/input.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
@@ -248,8 +250,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
         <pack name="SAML21_DFP" vendor="Microchip" version="3.6.105"/>
+        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
