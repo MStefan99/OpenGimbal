@@ -6,6 +6,7 @@
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
+#include "lib/inc/PID.hpp"
 #include "lib/inc/as5600.hpp"
 
 #define NVMTEMP ((uint32_t*)0x00806030)
@@ -100,8 +101,10 @@ int main() {
     i2c::init();
     bldc::init();
 
-    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
     calibrate();
+    
+    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
+    PID<float> torqueAmount {2, 0.2, 0.00005, 1000};
 
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
@@ -121,7 +124,8 @@ int main() {
         // Apply torque perpendicular to the current rotor position, taking polarity into account
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
                 // Vary applied power depending on distance from the setpoint
-                util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
+                util::min(util::abs(torqueAmount.update(setAngle % 4096, angle % 4096)) + 150, 255.0f));
+//              util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 

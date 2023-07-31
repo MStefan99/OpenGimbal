@@ -34,12 +34,14 @@ PID<T>::PID(T kp, T ki, T kd, T iLim):
 	// Nothing to do
 }
 
+    static float dt {0.00002};
+    
 template <class T>
 T PID<T>::update(T val, T sp) {
 	T error {sp - val};
 	
-	_sum = CLAMP(-iLim, _sum + error, iLim);
-	T out = kp * error + ki * _sum + kd * (val - _prev);
+	_sum = util::clamp(-iLim, _sum + error, iLim);
+	T out = kp * error + ki * _sum * dt + kd * (val - _prev) / dt;
 	_prev = val;
 	
 	return out;
