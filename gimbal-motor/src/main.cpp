@@ -2,6 +2,7 @@
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
 #include "lib/inc/util.hpp"
+#include "lib/inc/input.hpp"
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
@@ -90,6 +91,7 @@ void calibrate() {
 int main() {
     util::init();
 
+    input::init();
     dma::init();
     i2c::init();
     bldc::init();
@@ -103,7 +105,7 @@ int main() {
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
         uint16_t angle = measureAngle();
-        PORT_REGS->GROUP[0].PORT_OUTSET = 1;
+//        PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         
         // Calculate electrical angle from encoder reading
         uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
@@ -116,7 +118,7 @@ int main() {
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
                 // Vary applied power depending on distance from the setpoint
                 util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) + 128, 255));
-        PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
+//        PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 
     return 1;
