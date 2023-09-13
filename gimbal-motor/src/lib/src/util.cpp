@@ -1,6 +1,13 @@
 #include "lib/inc/util.hpp"
 
 
+static int16_t da {0};
+static int16_t dv {0};
+static float floatAngle {2048.0f};
+static uint16_t delay {0};
+uint16_t setAngle {2048};
+bool tone {true};
+
 static uint32_t ticks
 {
     0
@@ -11,6 +18,41 @@ extern "C" {
 
     void SysTick_Handler() {
         ++ticks;
+        
+        if (ticks % 10 == 0) {    
+            if (da > 400) {
+                dv = -dv;
+            }
+            if (da < -400) {
+                dv = - dv - dv/20 + 4;
+            }
+            if (dv > 150) {
+                dv = 0;
+                da = 0;
+                floatAngle = 2048.0f;
+                tone = true;
+            }
+            if (dv == 0) {
+                if (delay < 1500) {++delay;}
+                else {
+                    dv = 1;
+                    delay = 0;
+                    tone = true;
+                }
+            }
+            if (!tone) {
+                da += dv;
+            }
+        }
+
+        floatAngle += da / 10;
+        if (floatAngle < 0) {
+            floatAngle = 4095;
+        }
+        if (floatAngle > 4095) {
+            floatAngle = 0;
+        }
+        setAngle = floatAngle;
     }
 }
 

@@ -13,7 +13,8 @@
 
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
-static uint16_t setAngle {2048};
+extern uint16_t setAngle;
+extern bool tone;
 
 void input::onInput(uint16_t value) {
 //    setAngle = value;
@@ -50,7 +51,7 @@ void calibrate() {
     bldc::applyTorque(0, 255);
     
     do {
-        util::sleep(2);
+        util::sleep(20);
         offset = angle;
         angle = measureAngle();
     } while (offset != angle);
@@ -103,16 +104,32 @@ int main() {
     bldc::init();
 
     calibrate();
-    
-    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
 
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
 //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
+        if (tone) {
+            bldc::tone(247);
+            bldc::applyTorque(0, 255);
+            util::sleep(200);
+            
+            for (uint8_t i {255}; i > 160; i -= 30) {
+                bldc::tone(294);
+                bldc::applyTorque(0, i);
+                util::sleep(200);
+                bldc::tone(392);
+                bldc::applyTorque(0, i);
+                util::sleep(200);
+            }
+            
+            bldc::silent();
+            util::sleep(200);
+            tone = false;
+        }
+        
         uint16_t angle = measureAngle();
-        PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         
         // Calculate electrical angle from encoder reading
         uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
@@ -125,12 +142,6 @@ int main() {
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
                 // Vary applied power depending on distance from the setpoint
               util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) * 9 / 5 + 145, 255));
-        
-        PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
-        if (util::getTickCount() % 2 == 0) {   
-            setAngle += 1;
-            if (setAngle > 4095) setAngle = 0;
-        }
     }
 
     return 1;
