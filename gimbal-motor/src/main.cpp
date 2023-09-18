@@ -51,7 +51,7 @@ void calibrate() {
     bldc::applyTorque(0, 255);
     
     do {
-        util::sleep(20);
+        util::sleep(100);
         offset = angle;
         angle = measureAngle();
     } while (offset != angle);

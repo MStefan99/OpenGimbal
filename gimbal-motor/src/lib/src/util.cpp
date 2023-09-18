@@ -1,8 +1,9 @@
 #include "lib/inc/util.hpp"
+#include "lib/inc/bldc.hpp"
 
 
-static int16_t da {0};
-static int16_t dv {0};
+static float da {0};
+static float dv {0.01f};
 static float floatAngle {2048.0f};
 static uint16_t delay {0};
 uint16_t setAngle {2048};
@@ -19,7 +20,9 @@ extern "C" {
     void SysTick_Handler() {
         ++ticks;
         
-        if (ticks % 10 == 0) {    
+        if (ticks % 10 == 0) {
+            if (da > 10 && dv > 0 && dv < 0.2f) {dv = 0.2f;}
+            if (da > 60 && dv > 0 && dv < 1) {dv = 1;}
             if (da > 400) {
                 dv = -dv;
             }
@@ -35,7 +38,7 @@ extern "C" {
             if (dv == 0) {
                 if (delay < 1500) {++delay;}
                 else {
-                    dv = 1;
+                    dv = 0.2f;
                     delay = 0;
                     tone = true;
                 }
