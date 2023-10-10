@@ -88,6 +88,7 @@
             <itemPath>../src/packs/ATSAML21E16B_DFP/component/trng.h</itemPath>
             <itemPath>../src/packs/ATSAML21E16B_DFP/component/usb.h</itemPath>
             <itemPath>../src/packs/ATSAML21E16B_DFP/component/wdt.h</itemPath>
+            <itemPath>../src/packs/ATSAML21E16B_DFP/component/fuses.h</itemPath>
           </logicalFolder>
           <logicalFolder name="f2" displayName="instance" projectFiles="true">
             <itemPath>../src/packs/ATSAML21E16B_DFP/instance/ac.h</itemPath>
@@ -130,6 +131,7 @@
             <itemPath>../src/packs/ATSAML21E16B_DFP/instance/trng.h</itemPath>
             <itemPath>../src/packs/ATSAML21E16B_DFP/instance/usb.h</itemPath>
             <itemPath>../src/packs/ATSAML21E16B_DFP/instance/wdt.h</itemPath>
+            <itemPath>../src/packs/ATSAML21E16B_DFP/instance/fuses.h</itemPath>
           </logicalFolder>
           <logicalFolder name="f3" displayName="pio" projectFiles="true">
             <itemPath>../src/packs/ATSAML21E16B_DFP/pio/saml21e16b.h</itemPath>
@@ -229,6 +231,7 @@
       </logicalFolder>
       <itemPath>Makefile</itemPath>
       <itemPath>../src/config/default/harmony-manifest-success.yml</itemPath>
+      <itemPath>gimbal-main.mc3</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
