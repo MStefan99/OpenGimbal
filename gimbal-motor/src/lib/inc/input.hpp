@@ -12,10 +12,11 @@
 
 #include "util.hpp"
 
+
+extern void onInput(uint16_t value);
+    
 namespace input {
     void init();
-    
-    extern void onInput(uint16_t value);
 }
 
 #endif	/* INPUT_HPP */

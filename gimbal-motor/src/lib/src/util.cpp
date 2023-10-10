@@ -43,7 +43,7 @@ void util::init() { // TODO: move away
 
     // PM config
     NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1) // Use NVM in manual write mode
-            | NVMCTRL_CTRLB_RWS(3); // Use 3 wait states for NVM
+            | NVMCTRL_CTRLB_RWS(4); // Use 3 wait states for NVM
     PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2; // Enter PL2
     while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk)); // Wait for the transition to complete
 

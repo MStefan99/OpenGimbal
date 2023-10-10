@@ -6,6 +6,7 @@
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
+#include "lib/inc/uart.hpp"
 #include "lib/inc/PID.hpp"
 #include "lib/inc/as5600.hpp"
 
@@ -15,8 +16,8 @@
 static constexpr uint16_t fullRotation {4096};
 static uint16_t setAngle {2048};
 
-void input::onInput(uint16_t value) {
-//    setAngle = value;
+void onInput(uint16_t value) {
+    setAngle = value;
 }
 
 bool dataReady {false};
@@ -96,7 +97,7 @@ void calibrate() {
 int main() {
     util::init();
 
-//    input::init();
+    uart::init();
     dma::init();
     i2c::init();
     as5600::init();
@@ -127,10 +128,6 @@ int main() {
               util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) * 9 / 5 + 145, 255));
         
         PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
-        if (util::getTickCount() % 2 == 0) {   
-            setAngle += 1;
-            if (setAngle > 4095) setAngle = 0;
-        }
     }
 
     return 1;
