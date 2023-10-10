@@ -1,18 +1,7 @@
 #include "lib/inc/util.hpp"
 
 
-static float da {0};
-static float dv {0.01f};
-static float floatAngle {2048.0f};
-static uint16_t delay {0};
-uint16_t setAngle {2048};
-bool tone {true};
-
-static uint32_t ticks
-{
-    0
-};
-
+static uint32_t ticks {0};
 
 extern "C" {
 
@@ -64,7 +53,7 @@ void util::init() { // TODO: move away
 
     // GLCK config
     GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0
-            | GCLK_GENCTRL_SRC_DFLL48M; // Set DFLL48M as a source
+            | GCLK_GENCTRL_SRC_OSC16M; // Set DFLL48M as a source
     
     GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
             | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source

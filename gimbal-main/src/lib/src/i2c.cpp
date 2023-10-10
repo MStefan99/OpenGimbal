@@ -1,20 +1,20 @@
 #include "lib/inc/i2c.hpp"
 
-#define SERCOM_REGS SERCOM2_REGS
+#define SERCOM_REGS SERCOM0_REGS
 
 
 static tl::allocator<uint8_t> byteAllocator {};
 
 
 void i2c::init() { // GCLK config
-	GCLK_REGS->GCLK_PCHCTRL[20] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM2 clock
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM0_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM2 clock
 					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
 
 	// PORT config
-	PORT_REGS->GROUP[0].PORT_PINCFG[8] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 8
-	PORT_REGS->GROUP[0].PORT_PINCFG[9] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 9
-	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE_D // Mux pin 8 to SERCOM2
-					| PORT_PMUX_PMUXO_D; // Mux pin 9 to SERCOM2
+	PORT_REGS->GROUP[0].PORT_PINCFG[4] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 4
+	PORT_REGS->GROUP[0].PORT_PINCFG[5] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 5
+	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE(MUX_PA04D_SERCOM0_PAD0) // Mux pin 4 to SERCOM0
+					| PORT_PMUX_PMUXO(MUX_PA05D_SERCOM0_PAD1); // Mux pin 5 to SERCOM0
 
 	// DMA config
 	dma::initI2C();

@@ -2,9 +2,9 @@
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
 #include "lib/inc/util.hpp"
-#include "lib/inc/data.hpp"
-#include "lib/inc/usb.hpp"
-#include "lib/inc/i2c.hpp"
+//#include "lib/inc/data.hpp"
+#include "lib/inc/uart.hpp"
+//#include "lib/inc/i2c.hpp"
 #include "lib/inc/dma.hpp"
 
 #define NVMTEMP ((uint32_t*)0x00806030)
@@ -13,21 +13,24 @@ int main() {
     util::init();
     
     dma::init();
-    i2c::init();
-//    usb::init();
+//    i2c::init();
+    uart::init();
 
     // Temperature calibration values
-    uint8_t tempR = NVMTEMP[0] & 0xff;
-    uint16_t adcR = (NVMTEMP[1] & 0xfff00) >> 8u;
-    uint8_t tempH = (NVMTEMP[0] & 0xff0000) >> 12u;
-    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
+//    uint8_t tempR = NVMTEMP[0] & 0xff;
+//    uint16_t adcR = (NVMTEMP[1] & 0xfff00) >> 8u;
+//    uint8_t tempH = (NVMTEMP[0] & 0xff0000) >> 12u;
+//    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
+    uint8_t data[3] = {0x50, 0x55, 0xaa};
 
-    while (1) {
+    while (1) {        
+        uart::send(data, 3);
+        
         util::sleep(1);
 
-        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+//        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+//        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
     }
 
     return 1;

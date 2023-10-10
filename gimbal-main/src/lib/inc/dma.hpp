@@ -13,14 +13,12 @@
 #include "tl/list.hpp"
 
 
-#define DMA_CH_COUNT 6
+#define DMA_CH_COUNT 4
 
 #define DMA_CH_I2C_TX 0
 #define DMA_CH_I2C_RX 1
 #define DMA_CH_UART_TX 2
 #define DMA_CH_UART_RX 3
-#define DMA_CH_SBUS_TX 4
-#define DMA_CH_SBUS_RX 5
 
 
 namespace dma {
