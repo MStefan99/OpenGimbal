@@ -12,7 +12,7 @@ extern "C" {
         uint8_t d = SERCOM_REGS->USART_INT.SERCOM_DATA;
         
         if (remainingBytes == 0) {
-            if (d == (0x50 | ADDR)) {
+            if (d == (0x10 | ADDR)) {
                 buf[0] = d;
                 remainingBytes = 2;
             } else {
