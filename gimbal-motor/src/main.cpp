@@ -96,7 +96,7 @@ void calibrate() {
 int main() {
     util::init();
 
-    input::init();
+//    input::init();
     dma::init();
     i2c::init();
     as5600::init();

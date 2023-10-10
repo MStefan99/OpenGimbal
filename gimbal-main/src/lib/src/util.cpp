@@ -1,6 +1,13 @@
 #include "lib/inc/util.hpp"
 
 
+static float da {0};
+static float dv {0.01f};
+static float floatAngle {2048.0f};
+static uint16_t delay {0};
+uint16_t setAngle {2048};
+bool tone {true};
+
 static uint32_t ticks
 {
     0
@@ -19,21 +26,17 @@ void util::init() { // TODO: move away
      *
      * OSC16M @ 8MHz
      * |
-     * |--> GCLK0 @ 8MHz
-     * |    |
-     * |    |--> MCLK @ 8MHz
-     * |    |
-     * |     `-> TCC @ 8MHz
-     * |
      * |--> GCLK1 @ 250KHz
      * |    |
-     *       `-> ADC @ 250KHz
+     *      `--> ADC @ 250KHz
      *
      * DFLL48M @ 48MHz
      * |
-     *  `-> GCLK2 @ 48MHz
+     * `--> GCLK0 @ 48MHz
      *      |
-     *       `-> GCLK_USB @ 48MHz
+     *      |--> MCLK @ 48MHz
+     *      |
+     *      `--> TCC @ 48MHz
      */
 
 
@@ -46,6 +49,8 @@ void util::init() { // TODO: move away
     while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
     // PM config
+    NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1) // Use NVM in manual write mode
+            | NVMCTRL_CTRLB_RWS(3); // Use 3 wait states for NVM
     PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2; // Enter PL2
     while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk)); // Wait for the transition to complete
 
@@ -58,18 +63,15 @@ void util::init() { // TODO: move away
             | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
 
     // GLCK config
+    GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0
+            | GCLK_GENCTRL_SRC_DFLL48M; // Set DFLL48M as a source
+    
     GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
             | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source
             | GCLK_GENCTRL_DIVSEL_DIV2 // Set division mode (2^(x+1))
             | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
     GCLK_REGS->GCLK_PCHCTRL[30] = GCLK_PCHCTRL_CHEN(1) // Enable ADC clock
             | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
-
-    GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 2
-            | GCLK_GENCTRL_SRC_DFLL48M // Set DFLL48M as a source
-            | GCLK_GENCTRL_OE(1); // Enable clock output
-    GCLK_REGS->GCLK_PCHCTRL[4] = GCLK_PCHCTRL_CHEN(1) // Enable USB clock
-            | GCLK_PCHCTRL_GEN_GCLK2; //Set GCLK2 as a clock source
 
     // NVIC config
     __DMB();
@@ -78,7 +80,7 @@ void util::init() { // TODO: move away
 
     // SysTick config
     SysTick->CTRL = 0;
-    SysTick->LOAD = 8000 - 1;
+    SysTick->LOAD = 48000 - 1;
     SysTick->CTRL = SysTick_CTRL_TICKINT_Msk
             | SysTick_CTRL_CLKSOURCE_Msk
             | SysTick_CTRL_ENABLE_Msk;

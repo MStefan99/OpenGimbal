@@ -75,5 +75,5 @@ void servo::disable(uint8_t channel) {
 void servo::setChannel(uint8_t channel, int16_t angle) {
     // Range: [1ms * GCLK_TC; 2ms * GCLK_TCC]
     angle = (angle * 1000) >> 10u;
-    getTimer(channel)->TCC_CCBUF[getTimerChannel(channel)] = CLAMP(-1500, angle, 1500) / 2 + 1500;
+    getTimer(channel)->TCC_CCBUF[getTimerChannel(channel)] = util::clamp(angle, static_cast<int16_t>(-1500), static_cast<int16_t>(1500)) / 2 + 1500;
 }

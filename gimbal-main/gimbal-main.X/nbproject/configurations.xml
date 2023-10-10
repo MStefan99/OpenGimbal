@@ -48,19 +48,13 @@
           <itemPath>../src/lib/inc/tl/vector.hpp</itemPath>
         </logicalFolder>
         <itemPath>../src/lib/inc/servo.hpp</itemPath>
-        <itemPath>../src/lib/inc/lsm303.hpp</itemPath>
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
-        <itemPath>../src/lib/inc/mpu6050.hpp</itemPath>
-        <itemPath>../src/lib/inc/PID.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/usb.hpp</itemPath>
-        <itemPath>../src/lib/inc/updates.hpp</itemPath>
-        <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/lsm6dso.hpp</itemPath>
-        <itemPath>../src/lib/inc/bldc.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -209,18 +203,13 @@
       <logicalFolder name="f2" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/src/dma.cpp</itemPath>
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/lsm303.cpp</itemPath>
-        <itemPath>../src/lib/src/mpu6050.cpp</itemPath>
-        <itemPath>../src/lib/src/PID.cpp</itemPath>
         <itemPath>../src/lib/src/servo.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/updates.cpp</itemPath>
         <itemPath>../src/lib/src/usb.cpp</itemPath>
         <itemPath>../src/lib/src/usb_descriptors.cpp</itemPath>
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/lsm6dso.cpp</itemPath>
-        <itemPath>../src/lib/src/bldc.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
