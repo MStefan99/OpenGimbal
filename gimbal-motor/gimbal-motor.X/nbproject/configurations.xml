@@ -35,18 +35,6 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f3" displayName="lib" projectFiles="true">
-        <logicalFolder name="f1" displayName="tl" projectFiles="true">
-          <itemPath>../src/lib/inc/tl/allocator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/config_tl.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/iterator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/less.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/list.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/map.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/pair.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/queue.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/stack.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/vector.hpp</itemPath>
-        </logicalFolder>
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/PID.hpp</itemPath>
@@ -55,7 +43,8 @@
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/bldc.hpp</itemPath>
         <itemPath>../src/lib/inc/as5600.hpp</itemPath>
-        <itemPath>../src/lib/inc/input.hpp</itemPath>
+        <itemPath>../src/lib/inc/pwm.hpp</itemPath>
+        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -206,15 +195,14 @@
       <logicalFolder name="f2" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/src/dma.cpp</itemPath>
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/bldc.cpp</itemPath>
         <itemPath>../src/lib/src/as5600.cpp</itemPath>
-        <itemPath>../src/lib/src/input.cpp</itemPath>
+        <itemPath>../src/lib/src/pwm.cpp</itemPath>
+        <itemPath>../src/lib/src/uart.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
-      <itemPath>../src/config/default/pin_configurations.csv</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -254,8 +242,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
+        <pack name="SAML21_DFP" vendor="Microchip" version="3.6.105"/>
         <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
-        <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -311,7 +299,6 @@
       <C32>
         <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="enable-app-io" value="false"/>
         <property key="enable-omit-frame-pointer" value="false"/>
         <property key="enable-symbols" value="true"/>
@@ -368,7 +355,6 @@
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
         <property key="allocate-dinit" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="code-dinit" value="false"/>
         <property key="ebase-addr" value=""/>
         <property key="enable-check-sections" value="false"/>
@@ -408,7 +394,6 @@
       <C32CPP>
         <property key="additional-warnings" value="false"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="check-new" value="false"/>
         <property key="eh-specs" value="false"/>
         <property key="enable-app-io" value="false"/>
@@ -423,7 +408,7 @@
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value="-O1"/>
+        <property key="optimization-level" value=""/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
@@ -935,7 +920,7 @@
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
         <property key="debugoptions.simultaneous.debug" value="false"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
         <property key="freeze.timers" value="false"/>
@@ -1462,7 +1447,7 @@
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
         <property key="debugoptions.simultaneous.debug" value="false"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
         <property key="freeze.timers" value="false"/>

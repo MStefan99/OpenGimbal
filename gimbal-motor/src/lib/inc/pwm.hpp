@@ -15,7 +15,7 @@
 
 extern void onInput(uint16_t value);
     
-namespace input {
+namespace pwm {
     void init();
 }
 

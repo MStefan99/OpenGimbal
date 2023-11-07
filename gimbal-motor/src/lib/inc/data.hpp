@@ -11,7 +11,6 @@
 #include "device.h"
 #include <cstdlib>
 
-#include "lib/inc/Matrix.hpp"
 #include "lib/inc/util.hpp"
 
 

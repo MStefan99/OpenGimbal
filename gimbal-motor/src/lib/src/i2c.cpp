@@ -3,8 +3,6 @@
 #define SERCOM_REGS SERCOM2_REGS
 
 
-static tl::allocator<uint8_t> byteAllocator {};
-
 void i2c::init() { // GCLK config
 	GCLK_REGS->GCLK_PCHCTRL[20] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM2 clock
 					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
@@ -33,55 +31,55 @@ void i2c::init() { // GCLK config
 	while (!(SERCOM_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_BUSSTATE_Msk));
 }
 
-void i2c::write(uint8_t devAddr, uint8_t* buf, uint8_t size, void (*cb)(bool), bool littleEndian) {
-	uint8_t* txBuf = byteAllocator.allocate(size);
-	util::copy(txBuf, buf, size);
-
-	dma::startTransfer(dma::I2CTransfer{
+void i2c::write(uint8_t devAddr, uint8_t* buf, uint8_t size, void (*cb)(bool, const dma::I2CTransfer&), bool littleEndian) {
+	auto transfer {dma::I2CTransfer{
 		.devAddr = devAddr,
-		.buf = txBuf,
 		.len = size,
 		.type = dma::I2CTransferType::Write,
         .cb = cb,
 		.littleEndian = littleEndian
-	});
+	}};
+    
+	util::copy(transfer.buf, buf, size);
+	dma::startTransfer(transfer);
 }
 
-void i2c::read(uint8_t devAddr, uint8_t* buf, uint8_t size, void (*cb)(bool), bool littleEndian) {
-	dma::startTransfer(dma::I2CTransfer{
+void i2c::read(uint8_t devAddr, uint8_t size, void (*cb)(bool, const dma::I2CTransfer&), bool littleEndian) {
+    auto transfer {dma::I2CTransfer{
 		.devAddr = devAddr,
-		.buf = buf,
 		.len = size,
 		.type = dma::I2CTransferType::Read,
         .cb = cb,
 		.littleEndian = littleEndian
-	});
+	}}; 
+    
+	dma::startTransfer(transfer);
 }
 
-void i2c::writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size, void (*cb)(bool), bool littleEndian) {
-	uint8_t* txBuf = byteAllocator.allocate(size + 1);
-	txBuf[0] = regAddr;
-	util::copy(txBuf + 1, buf, size);
-
-	dma::startTransfer(dma::I2CTransfer{
+void i2c::writeRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size, void (*cb)(bool, const dma::I2CTransfer&), bool littleEndian) {
+	auto transfer {dma::I2CTransfer{
 		.devAddr = devAddr,
 		.regAddr = regAddr,
-		.buf = txBuf,
 		.len = (uint8_t) (size + 1),
 		.type = dma::I2CTransferType::Write,
         .cb = cb,
 		.littleEndian = littleEndian
-	});
+	}};
+
+    transfer.buf[0] = regAddr;
+	util::copy(transfer.buf + 1, buf, size);
+	dma::startTransfer(transfer);
 }
 
-void i2c::readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size, void (*cb)(bool), bool littleEndian) {
-	dma::startTransfer(dma::I2CTransfer{
+void i2c::readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t size, void (*cb)(bool, const dma::I2CTransfer&), bool littleEndian) {
+    auto transfer {dma::I2CTransfer{
 		.devAddr = devAddr,
 		.regAddr = regAddr,
-		.buf = buf,
 		.len = size,
 		.type = dma::I2CTransferType::WriteRead,
         .cb = cb,
 		.littleEndian = littleEndian
-	});
+	}};
+    
+	dma::startTransfer(transfer);
 }

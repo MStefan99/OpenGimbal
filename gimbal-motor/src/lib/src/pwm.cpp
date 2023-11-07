@@ -1,4 +1,4 @@
-#include "lib/inc/input.hpp"
+#include "lib/inc/pwm.hpp"
 
 #define TC_REGS TC0_REGS
 
@@ -12,7 +12,7 @@ extern "C" {
     }
 }
 
-void input::init() {
+void pwm::init() {
     // GCLK config
     GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1) // Enable TC0 clock
             | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source

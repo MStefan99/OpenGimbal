@@ -9,16 +9,19 @@
 #define	DMA_H
 
 #include "device.h"
-#include "tl/allocator.hpp"
-#include "tl/list.hpp"
+#include "RingBuffer.hpp"
 
 
-#define DMA_CH_COUNT 6
+static constexpr uint8_t I2C_BUFFER_LEN {8};
+static constexpr uint8_t UART_BUFFER_LEN {16};
 
-#define DMA_CH_I2C_TX 0
-#define DMA_CH_I2C_RX 1
-#define DMA_CH_UART_TX 2
-#define DMA_CH_UART_RX 3
+
+static constexpr uint8_t DMA_CH_COUNT {4};
+
+static constexpr uint8_t DMA_CH_I2C_TX {0};
+static constexpr uint8_t DMA_CH_I2C_RX {1};
+static constexpr uint8_t DMA_CH_UART_TX {2};
+static constexpr uint8_t DMA_CH_UART_RX {3};
 
 
 namespace dma {
@@ -27,25 +30,29 @@ namespace dma {
 		Write,
 		WriteRead
 	};
+    
+    enum UARTTransferType: uint8_t {
+        Out,
+        In
+    };
 
-	typedef struct __attribute__((packed)) {
+	struct __attribute__((packed)) I2CTransfer {
 		uint8_t devAddr;
 		uint8_t regAddr;
-		uint8_t* buf;
+		uint8_t buf[I2C_BUFFER_LEN];
 		uint8_t len;
 		I2CTransferType type;
-        void (*cb)(bool);
+        void (*cb)(bool success, const I2CTransfer& transfer);
 		bool littleEndian;
-	}
-	I2CTransfer;
+	};
 
-	typedef struct __attribute__((packed)) {
-		uint8_t* buf;
+	struct __attribute__((packed)) UARTTransfer {
+		uint8_t buf[UART_BUFFER_LEN];
 		uint8_t len;
-        void (*cb)(bool);
+        UARTTransferType type;
+        void (*cb)(bool success, const UARTTransfer& transfer);
         bool littleEndian;
-	}
-	UARTTransfer;
+	};
 
 	void init();
 	void initI2C();

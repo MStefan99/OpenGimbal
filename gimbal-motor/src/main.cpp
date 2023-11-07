@@ -2,7 +2,7 @@
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
 #include "lib/inc/util.hpp"
-#include "lib/inc/input.hpp"
+#include "lib/inc/pwm.hpp"
 #include "lib/inc/data.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
@@ -35,7 +35,7 @@ uint16_t measureAngle() {
     dataReady = false;
     auto startTime {util::getTickCount()};
     
-    as5600::getAngle(angle, [](bool success) {
+    as5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
         dataReady = true;
     });
     
@@ -100,12 +100,12 @@ int main() {
     uart::init();
     dma::init();
     i2c::init();
-    as5600::init();
-    bldc::init();
+//    as5600::init();
+//    bldc::init();
 
+    while (true) __WFI();
+        
     calibrate();
-    
-    PORT_REGS->GROUP[0].PORT_DIRSET = 1;
 
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion

@@ -50,10 +50,10 @@ void util::init() { // TODO: move away
     // OSCCTRL config
     OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1) // Enable OSC16M
             | OSCCTRL_OSC16MCTRL_FSEL_8; // Set frequency to 8MHz
-    OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE((calibration >> 26u) & 0x3f)
-            | OSCCTRL_DFLLVAL_FINE(108); // Load calibration value
+    OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE(calibration >> 26u) // Load calibration value
+            | OSCCTRL_DFLLVAL_FINE(512); // Middle value for FINE (0-1023) is a good starting point
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
-            | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
+            | OSCCTRL_DFLLCTRL_MODE(100); // Run in open-loop mode
 
     // GLCK config
     GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0

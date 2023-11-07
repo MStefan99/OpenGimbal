@@ -1,17 +1,14 @@
 #include "lib/inc/dma.hpp"
 
 #define I2C_REGS SERCOM2_REGS
-#define UART_REGS SERCOM4_REGS
+#define UART_REGS SERCOM3_REGS
 
 static dmac_descriptor_registers_t __attribute__((section (".lpram"))) DESCRIPTOR_TABLE[DMA_CH_COUNT];
 static dmac_descriptor_registers_t __attribute__((section (".lpram"))) WRITE_BACK_DESCRIPTOR_TABLE[DMA_CH_COUNT];
 
 
-static tl::allocator<uint8_t> byteAllocator {};
-
-
-static tl::list<dma::I2CTransfer> pendingI2CTransfers{};
-static tl::list<dma::UARTTransfer> pendingUARTTransfers{};
+static RingBuffer<dma::I2CTransfer, 3> pendingI2CTransfers{};
+static RingBuffer<dma::UARTTransfer, 3> pendingUARTTransfers{};
 
 
 static void nextTransfer();
@@ -40,6 +37,7 @@ extern "C" {
 					completeI2CTransfer(true);
 					break;
 				case DMA_CH_UART_TX:
+				case DMA_CH_UART_RX:
 					completeUARTTransfer(true);
 					break;
 			}
@@ -96,7 +94,7 @@ void dma::initI2C() {
 	// Tx setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_TX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(0x06); // SERCOM2_TX
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM2_DMAC_ID_TX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -106,7 +104,7 @@ void dma::initI2C() {
 	// Rx setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_RX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(0x05); // SERCOM2_RX
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM2_DMAC_ID_RX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -119,7 +117,7 @@ void dma::initUART() {
 	// TX setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_UART_TX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(0x0a); // SERCOM4_TX
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM3_DMAC_ID_TX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -129,7 +127,7 @@ void dma::initUART() {
 	// Rx setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_UART_RX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(0x09); // SERCOM4_RX
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM3_DMAC_ID_RX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -151,16 +149,13 @@ static void nextTransfer() {
 void dma::startTransfer(const I2CTransfer& transfer) {
 	__disable_irq();
 	pendingI2CTransfers.push_back(transfer);
-    if (pendingI2CTransfers.size() > 5) {
-        pendingI2CTransfers.pop_front();
-    }
 	__enable_irq();
 	nextTransfer();
 }
 
 
 static void nextI2CTransfer() {
-	dma::I2CTransfer transfer {pendingI2CTransfers.front()};
+	dma::I2CTransfer& transfer {pendingI2CTransfers.front()};
 	
 	if ((I2C_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_BUSSTATE_Msk)
 					!= SERCOM_I2CM_STATUS_BUSSTATE(1)) {
@@ -185,7 +180,7 @@ static void nextI2CTransfer() {
 static void I2CStreamOut(const dma::I2CTransfer& transfer) {
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_TX;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_BTCNT = transfer.len;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_SRCADDR = (uint32_t) (transfer.buf + transfer.len);
+	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_SRCADDR = (uint32_t) (&transfer.buf) + transfer.len;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_DSTADDR = (uint32_t) & I2C_REGS->I2CM.SERCOM_DATA;
 	DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
 
@@ -199,7 +194,7 @@ static void I2CStreamIn(const dma::I2CTransfer& transfer) {
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_RX;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_BTCNT = transfer.len;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_SRCADDR = (uint32_t) & I2C_REGS->I2CM.SERCOM_DATA;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_DSTADDR = (uint32_t) (transfer.buf + transfer.len);
+	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_DSTADDR = (uint32_t) (&transfer.buf) + transfer.len;
 	DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
 
 	I2C_REGS->I2CM.SERCOM_ADDR = SERCOM_I2CM_ADDR_ADDR(transfer.devAddr << 1u | 0x1)
@@ -213,11 +208,8 @@ static void completeI2CTransfer(bool success) {
         return;
     }
     dma::I2CTransfer transfer {pendingI2CTransfers.front()};
-	if (transfer.type == dma::I2CTransferType::Write) {
-		byteAllocator.deallocate(transfer.buf);
-	}
     if (transfer.cb) {
-        transfer.cb(success);
+        transfer.cb(success, transfer);
     }
 	pendingI2CTransfers.pop_front();
 }
@@ -228,34 +220,41 @@ static void completeI2CTransfer(bool success) {
 void dma::startTransfer(const dma::UARTTransfer& transfer) {
 	__disable_irq();
 	pendingUARTTransfers.push_back(transfer);
-    if (pendingUARTTransfers.size() > 5) {
-        pendingUARTTransfers.pop_front();
-    }
 	__enable_irq();
 	nextTransfer();
 }
 
 
 static void nextUARTTransfer() {
-	dma::UARTTransfer transfer {pendingUARTTransfers.front()};
+	dma::UARTTransfer& transfer {pendingUARTTransfers.front()};
 	
 	if (UART_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_CTS_Msk) {
 		return; // SERCOM busy, cannot start another transfer
 	}
 
-	DMAC_REGS->DMAC_CHID = DMA_CH_UART_TX;
-	DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_BTCNT = transfer.len;
-	DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_SRCADDR = (uint32_t) (transfer.buf + transfer.len);
-	DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_DSTADDR = (uint32_t) & UART_REGS->USART_INT.SERCOM_DATA;
-	DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);	
+    if (transfer.type == dma::UARTTransferType::Out) {   
+        DMAC_REGS->DMAC_CHID = DMA_CH_UART_TX;
+        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_BTCNT = transfer.len;
+        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_SRCADDR = (uint32_t) (&transfer.buf) + transfer.len;
+        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_DSTADDR = (uint32_t) & UART_REGS->USART_INT.SERCOM_DATA;
+        DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
+    } else {
+        DMAC_REGS->DMAC_CHID = DMA_CH_UART_RX;
+        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_BTCNT = transfer.len;
+        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_SRCADDR = (uint32_t) & UART_REGS->USART_INT.SERCOM_DATA;
+        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_DSTADDR = (uint32_t) (&transfer.buf) + transfer.len;
+        DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);        
+    }
 }
 
 
 static void completeUARTTransfer(bool success) {
-	dma::UARTTransfer transfer {pendingUARTTransfers.front()};
-	byteAllocator.deallocate(transfer.buf);
-    if (transfer.cb) {
-        transfer.cb(success);
+    if (pendingUARTTransfers.empty()) {
+        return;
     }
-	pendingUARTTransfers.pop_front();
+	dma::UARTTransfer transfer {pendingUARTTransfers.front()};
+    if (transfer.cb) {
+        transfer.cb(success, transfer);
+    }
+    pendingUARTTransfers.pop_front();
 }

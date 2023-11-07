@@ -16,7 +16,7 @@ namespace as5600 {
     // I2C needs to be initialized before using any methods below
     void init();
     
-    void getAngle(uint16_t& angle, void (*cb)(bool success) = nullptr);
+    void getAngle(void (*cb)(bool success, const dma::I2CTransfer& transfer) = nullptr);
 }
 
 #endif	/* AS5600_HPP */
