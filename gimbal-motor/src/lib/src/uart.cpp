@@ -2,49 +2,65 @@
 
 
 #define SERCOM_REGS SERCOM3_REGS
-static constexpr uint8_t deviceAddresss {1};
+static constexpr uint8_t deviceAddress {1};
 
-static uint8_t command {0};
+static uint8_t setupByte {0};
 static void processCommand(bool success, const dma::UARTTransfer& transfer);
 
 extern "C" {
     void SERCOM3_Handler() {
-//        if (!(SERCOM_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {
+        if (!(SERCOM_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {
             if ((SERCOM_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_RXC_Msk) &&
                     !(SERCOM_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_TXC_Msk)) {
-                uint8_t data = SERCOM_REGS->USART_INT.SERCOM_DATA;
-                command = data;
+                
+                SERCOM_REGS->USART_INT.SERCOM_INTENCLR = SERCOM_USART_INT_INTENCLR_RXC(1);
+                setupByte = SERCOM_REGS->USART_INT.SERCOM_DATA;
 
                 dma::UARTTransfer t {
-                    .len = static_cast<uint8_t>((data >> 4u) - 1),
+                    .len = static_cast<uint8_t>((setupByte >> 4u) - 1),
                     .type = dma::UARTTransferType::In,
                     .cb = processCommand
                 };
                 dma::startTransfer(t);
             }
-//        }
-        (void)SERCOM_REGS->USART_INT.SERCOM_DATA;
+        }
+        (void)SERCOM_REGS->USART_INT.SERCOM_DATA; // Clear the RXC interrupt flag
         SERCOM_REGS->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
     }
 }
 
+void disableTx(bool success, const dma::UARTTransfer& transfer) {
+    SERCOM_REGS->USART_INT.SERCOM_CTRLB &= ~SERCOM_USART_INT_CTRLB_TXEN(1);
+    while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
+    (void)SERCOM_REGS->USART_INT.SERCOM_DATA; // Clear the RXC interrupt flag
+    SERCOM_REGS->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
+    SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
+}
+
 void processCommand(bool success, const dma::UARTTransfer& transfer) {
-    uint8_t len = (command >> 4u) - 1;
+    uint8_t len = (setupByte >> 4u) - 1;
     
-    SERCOM_REGS->USART_INT.SERCOM_CTRLB |= SERCOM_USART_INT_CTRLB_TXEN(1);
-    dma::UARTTransfer newTransfer {
-        .len = len,
-        .type = dma::UARTTransferType::Out,
-        .cb = [](bool success, const dma::UARTTransfer& transfer) {
-            SERCOM_REGS->USART_INT.SERCOM_CTRLB &= ~SERCOM_USART_INT_CTRLB_TXEN(1);
+    if ((setupByte & 0x0f) != deviceAddress) {
+        SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
+        return;
+    } // Command intended for another device
+    
+    switch(transfer.buf[0] & 0x0f) { // Parse command type
+        case 0: { // Ping command
+            SERCOM_REGS->USART_INT.SERCOM_CTRLB |= SERCOM_USART_INT_CTRLB_TXEN(1);
+            while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
+            dma::UARTTransfer newTransfer {
+                .len = 3,
+                .type = dma::UARTTransferType::Out,
+                .cb = disableTx
+            };
+            newTransfer.buf[0] = 0x30;
+            newTransfer.buf[1] = deviceAddress << 4u;
+            newTransfer.buf[2] = transfer.buf[1];
+            dma::startTransfer(newTransfer);
         }
-    };
-    
-    for (uint8_t i {0}; i < len; ++i) {
-        newTransfer.buf[i] = ~transfer.buf[i];
+        break;
     }
-    SERCOM_REGS->USART_INT.SERCOM_CTRLB |= SERCOM_USART_INT_CTRLB_TXEN(1);
-    dma::startTransfer(newTransfer);
 }
 
 
@@ -68,6 +84,7 @@ void uart::init() {
 					| SERCOM_USART_INT_CTRLB_SBMODE_1_BIT
 					| SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;
 	SERCOM_REGS->USART_INT.SERCOM_BAUD = 63020; // 115200 baud
+    SERCOM_REGS->USART_INT.SERCOM_DBGCTRL = SERCOM_USART_INT_DBGCTRL_DBGSTOP(1);
 	SERCOM_REGS->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB
 					| SERCOM_USART_INT_CTRLA_CMODE_ASYNC
                     | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC
@@ -77,6 +94,6 @@ void uart::init() {
 					| SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK
 					| SERCOM_USART_INT_CTRLA_ENABLE(1);
     
-	SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1) | SERCOM_USART_INT_INTENSET_TXC(1);
+	SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
     NVIC_EnableIRQ(SERCOM3_IRQn);
 }

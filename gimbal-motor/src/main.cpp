@@ -106,14 +106,13 @@ int main() {
     while (true) __WFI();
         
     calibrate();
-
+    
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
 //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
         uint16_t angle = measureAngle();
-        PORT_REGS->GROUP[0].PORT_OUTSET = 1;
         
         // Calculate electrical angle from encoder reading
         uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
@@ -126,8 +125,6 @@ int main() {
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
                 // Vary applied power depending on distance from the setpoint
               util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) * 9 / 5 + 145, 255));
-        
-        PORT_REGS->GROUP[0].PORT_OUTCLR = 1;
     }
 
     return 1;
