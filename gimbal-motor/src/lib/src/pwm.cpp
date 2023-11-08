@@ -5,7 +5,7 @@
 extern "C" {
     void TC0_Handler() {
         uint16_t duration {TC_REGS->COUNT16.TC_CC[1]};
-        onInput((util::clamp(duration, 
+        setTargetAngle((util::clamp(duration, 
                 static_cast<uint16_t>(3000), 
                 static_cast<uint16_t>(6000)) - 3000) * 4 / 3); // Map to 0-4096 range
         TC_REGS->COUNT16.TC_INTFLAG = TC_INTFLAG_Msk;

@@ -1,6 +1,7 @@
 #include "device.h"
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
+#include "main.hpp"
 #include "lib/inc/util.hpp"
 #include "lib/inc/pwm.hpp"
 #include "lib/inc/data.hpp"
@@ -12,12 +13,18 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
+static constexpr uint8_t torqueLUT[16] = {0, 64, 101, 128, 148, 165, 179, 191, 202, 212, 221, 229, 236, 243, 249, 255};
+
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
-static uint16_t setAngle {2048};
+static uint16_t targetAngle {2048};
+static uint8_t maxTorque {255};
 
-void onInput(uint16_t value) {
-    setAngle = value;
+
+void setTargetAngle(uint16_t angle, uint8_t torque) {
+    if (torque > 15) {torque = 15;}
+    targetAngle = angle;
+    maxTorque = torqueLUT[torque];
 }
 
 bool dataReady {false};
@@ -119,12 +126,12 @@ int main() {
         // Flip the angle if the motor polarity is reversed
         uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW; 
         // Calculate difference between current and set angle
-        uint16_t dAngle = (fullRotation + angle - setAngle) % fullRotation;
+        uint16_t dAngle = (fullRotation + angle - targetAngle) % fullRotation;
         
         // Apply torque perpendicular to the current rotor position, taking polarity into account
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
                 // Vary applied power depending on distance from the setpoint
-              util::min(util::abs(static_cast<int16_t>(6144 + angle - setAngle) % 4096 - 2048) * 9 / 5 + 145, 255));
+              util::min(util::abs(static_cast<int16_t>(6144 + angle - targetAngle) % 4096 - 2048) * 9 / 5 + 145, static_cast<int>(maxTorque)));
     }
 
     return 1;

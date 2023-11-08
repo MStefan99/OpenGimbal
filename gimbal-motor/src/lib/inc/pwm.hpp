@@ -10,11 +10,10 @@
 
 #include "device.h"
 
+#include "main.hpp"
 #include "util.hpp"
 
 
-extern void onInput(uint16_t value);
-    
 namespace pwm {
     void init();
 }

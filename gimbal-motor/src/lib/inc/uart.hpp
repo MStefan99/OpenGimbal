@@ -10,13 +10,17 @@
 
 #include "device.h"
 
+#include "main.hpp"
 #include "lib/inc/util.hpp"
 #include "lib/inc/dma.hpp"
 
-extern void onInput(uint16_t value);
-
 namespace uart {
     void init();
+    
+    enum Command : uint8_t {
+        Ping = 0,
+        Position = 1
+    };
 }
 
 

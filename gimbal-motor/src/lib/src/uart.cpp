@@ -38,15 +38,18 @@ void disableTx(bool success, const dma::UARTTransfer& transfer) {
 }
 
 void processCommand(bool success, const dma::UARTTransfer& transfer) {
+    SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
+    
     uint8_t len = (setupByte >> 4u) - 1;
+    const uint8_t& commandByte = transfer.buf[0];
+    const uint8_t* data = transfer.buf + 1;
     
     if ((setupByte & 0x0f) != deviceAddress) {
-        SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
-        return;
-    } // Command intended for another device
+        return; // Command intended for another device
+    }
     
     switch(transfer.buf[0] & 0x0f) { // Parse command type
-        case 0: { // Ping command
+        case uart::Ping: {
             SERCOM_REGS->USART_INT.SERCOM_CTRLB |= SERCOM_USART_INT_CTRLB_TXEN(1);
             while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
             dma::UARTTransfer newTransfer {
@@ -56,8 +59,12 @@ void processCommand(bool success, const dma::UARTTransfer& transfer) {
             };
             newTransfer.buf[0] = 0x30;
             newTransfer.buf[1] = deviceAddress << 4u;
-            newTransfer.buf[2] = transfer.buf[1];
+            newTransfer.buf[2] = data[0];
             dma::startTransfer(newTransfer);
+        }
+        break;
+        case uart::Position: {
+            setTargetAngle(((data[0] & 0x0f) << 8u) | data[1], data[0] >> 4u);
         }
         break;
     }
