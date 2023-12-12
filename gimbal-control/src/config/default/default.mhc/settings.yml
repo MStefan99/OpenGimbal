@@ -1,0 +1,14 @@
+format_version: v1.0
+configName: default
+folderName: gimbal-control
+frameworkPath: D:\Microchip\Harmony
+processor: ATSAMD09C13A
+projectName: gimbal-control
+settings:
+  PackageFilter: ''
+  FORCE_OPTIMIZATION: 'false'
+  GENERATE_BACKUP: 'true'
+  TRUSTZONE: 'false'
+  CMSISPath: dev_packs\arm\CMSIS\5.8.0
+  MERGE_STRATEGY: USER_ALL
+  DFPPath: dev_packs\Microchip\SAMD09_DFP\2.5.147\atdf\ATSAMD09C13A.atdf

@@ -1,0 +1,70 @@
+# Created by https://www.toptal.com/developers/gitignore/api/mplabx,netbeans,windows
+# Edit at https://www.toptal.com/developers/gitignore?templates=mplabx,netbeans,windows
+
+### MPLabX ###
+#Ignore List for Microchip's MPLAB X IDE
+#It's a form of NetBeans with vendor specific changes
+#Taken from zeha on GIST https://gist.github.com/zeha/5999375
+#Updated by Cristian Cristea (https://github.com/cristiancristea00)
+
+*.d
+*.pre
+*.p1
+*.lst
+*.sym
+*.obj
+*.o
+*.sdb
+*.obj.dmp
+*.mk
+*.map
+*.properties
+*.production
+*.debug
+html/
+nbproject/private/
+nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+funclist
+nbproject/Makefile-*
+disassembly/
+.generated_files/
+
+### NetBeans ###
+**/nbproject/private/
+**/nbproject/Makefile-*.mk
+**/nbproject/Package-*.bash
+.nb-gradle/
+
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# End of https://www.toptal.com/developers/gitignore/api/mplabx,netbeans,windows
