@@ -65,18 +65,14 @@ void util::init() { // TODO: move away
             | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
     GCLK_REGS->GCLK_PCHCTRL[30] = GCLK_PCHCTRL_CHEN(1) // Enable ADC clock
             | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
+    
+    // SysTick config
+    SysTick_Config(48000);
 
     // NVIC config
     __DMB();
     __enable_irq();
     NVIC_EnableIRQ(SysTick_IRQn);
-
-    // SysTick config
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 48000 - 1;
-    SysTick->CTRL = SysTick_CTRL_TICKINT_Msk
-            | SysTick_CTRL_CLKSOURCE_Msk
-            | SysTick_CTRL_ENABLE_Msk;
 
     // ADC config
     ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTREF; // Set ADC reference voltage

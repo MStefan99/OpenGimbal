@@ -25,7 +25,7 @@ uint8_t state{0};
 
 int main() {
     util::init();
-
+    
     // Setting LED pins as outputs
     PORT_REGS->GROUP[0].PORT_DIRSET = 0xC000C020;
     // Disabling SWD pins
@@ -36,10 +36,10 @@ int main() {
     PORT_REGS->GROUP[0].PORT_OUTSET = 0x3000000;
 
     PORT_REGS->GROUP[0].PORT_OUTSET = 0xC000C020;
-    util::sleep(1000);
+    util::sleep(1000);    
     PORT_REGS->GROUP[0].PORT_OUTCLR = 0xC000C020;
 
-    util::setInterval(500, [] {
+    util::setInterval(200, [] {
         if (!(PORT_REGS->GROUP[0].PORT_IN & 0x1 << 24u)) {
             switch (state) {
                 case 0:

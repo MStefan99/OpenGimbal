@@ -13,11 +13,7 @@ extern "C" {
 
 void util::init() {
     // SysTick config
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 1000 - 1;
-    SysTick->CTRL = SysTick_CTRL_TICKINT_Msk
-            | SysTick_CTRL_CLKSOURCE_Msk
-            | SysTick_CTRL_ENABLE_Msk;
+    SysTick_Config(1000);
 
     // NVIC config
     __DMB();
