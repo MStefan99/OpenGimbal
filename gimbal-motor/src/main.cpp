@@ -40,13 +40,13 @@ uint16_t measureAngle() {
     uint16_t angle;
     
     dataReady = false;
-    auto startTime {util::getTickCount()};
+    auto startTime {util::getTime()};
     
     as5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
         dataReady = true;
     });
     
-    while (!dataReady && util::getTickCount() - startTime < 5) {
+    while (!dataReady && util::getTime() - startTime < 5) {
         __WFI();
     }
     

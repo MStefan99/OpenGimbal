@@ -1,5 +1,5 @@
 #include "device.h"
-#include "inc/util.hpp"
+#include "lib/inc/util.hpp"
 
 /* Pinouts
  * 
@@ -36,7 +36,7 @@ int main() {
     PORT_REGS->GROUP[0].PORT_OUTSET = 0x3000000;
 
     PORT_REGS->GROUP[0].PORT_OUTSET = 0xC000C020;
-    util::sleep(1000);    
+    util::sleep(500);    
     PORT_REGS->GROUP[0].PORT_OUTCLR = 0xC000C020;
 
     util::setInterval(200, [] {

@@ -43,7 +43,7 @@ void util::init() { // TODO: move away
 
     // PM config
     NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1) // Use NVM in manual write mode
-            | NVMCTRL_CTRLB_RWS(4); // Use 3 wait states for NVM
+            | NVMCTRL_CTRLB_RWS(4); // Use 4 wait states for NVM
     PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2; // Enter PL2
     while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk)); // Wait for the transition to complete
 
@@ -53,7 +53,7 @@ void util::init() { // TODO: move away
     OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE(calibration >> 26u) // Load calibration value
             | OSCCTRL_DFLLVAL_FINE(512); // Middle value for FINE (0-1023) is a good starting point
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
-            | OSCCTRL_DFLLCTRL_MODE(100); // Run in open-loop mode
+            | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
 
     // GLCK config
     GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0
@@ -82,7 +82,7 @@ void util::init() { // TODO: move away
     ADC_REGS->ADC_CTRLA = ADC_CTRLA_ENABLE(1); // Enable ADC
 }
 
-uint32_t util::getTickCount() {
+uint32_t util::getTime() {
     return ticks;
 }
 

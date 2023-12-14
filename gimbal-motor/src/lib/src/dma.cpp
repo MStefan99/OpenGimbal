@@ -7,8 +7,8 @@ static dmac_descriptor_registers_t __attribute__((section (".lpram"))) DESCRIPTO
 static dmac_descriptor_registers_t __attribute__((section (".lpram"))) WRITE_BACK_DESCRIPTOR_TABLE[DMA_CH_COUNT];
 
 
-static RingBuffer<dma::I2CTransfer, 3> pendingI2CTransfers{};
-static RingBuffer<dma::UARTTransfer, 3> pendingUARTTransfers{};
+static RingBuffer<dma::I2CTransfer, uint8_t, 3> pendingI2CTransfers{};
+static RingBuffer<dma::UARTTransfer, uint8_t, 3> pendingUARTTransfers{};
 
 
 static void nextTransfer();

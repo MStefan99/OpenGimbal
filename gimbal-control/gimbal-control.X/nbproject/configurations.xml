@@ -31,6 +31,11 @@
           <itemPath>../src/config/default/definitions.h</itemPath>
         </logicalFolder>
       </logicalFolder>
+      <logicalFolder name="inc" displayName="inc" projectFiles="true">
+        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
+        <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
+        <itemPath>../src/lib/inc/util.hpp</itemPath>
+      </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
                        displayName="ATSAMD09C13A_DFP"
@@ -147,13 +152,8 @@
           <itemPath>../src/config/default/initialization.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="inc" displayName="inc" projectFiles="true">
-        <itemPath>../src/inc/RingBuffer.hpp</itemPath>
-        <itemPath>../src/inc/TaskScheduler.hpp</itemPath>
-        <itemPath>../src/inc/util.hpp</itemPath>
-      </logicalFolder>
       <logicalFolder name="src" displayName="src" projectFiles="true">
-        <itemPath>../src/src/util.cpp</itemPath>
+        <itemPath>../src/lib/src/util.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
@@ -175,14 +175,14 @@
         <targetDevice>ATSAMD09C13A</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>pk4hybrid</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>4.21</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
         <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
+        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -298,7 +298,7 @@
         <property key="optimization-level" value=""/>
         <property key="preprocessor-macros" value=""/>
         <property key="remove-unused-sections" value="true"/>
-        <property key="report-memory-usage" value="false"/>
+        <property key="report-memory-usage" value="true"/>
         <property key="serial-length" value=""/>
         <property key="serial-origin" value=""/>
         <property key="stack-size" value=""/>

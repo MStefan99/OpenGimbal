@@ -32,16 +32,11 @@ constexpr uint32_t MAX_INT32  {0x7fffffff};
 constexpr uint32_t MIN_UINT32 {0x00000000};
 constexpr uint32_t MAX_UINT32 {0xffffffff};
 
-#define SWAP(a, b) {\
-  auto t {a};  \
-  a = b;  \
-  b = t;\
-}
 
 namespace util {
 	void init();
 
-	uint32_t getTickCount();
+	uint32_t getTime();
 	void sleep(uint32_t ms);
 
     
@@ -51,7 +46,13 @@ namespace util {
 			dest[i] = src[i];
 		}
 	}
-
+    
+    template <class T>
+    void swap(T* a, T* b) {
+        T t {*a};
+        *a = *b;
+        *b = t;
+    }
 	
 	template <class T>
 	void copy(T* dest, const T& src) {

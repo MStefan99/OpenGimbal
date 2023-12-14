@@ -22,7 +22,7 @@ public:
 	void clearTimeout(size_type id);
 	void clearInterval(size_type id);
 
-	task_type retrieveNext(timestamp_type currentTime);
+	task_type getNextTask(timestamp_type currentTime);
 	void execute(timestamp_type currentTime);
 
 	size_type size() const;
@@ -41,9 +41,14 @@ protected:
 	size_type schedule(timestamp_type currentTime, timestamp_type timeout, task_type cb, timestamp_type interval = 0);
 	void unschedule(size_type id);
 
+	static size_type lastID;
+
 	RingBuffer<Task, size_type, C> _tasks {};
 };
 
+
+template<class size_type, size_type C>
+size_type TaskScheduler<size_type, C>::lastID {0};
 
 template<class size_type, size_type C>
 size_type TaskScheduler<size_type, C>::schedule(timestamp_type currentTime, timestamp_type timeout,
@@ -59,16 +64,23 @@ size_type TaskScheduler<size_type, C>::schedule(timestamp_type currentTime, time
 			cb,
 			timestamp,
 			interval,
-			static_cast<size_type>(_tasks.empty() ? 1 : _tasks.back().id + 1)
+			++lastID != 0 ? lastID : ++lastID
 	};
 
 	if (!_tasks.empty()) {
 		for (; _tasks[i].timestamp <= timestamp && i < _tasks.size(); ++i);
 
 		// When the position is found, shift existing tasks
-		_tasks.push_back(_tasks.back());
-		for (size_type j = _tasks.size() - 1; j > i + 1; --j) {
-			_tasks[j - 1] = _tasks[j - 2];
+		if (i < _tasks.size() / 2) { // If the new task should be closer to the front, shift the tasks before
+			_tasks.push_front(_tasks.front());
+			for (size_type j {0}; j < i - 1; ++j) {
+				_tasks[j + 1] = _tasks[j + 2];
+			}
+		} else { // Otherwise shift the tasks after
+			_tasks.push_back(_tasks.back());
+			for (size_type j = _tasks.size() - 1; j > i + 1; --j) {
+				_tasks[j - 1] = _tasks[j - 2];
+			}
 		}
 
 		_tasks[i] = task;
@@ -84,6 +96,7 @@ void TaskScheduler<size_type, C>::unschedule(size_type id) {
 	size_type i {0};
 	for (; _tasks[i].id != id && i < _tasks.size(); ++i);
 
+	// Same logic as when adding tasks: shift the smaller part
 	if (i < _tasks.size() / 2) {
 		for (size_type j {i}; j > 0; --j) {
 			_tasks[j] = _tasks[j - 1];
@@ -118,7 +131,7 @@ void TaskScheduler<size_type, C>::clearInterval(size_type id) {
 }
 
 template<class size_type, size_type C>
-typename TaskScheduler<size_type, C>::task_type TaskScheduler<size_type, C>::retrieveNext(timestamp_type currentTime) {
+typename TaskScheduler<size_type, C>::task_type TaskScheduler<size_type, C>::getNextTask(timestamp_type currentTime) {
 	if (_tasks.empty()) {
 		return nullptr;
 	}
@@ -138,7 +151,7 @@ typename TaskScheduler<size_type, C>::task_type TaskScheduler<size_type, C>::ret
 
 template<class size_type, size_type C>
 void TaskScheduler<size_type, C>::execute(timestamp_type currentTime) {
-	for (task_type cb {retrieveNext(currentTime)}; cb; cb = retrieveNext(currentTime)) {
+	for (task_type cb {getNextTask(currentTime)}; cb; cb = getNextTask(currentTime)) {
 		cb();
 	}
 }
@@ -156,6 +169,7 @@ bool TaskScheduler<size_type, C>::empty() const {
 template<class size_type, size_type C>
 void TaskScheduler<size_type, C>::reset() {
 	_tasks.clear();
+	lastID = 0;
 }
 
 

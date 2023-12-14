@@ -35,26 +35,11 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f3" displayName="lib" projectFiles="true">
-        <logicalFolder name="f1" displayName="tl" projectFiles="true">
-          <itemPath>../src/lib/inc/tl/allocator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/config_tl.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/iterator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/less.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/list.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/map.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/pair.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/queue.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/stack.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/vector.hpp</itemPath>
-        </logicalFolder>
-        <itemPath>../src/lib/inc/servo.hpp</itemPath>
+        <itemPath>../src/lib/inc/util.hpp</itemPath>
+        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
-        <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/usb.hpp</itemPath>
-        <itemPath>../src/lib/inc/data.hpp</itemPath>
-        <itemPath>../src/lib/inc/lsm6dso.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -203,15 +188,10 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f2" displayName="lib" projectFiles="true">
+        <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/dma.cpp</itemPath>
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/servo.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/usb.cpp</itemPath>
-        <itemPath>../src/lib/src/usb_descriptors.cpp</itemPath>
-        <itemPath>../src/lib/src/util.cpp</itemPath>
-        <itemPath>../src/lib/src/data.cpp</itemPath>
-        <itemPath>../src/lib/src/lsm6dso.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
@@ -238,6 +218,7 @@
     <Elem>../src</Elem>
     <Elem>../../controller/src/lib/inc</Elem>
     <Elem>../../controller/src/lib/src</Elem>
+    <Elem>../inc</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -247,14 +228,14 @@
         <targetDevice>ATSAML21E16B</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>pk4hybrid</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>4.21</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
         <pack name="SAML21_DFP" vendor="Microchip" version="3.6.105"/>
+        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -382,7 +363,7 @@
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-cross-reference-file" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
-        <property key="heap-size" value="512"/>
+        <property key="heap-size" value="0"/>
         <property key="input-libraries" value=""/>
         <property key="kseg-length" value=""/>
         <property key="kseg-origin" value=""/>
@@ -394,7 +375,7 @@
         <property key="optimization-level" value=""/>
         <property key="preprocessor-macros" value=""/>
         <property key="remove-unused-sections" value="true"/>
-        <property key="report-memory-usage" value="false"/>
+        <property key="report-memory-usage" value="true"/>
         <property key="serial-length" value=""/>
         <property key="serial-origin" value=""/>
         <property key="stack-size" value=""/>
