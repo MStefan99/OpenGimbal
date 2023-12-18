@@ -68,7 +68,7 @@ void calibrate() {
         uint8_t polePairs {0};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};
-
+    
         do {
             torqueAngle += 10;
 
@@ -107,10 +107,8 @@ int main() {
     uart::init();
     dma::init();
     i2c::init();
-//    as5600::init();
-//    bldc::init();
-
-    while (true) __WFI();
+    as5600::init();
+    bldc::init();
         
     calibrate();
     
