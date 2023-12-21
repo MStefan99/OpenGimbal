@@ -40,6 +40,7 @@
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
+        <itemPath>../src/lib/inc/adc.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -192,6 +193,7 @@
         <itemPath>../src/lib/src/dma.cpp</itemPath>
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
+        <itemPath>../src/lib/src/adc.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
@@ -228,7 +230,7 @@
         <targetDevice>ATSAML21E16B</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>pk4hybrid</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>4.21</languageToolchainVersion>
         <platform>3</platform>
