@@ -16,7 +16,6 @@
                 <sourceRootElem>../src</sourceRootElem>
                 <sourceRootElem>../../controller/src/lib/inc</sourceRootElem>
                 <sourceRootElem>../../controller/src/lib/src</sourceRootElem>
-                <sourceRootElem>../inc</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

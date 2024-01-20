@@ -20,9 +20,6 @@ namespace lsm6dso {
     
     const float* getAcc();
 	const float* getRot();
-	
-	const int16_t* getRawAcc();
-	const int16_t* getRawRot();
 }
 
 #endif	/* LSM6DSO_HPP */

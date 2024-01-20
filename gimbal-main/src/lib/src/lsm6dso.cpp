@@ -5,8 +5,6 @@ static constexpr uint8_t LSM6DSO_ADDR {0x6a};
 static constexpr float ACC_LSB {0.122 / 1000};
 static constexpr float ROT_LSB {0.153 / 1000};
 
-static int16_t rawAcc[3] {0};
-static int16_t rawRot[3] {0};
 static float acc[3] {0};
 static float rot[3] {0};
 
@@ -20,23 +18,16 @@ void lsm6dso::init() {
 
 
 void lsm6dso::update() {
-	i2c::readRegister(LSM6DSO_ADDR, 0x28, (uint8_t*) rawAcc, 6);
-	i2c::readRegister(LSM6DSO_ADDR, 0x22, (uint8_t*) rawRot, 6, [](bool success) {
+	i2c::readRegister(LSM6DSO_ADDR, 0x28, 6, [](bool success, const dma::I2CTransfer& transfer) {
        for (uint8_t i {0}; i < 3; ++i) {
-            acc[i] = rawAcc[i] * ACC_LSB;
-            rot[i] = rawRot[i] * ROT_LSB;
+            rot[i] = transfer.buf[i] * ROT_LSB;
         } 
     });
-}
-
-
-const int16_t* lsm6dso::getRawAcc() {
-	return rawAcc;
-}
-
-
-const int16_t* lsm6dso::getRawRot() {
-	return rawRot;
+	i2c::readRegister(LSM6DSO_ADDR, 0x22, 6, [](bool success, const dma::I2CTransfer& transfer) {
+       for (uint8_t i {0}; i < 3; ++i) {
+            acc[i] = transfer.buf[i] * ACC_LSB;
+        } 
+    });
 }
 
 
