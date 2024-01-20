@@ -8,12 +8,10 @@ static dmac_descriptor_registers_t __attribute__((section (".lpram"))) WRITE_BAC
 
 
 static RingBuffer<dma::I2CTransfer, uint8_t, 3> pendingI2CTransfers{};
-static RingBuffer<dma::UARTTransfer, uint8_t, 3> pendingUARTTransfers{};
 
 
 static void nextTransfer();
 static void nextI2CTransfer();
-static void nextUARTTransfer();
 
 
 static void I2CStreamOut(const dma::I2CTransfer& transfer);
@@ -21,7 +19,6 @@ static void I2CStreamIn(const dma::I2CTransfer& transfer);
 
 
 static void completeI2CTransfer(bool success);
-static void completeUARTTransfer(bool success);
 
 
 // Interrupt handlers
@@ -36,9 +33,6 @@ extern "C" {
 				case DMA_CH_I2C_RX:
 					completeI2CTransfer(true);
 					break;
-				case DMA_CH_UART_TX:
-				case DMA_CH_UART_RX:
-					completeUARTTransfer(true);
 					break;
 			}
 		}
@@ -113,34 +107,9 @@ void dma::initI2C() {
 }
 
 
-void dma::initUART() {
-	// TX setup
-	DMAC_REGS->DMAC_CHID = DMA_CH_UART_TX;
-	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(SERCOM3_DMAC_ID_TX);
-	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
-
-	DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
-					| DMAC_BTCTRL_SRCINC(1)
-					| DMAC_BTCTRL_VALID(1);
-
-	// Rx setup
-	DMAC_REGS->DMAC_CHID = DMA_CH_UART_RX;
-	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(SERCOM3_DMAC_ID_RX);
-	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
-
-	DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
-					| DMAC_BTCTRL_DSTINC(1)
-					| DMAC_BTCTRL_VALID(1);
-}
-
-
 static void nextTransfer() {
 	if (pendingI2CTransfers.size()) {
 		nextI2CTransfer();
-	} else if (pendingUARTTransfers.size()) {
-		nextUARTTransfer();
 	}
 }
 
@@ -212,49 +181,4 @@ static void completeI2CTransfer(bool success) {
         transfer.cb(success, transfer);
     }
 	pendingI2CTransfers.pop_front();
-}
-
-
-// UART transfers
-
-void dma::startTransfer(const dma::UARTTransfer& transfer) {
-	__disable_irq();
-	pendingUARTTransfers.push_back(transfer);
-	__enable_irq();
-	nextTransfer();
-}
-
-
-static void nextUARTTransfer() {
-	dma::UARTTransfer& transfer {pendingUARTTransfers.front()};
-	
-	if (UART_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_CTS_Msk) {
-		return; // SERCOM busy, cannot start another transfer
-	}
-
-    if (transfer.type == dma::UARTTransferType::Out) {   
-        DMAC_REGS->DMAC_CHID = DMA_CH_UART_TX;
-        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_BTCNT = transfer.len;
-        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_SRCADDR = (uint32_t) (&transfer.buf) + transfer.len;
-        DESCRIPTOR_TABLE[DMA_CH_UART_TX].DMAC_DSTADDR = (uint32_t) & UART_REGS->USART_INT.SERCOM_DATA;
-        DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
-    } else {
-        DMAC_REGS->DMAC_CHID = DMA_CH_UART_RX;
-        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_BTCNT = transfer.len;
-        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_SRCADDR = (uint32_t) & UART_REGS->USART_INT.SERCOM_DATA;
-        DESCRIPTOR_TABLE[DMA_CH_UART_RX].DMAC_DSTADDR = (uint32_t) (&transfer.buf) + transfer.len;
-        DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);        
-    }
-}
-
-
-static void completeUARTTransfer(bool success) {
-    if (pendingUARTTransfers.empty()) {
-        return;
-    }
-	dma::UARTTransfer transfer {pendingUARTTransfers.front()};
-    if (transfer.cb) {
-        transfer.cb(success, transfer);
-    }
-    pendingUARTTransfers.pop_front();
 }
