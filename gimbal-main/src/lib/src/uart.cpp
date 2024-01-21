@@ -4,49 +4,53 @@
 #define SERCOM_REGS SERCOM3_REGS
 
 
-template<class size_type, size_type C>
-struct Buffer {
-    uint8_t buffer[C] {};
-    size_type transferrred {0};
-    size_type remaining {0};
-};
+static uart::Buffer<uint8_t, 8> motorInBuffer {};
+static uart::Buffer<uint8_t, 16> motorOutBuffer {};
 
+static uart::Buffer<uint8_t, 8> controlInBuffer {};
+static uart::Buffer<uint8_t, 8> controlOutBuffer {};
 
-static Buffer<uint8_t, 8> motorInBuffer {};
-static Buffer<uint8_t, 16> motorOutBuffer {};
-
-static Buffer<uint8_t, 8> controlInBuffer {};
-static Buffer<uint8_t, 8> controlOutBuffer {};
+static uart::Callback<uint8_t, 8> motorCb {nullptr};
+static uart::Callback<uint8_t, 8> controlCb {nullptr};
         
+
+static void disableTx() {
+    SERCOM_REGS->USART_INT.SERCOM_CTRLB &= ~SERCOM_USART_INT_CTRLB_TXEN(1);
+    while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
+}
+
+static void enableTx() {
+    SERCOM_REGS->USART_INT.SERCOM_CTRLB |= SERCOM_USART_INT_CTRLB_TXEN(1);
+    while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
+}
 
 extern "C" {
     void SERCOM3_Handler() {
         if (!(SERCOM_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk) // Not a framing error
                 && SERCOM_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_RXC_Msk) { // Received a byte
-            if (SERCOM_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_TXC_Msk) { // Also transmitted a byte (outgoing transfer)
-                SERCOM_REGS->USART_INT.SERCOM_INTENCLR = SERCOM_USART_INT_INTENCLR_RXC(1);
-
-//                dma::UARTTransfer t {
-//                    .len = static_cast<uint8_t>((setupByte >> 4u) - 1),
-//                    .type = dma::UARTTransferType::In,
-//                    .cb = nullptr
-//                };
-//                dma::startTransfer(t);
-            } else { // Haven't transmitted a byte (incoming transfer)
-                
+            if (SERCOM_REGS->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
+                SERCOM_REGS->USART_INT.SERCOM_DATA = motorOutBuffer.buffer[motorOutBuffer.transferrred++];
+                --motorOutBuffer.remaining;
+                if (!motorOutBuffer.remaining) { // Transmitted last byte, turning off transmitter
+                    disableTx();
+                }
+            } else { // Transmitter disabled (incoming transfer)
+                if (!motorInBuffer.remaining) { // Received first byte, set up new transfer
+                    motorInBuffer.buffer[0] = SERCOM_REGS->USART_INT.SERCOM_DATA;
+                    motorInBuffer.remaining = motorInBuffer.buffer[0] >> 4u;
+                    motorInBuffer.transferrred = 1;
+                } else { // Continued transfer   
+                    motorInBuffer.buffer[motorInBuffer.transferrred++] = SERCOM_REGS->USART_INT.SERCOM_DATA;
+                    --motorInBuffer.remaining;
+                    if (!motorInBuffer.remaining && motorCb) { // Received last byte, ready to process
+                        motorCb(motorInBuffer);
+                    }
+                }
             }
         }
         (void)SERCOM_REGS->USART_INT.SERCOM_DATA; // Clear the RXC interrupt flag
         SERCOM_REGS->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
     }
-}
-
-void disableTx() {
-    SERCOM_REGS->USART_INT.SERCOM_CTRLB &= ~SERCOM_USART_INT_CTRLB_TXEN(1);
-    while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
-    (void)SERCOM_REGS->USART_INT.SERCOM_DATA; // Clear the RXC interrupt flag
-    SERCOM_REGS->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
-    SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
 }
 
 void uart::init() {
@@ -76,6 +80,20 @@ void uart::init() {
 					| SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK
 					| SERCOM_USART_INT_CTRLA_ENABLE(1);
     
-	SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1);
+	SERCOM_REGS->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1)
+            | SERCOM_USART_INT_INTENSET_TXC(1);
     NVIC_EnableIRQ(SERCOM3_IRQn);
+}
+
+
+void uart::sendToMotors(uint8_t* buf, uint8_t len) {
+    util::copy(motorOutBuffer.buffer, buf, len);
+    motorOutBuffer.remaining = len;
+    motorOutBuffer.transferrred = 0;
+    enableTx();
+    SERCOM_REGS->USART_INT.SERCOM_DATA = motorOutBuffer.buffer[0];
+}
+
+void uart::setMotorCallback(uart::Callback<uint8_t, 8> cb) {
+    motorCb = cb;
 }
