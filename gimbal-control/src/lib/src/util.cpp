@@ -14,6 +14,11 @@ extern "C" {
 void util::init() {
     // Oscillator setup
     SYSCTRL_REGS->SYSCTRL_OSC8M = SYSCTRL_REGS->SYSCTRL_OSC8M & ~SYSCTRL_OSC8M_PRESC_Msk | SYSCTRL_OSC8M_PRESC_2;
+    
+    // APB clock setup
+    PM_REGS->PM_APBCMASK = PM_APBCMASK_SERCOM1(1) // Enable APB SERCOM1 clock
+            | PM_APBCMASK_TC1(1) // Enable APB TC1 clock
+            | PM_APBCMASK_TC2(1); // Enable APB TC2 clock
 
     // SysTick setup
     SysTick_Config(2000);

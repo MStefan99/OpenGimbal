@@ -36,6 +36,7 @@
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
+        <itemPath>../src/lib/inc/pwm.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
@@ -156,6 +157,7 @@
       <logicalFolder name="src" displayName="src" projectFiles="true">
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
+        <itemPath>../src/lib/src/pwm.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>

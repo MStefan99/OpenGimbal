@@ -50,9 +50,7 @@ extern "C" {
     }
 }
 
-void uart::init() {
-    PM_REGS->PM_APBCMASK = PM_APBCMASK_SERCOM1(1); // Enable APB clock
-    
+void uart::init() {    
 	GCLK_REGS->GCLK_CLKCTRL = GCLK_CLKCTRL_ID_SERCOM1_CORE // Setting up SERCOM1 clock
             | GCLK_CLKCTRL_CLKEN(1) // Enable clock
 			| GCLK_CLKCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
