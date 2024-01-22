@@ -12,10 +12,13 @@ extern "C" {
 }
 
 void util::init() {
-    // SysTick config
-    SysTick_Config(1000);
+    // Oscillator setup
+    SYSCTRL_REGS->SYSCTRL_OSC8M = SYSCTRL_REGS->SYSCTRL_OSC8M & ~SYSCTRL_OSC8M_PRESC_Msk | SYSCTRL_OSC8M_PRESC_2;
 
-    // NVIC config
+    // SysTick setup
+    SysTick_Config(2000);
+
+    // NVIC setup
     __DMB();
     __enable_irq();
     NVIC_EnableIRQ(SysTick_IRQn);

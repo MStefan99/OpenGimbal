@@ -1,5 +1,6 @@
 #include "device.h"
 #include "lib/inc/util.hpp"
+#include "lib/inc/uart.hpp"
 
 /* Pinouts
  * 

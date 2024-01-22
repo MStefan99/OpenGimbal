@@ -35,6 +35,7 @@
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
+        <itemPath>../src/lib/inc/uart.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
@@ -154,6 +155,7 @@
       </logicalFolder>
       <logicalFolder name="src" displayName="src" projectFiles="true">
         <itemPath>../src/lib/src/util.cpp</itemPath>
+        <itemPath>../src/lib/src/uart.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
@@ -175,7 +177,7 @@
         <targetDevice>ATSAMD09C13A</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>pk4hybrid</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>4.21</languageToolchainVersion>
         <platform>3</platform>
