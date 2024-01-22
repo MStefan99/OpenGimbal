@@ -15,6 +15,7 @@ namespace pwm {
     void init();
     
     void setDuty(uint8_t channel, uint8_t duty);
+    void setBrightness(uint8_t channel, uint8_t brightness);
 }
 
 #endif	/* PWM_HPP */

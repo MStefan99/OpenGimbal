@@ -38,3 +38,13 @@ void pwm::setDuty(uint8_t channel, uint8_t duty) {
         TC2_REGS->COUNT8.TC_CC[channel % 2] = duty;
     }
 }
+
+
+void pwm::setBrightness(uint8_t channel, uint8_t brightness) {
+    uint8_t duty = brightness * brightness / 282 + brightness / 25;
+    if (channel < 2) {
+        TC1_REGS->COUNT8.TC_CC[channel % 2] = duty;
+    } else {
+        TC2_REGS->COUNT8.TC_CC[channel % 2] = duty;
+    }
+}
