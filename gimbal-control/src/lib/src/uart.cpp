@@ -3,9 +3,8 @@
 
 #define SERCOM_REGS SERCOM1_REGS
 
-
 static uart::Buffer<uint8_t, 8> inBuffer {};
-static uart::Buffer<uint8_t, 16> outBuffer {};
+static RingBuffer<uart::Buffer<uint8_t, 8>, uint8_t, 8> outQueue {};
 
 static uart::Callback<uint8_t, 8> callback {nullptr};
         
@@ -20,16 +19,33 @@ static void enableTx() {
     while (SERCOM_REGS->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
 }
 
+static void startTransfer(bool force = false) {
+    if (SERCOM_REGS->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk && !force) { // SERCOM busy
+        return;
+    }
+    
+    if (outQueue.empty()) { // No pending transactions
+        return;
+    }
+    
+    enableTx();
+    SERCOM_REGS->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
+}
+
 extern "C" {
     void SERCOM1_Handler() {
-        if (!(SERCOM_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk) // Not a framing error
-                && SERCOM_REGS->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_RXC_Msk) { // Received a byte
+        if (!(SERCOM_REGS->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)){// Not a framing error
             if (SERCOM_REGS->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
-                --outBuffer.remaining;
-                if (!outBuffer.remaining) { // Transmitted last byte, turning off transmitter
-                    disableTx();
+                --outQueue.front().remaining;
+                if (!outQueue.front().remaining) { // Transmitted last byte, turning off transmitter
+                    outQueue.pop_front();
+                    if (outQueue.empty()) {
+                        disableTx();
+                    } else {
+                        startTransfer(true);
+                    }
                 } else {
-                    SERCOM_REGS->USART_INT.SERCOM_DATA = outBuffer.buffer[++outBuffer.transferred];
+                    SERCOM_REGS->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
                 }
             } else { // Transmitter disabled (incoming transfer)
                 if (!inBuffer.remaining) { // Received first byte, set up new transfer
@@ -85,11 +101,13 @@ void uart::init() {
 
 
 void uart::send(const uint8_t* buf, uint8_t len) {
-    util::copy(outBuffer.buffer, buf, len);
-    outBuffer.remaining = len;
-    outBuffer.transferred = 0;
-    enableTx();
-    SERCOM_REGS->USART_INT.SERCOM_DATA = outBuffer.buffer[0];
+    if (outQueue.full()) {
+        return;
+    }
+    
+    outQueue.push_back({{}, 0, len});
+    util::copy(outQueue.back().buffer, buf, len);
+    startTransfer();
 }
 
 void uart::setCallback(uart::Callback<uint8_t, 8> cb) {

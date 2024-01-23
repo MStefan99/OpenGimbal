@@ -10,7 +10,7 @@
 
 #include "device.h"
 
-
+#include "lib/inc/RingBuffer.hpp"
 #include "lib/inc/util.hpp"
 
 namespace uart {
