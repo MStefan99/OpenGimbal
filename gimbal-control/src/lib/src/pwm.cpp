@@ -2,16 +2,13 @@
 
 
 void pwm::init() {
-    GCLK_REGS->GCLK_GENCTRL = GCLK_GENCTRL_ID(1)
-            | GCLK_GENCTRL_SRC_OSC8M
-            | GCLK_GENCTRL_GENEN(1);
     GCLK_REGS->GCLK_GENDIV = GCLK_GENDIV_ID(1)
             | GCLK_GENDIV_DIV(32);
     
     GCLK_REGS->GCLK_CLKCTRL = GCLK_CLKCTRL_ID_TC1_TC2 // Enable TC1/TC2 clock
             | GCLK_CLKCTRL_CLKEN(1) // Enable clock
 			| GCLK_CLKCTRL_GEN_GCLK0; //Set GCLK1 as a clock source
-    
+
     PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 14u | 0x1 << 15u)
             | PORT_WRCONFIG_PMUXEN(1)
             | PORT_WRCONFIG_PMUX(MUX_PA14E_TC1_WO0)

@@ -15,6 +15,13 @@ void util::init() {
     // Oscillator setup
     SYSCTRL_REGS->SYSCTRL_OSC8M = SYSCTRL_REGS->SYSCTRL_OSC8M & ~SYSCTRL_OSC8M_PRESC_Msk | SYSCTRL_OSC8M_PRESC_2;
     
+    // GCLK setup
+//    GCLK_REGS->GCLK_GENCTRL = GCLK_GENCTRL_ID(1)
+//            | GCLK_GENCTRL_SRC_OSC8M
+//            | GCLK_GENCTRL_GENEN(1);
+//    GCLK_REGS->GCLK_GENDIV = GCLK_GENDIV_ID(1)
+//            | GCLK_GENDIV_DIV(32);
+    
     // APB clock setup
     PM_REGS->PM_APBCMASK = PM_APBCMASK_SERCOM1(1) // Enable APB SERCOM1 clock
             | PM_APBCMASK_TC1(1) // Enable APB TC1 clock

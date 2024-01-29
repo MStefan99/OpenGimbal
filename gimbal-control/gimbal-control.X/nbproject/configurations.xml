@@ -37,6 +37,7 @@
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/pwm.hpp</itemPath>
+        <itemPath>../src/lib/inc/buttons.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
@@ -158,6 +159,7 @@
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/pwm.cpp</itemPath>
+        <itemPath>../src/lib/src/buttons.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
