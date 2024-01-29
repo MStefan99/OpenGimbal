@@ -4,7 +4,7 @@
 #define SERCOM_REGS SERCOM1_REGS
 
 static uart::Buffer<uint8_t, 8> inBuffer {};
-static RingBuffer<uart::Buffer<uint8_t, 8>, uint8_t, 8> outQueue {};
+static RingBuffer<uart::Buffer<uint8_t, 32>, uint8_t, 4> outQueue {};
 
 static uart::Callback<uint8_t, 8> callback {nullptr};
         
@@ -108,6 +108,19 @@ void uart::send(const uint8_t* buf, uint8_t len) {
     outQueue.push_back({{}, 0, len});
     util::copy(outQueue.back().buffer, buf, len);
     startTransfer();
+}
+
+uint8_t uart::print(const char* buf) {
+    if (outQueue.full()) {
+        return 0;
+    }
+    uint8_t len {0};
+    for (; buf[len] && len < 32; ++len); 
+    
+    outQueue.push_back({{}, 0, len});
+    util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+    startTransfer();
+    return len;
 }
 
 void uart::setCallback(uart::Callback<uint8_t, 8> cb) {

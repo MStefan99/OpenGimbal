@@ -27,6 +27,7 @@ namespace uart {
     void init();
     
     void send(const uint8_t* buf, uint8_t len);
+    uint8_t print(const char* buf);
     void setCallback(Callback<uint8_t, 8> cb);
 }
 
