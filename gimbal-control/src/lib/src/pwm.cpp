@@ -28,6 +28,7 @@ void pwm::init() {
             | TC_CTRLA_PRESCALER_DIV1;
 }
 
+
 void pwm::setDuty(uint8_t channel, uint8_t duty) {
     if (channel < 2) {
         TC1_REGS->COUNT8.TC_CC[channel % 2] = duty;
