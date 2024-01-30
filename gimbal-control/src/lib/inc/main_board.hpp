@@ -14,12 +14,16 @@
 
 
 namespace main_board {
-    enum Command: uint8_t {
+    enum class OutgoingCommand: uint8_t {
         Sleep = 0x0,
         Move = 0x1,
         Calibrate = 0x2,
         GetVariable = 0x3,
         SetVariable = 0x4
+    };
+    
+    enum class IncomingCommand: uint8_t {
+        GetVariable = 0x0
     };
     
     void init();
