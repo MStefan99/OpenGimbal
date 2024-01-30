@@ -22,13 +22,17 @@ namespace uart {
     };
 
     template<class size_type, size_type C>
-    using Callback = void (*)(const Buffer<size_type, C>&);
+    struct Callback {
+        using buffer_type = Buffer<size_type, C>;
+        using callback_type = void (*)(const Buffer<size_type, C>&);
+    };
+    using DefaultCallback = Callback<uint8_t, 8>;
 
     void init();
     
     void send(const uint8_t* buf, uint8_t len);
     uint8_t print(const char* buf);
-    void setCallback(Callback<uint8_t, 8> cb);
+    void setCallback(DefaultCallback::callback_type cb);
 }
 
 

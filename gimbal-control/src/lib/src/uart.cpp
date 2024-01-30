@@ -3,10 +3,10 @@
 
 #define SERCOM_REGS SERCOM1_REGS
 
-static uart::Buffer<uint8_t, 8> inBuffer {};
-static RingBuffer<uart::Buffer<uint8_t, 32>, uint8_t, 4> outQueue {};
+static uart::DefaultCallback::buffer_type inBuffer {};
+static RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4> outQueue {};
 
-static uart::Callback<uint8_t, 8> callback {nullptr};
+static uart::DefaultCallback::callback_type callback {nullptr};
         
 
 static void disableTx() {
@@ -123,6 +123,6 @@ uint8_t uart::print(const char* buf) {
     return len;
 }
 
-void uart::setCallback(uart::Callback<uint8_t, 8> cb) {
+void uart::setCallback(uart::DefaultCallback::callback_type cb) {
     callback = cb;
 }
