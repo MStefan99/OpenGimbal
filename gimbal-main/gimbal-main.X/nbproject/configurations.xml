@@ -40,7 +40,6 @@
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/usb.hpp</itemPath>
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/lsm6dso.hpp</itemPath>
         <itemPath>../src/lib/inc/adc.hpp</itemPath>
@@ -194,8 +193,6 @@
         <itemPath>../src/lib/src/i2c.cpp</itemPath>
         <itemPath>../src/lib/src/servo.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/usb.cpp</itemPath>
-        <itemPath>../src/lib/src/usb_descriptors.cpp</itemPath>
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/lsm6dso.cpp</itemPath>

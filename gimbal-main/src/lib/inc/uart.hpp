@@ -18,17 +18,25 @@ namespace uart {
     template<class size_type, size_type C>
     struct Buffer {
         uint8_t buffer[C] {};
-        size_type transferrred {0};
+        size_type transferred {0};
         size_type remaining {0};
     };
 
     template<class size_type, size_type C>
-    using Callback = void (*)(const Buffer<size_type, C>&);
+    struct Callback {
+        using buffer_type = Buffer<size_type, C>;
+        using callback_type = void (*)(const Buffer<size_type, C>&);
+    };
+    using DefaultCallback = Callback<uint8_t, 8>;
+    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
 
     void init();
     
-    void sendToMotors(uint8_t* buf, uint8_t len);
-    void setMotorCallback(Callback<uint8_t, 8> cb);
+    void sendToMotors(const uint8_t* buf, uint8_t len);
+    void setMotorCallback(DefaultCallback::callback_type cb);
+    
+    void sendToControl(const uint8_t* buf, uint8_t len);
+    void setControlCallback(uart::DefaultCallback::callback_type cb);
 }
 
 

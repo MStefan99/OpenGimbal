@@ -40,7 +40,6 @@ namespace dma {
 
 	void init();
 	void initI2C();
-	void initUART();
 
 	void startTransfer(const I2CTransfer& transfer);
 }

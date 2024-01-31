@@ -34,7 +34,7 @@ namespace main_board {
         Error = 0xf
     };
     
-    void init();
+    void init(); // UART needs to be initialized first
     void sleep();
     void calibrate();
     template <class T>
