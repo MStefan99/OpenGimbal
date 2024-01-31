@@ -151,15 +151,15 @@ void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
 
 
 void uart::sendToControl(const uint8_t* buf, uint8_t len) {
-    if (motorOutQueue.full()) {
+    if (controlOutQueue.full()) {
         return;
     }
     
-    motorOutQueue.push_back({{}, 0, len});
-    util::copy(motorOutQueue.back().buffer, buf, len);
-    startTransfer(SERCOM1_REGS, motorOutQueue);
+    controlOutQueue.push_back({{}, 0, len});
+    util::copy(controlOutQueue.back().buffer, buf, len);
+    startTransfer(SERCOM1_REGS, controlOutQueue);
 }
 
 void uart::setControlCallback(uart::DefaultCallback::callback_type cb) {
-    motorCallback = cb;
+    controlCallback = cb;
 }

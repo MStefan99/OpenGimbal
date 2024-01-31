@@ -27,6 +27,19 @@ void setTargetAngle(uint16_t angle, uint8_t torque) {
     maxTorque = torqueLUT[torque];
 }
 
+void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
+    if ((buffer.buffer[0] & 0x0f) != 0x1) {
+        return; // Command intended for another device
+    }
+    
+    switch(buffer.buffer[1] & 0x0f) { // Parse command type
+        case (0x2): {
+            setTargetAngle(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3], buffer.buffer[2] >> 4u);
+        }
+        break;
+    }
+}
+
 bool dataReady {false};
 uint16_t offset {0};
 
@@ -37,12 +50,13 @@ uint16_t offset {0};
 //    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
 uint16_t measureAngle() {
-    uint16_t angle;
+    static uint16_t angle;
     
     dataReady = false;
     auto startTime {util::getTime()};
     
     as5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
+        angle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
         dataReady = true;
     });
     
@@ -109,8 +123,10 @@ int main() {
     i2c::init();
     as5600::init();
     bldc::init();
-        
+    
     calibrate();
+    
+    uart::setCallback(processCommand);
     
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
@@ -128,8 +144,8 @@ int main() {
         
         // Apply torque perpendicular to the current rotor position, taking polarity into account
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
-                // Vary applied power depending on distance from the setpoint
-              util::min(util::abs(static_cast<int16_t>(6144 + angle - targetAngle) % 4096 - 2048) * 9 / 5 + 145, static_cast<int>(maxTorque)));
+            // Vary applied power depending on distance from the setpoint
+            util::min(util::abs(static_cast<int16_t>(6144 + angle - targetAngle) % 4096 - 2048) * 9 / 5 + 145, static_cast<int>(maxTorque)));
     }
 
     return 1;

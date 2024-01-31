@@ -22,7 +22,7 @@ static void completeI2CTransfer(bool success);
 
 // Interrupt handlers
 extern "C" {
-	void DMA_Handler() {
+	void DMAC_Handler() {
 		while (DMAC_REGS->DMAC_INTSTATUS) {
 			DMAC_REGS->DMAC_CHID = DMAC_REGS->DMAC_INTPEND & DMAC_INTPEND_ID_Msk;
 			DMAC_REGS->DMAC_CHINTFLAG = DMAC_CHINTFLAG_Msk;
@@ -39,8 +39,8 @@ extern "C" {
 	}
 
 
-	void I2C_Handler() {
-		dma::I2CTransfer transfer {pendingI2CTransfers.front()};
+	void SERCOM0_Handler() {
+		dma::I2CTransfer& transfer {pendingI2CTransfers.front()};
 		
 		if (I2C_REGS->I2CM.SERCOM_INTFLAG & SERCOM_I2CM_INTFLAG_ERROR_Msk ||
 						(I2C_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_RXNACK_Msk)) {
@@ -59,7 +59,7 @@ extern "C" {
 				regAddrWritten = true;
 			} else {
 				I2CStreamIn(transfer);
-				I2C_REGS->I2CM.SERCOM_INTENCLR = SERCOM_I2CM_INTENSET_MB(1);
+				I2C_REGS->I2CM.SERCOM_INTENCLR = SERCOM_I2CM_INTENCLR_MB(1);
 				regAddrWritten = false;
 			}
 		}
@@ -86,7 +86,7 @@ void dma::initI2C() {
 	// Tx setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_TX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(SERCOM2_DMAC_ID_TX);
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM0_DMAC_ID_TX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -96,7 +96,7 @@ void dma::initI2C() {
 	// Rx setup
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_RX;
 	DMAC_REGS->DMAC_CHCTRLB = DMAC_CHCTRLB_TRIGACT_BEAT
-					| DMAC_CHCTRLB_TRIGSRC(SERCOM2_DMAC_ID_RX);
+					| DMAC_CHCTRLB_TRIGSRC(SERCOM0_DMAC_ID_RX);
 	DMAC_REGS->DMAC_CHINTENSET = DMAC_CHINTENSET_TCMPL(1) | DMAC_CHINTENSET_TERR(1);
 
 	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_BTCTRL = DMAC_BTCTRL_BEATSIZE_BYTE
@@ -147,8 +147,8 @@ static void nextI2CTransfer() {
 static void I2CStreamOut(const dma::I2CTransfer& transfer) {
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_TX;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_BTCNT = transfer.len;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_SRCADDR = (uint32_t) (&transfer.buf) + transfer.len;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_DSTADDR = (uint32_t) & I2C_REGS->I2CM.SERCOM_DATA;
+	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_SRCADDR = reinterpret_cast<uint32_t>(transfer.buf) + transfer.len;
+	DESCRIPTOR_TABLE[DMA_CH_I2C_TX].DMAC_DSTADDR = reinterpret_cast<uint32_t>(&I2C_REGS->I2CM.SERCOM_DATA);
 	DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
 
 	I2C_REGS->I2CM.SERCOM_ADDR = SERCOM_I2CM_ADDR_ADDR(transfer.devAddr << 1u)
@@ -160,8 +160,8 @@ static void I2CStreamOut(const dma::I2CTransfer& transfer) {
 static void I2CStreamIn(const dma::I2CTransfer& transfer) {
 	DMAC_REGS->DMAC_CHID = DMA_CH_I2C_RX;
 	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_BTCNT = transfer.len;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_SRCADDR = (uint32_t) & I2C_REGS->I2CM.SERCOM_DATA;
-	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_DSTADDR = (uint32_t) (&transfer.buf) + transfer.len;
+	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_SRCADDR = reinterpret_cast<uint32_t>(&I2C_REGS->I2CM.SERCOM_DATA);
+	DESCRIPTOR_TABLE[DMA_CH_I2C_RX].DMAC_DSTADDR = reinterpret_cast<uint32_t>(transfer.buf) + transfer.len;
 	DMAC_REGS->DMAC_CHCTRLA = DMAC_CHCTRLA_ENABLE(1);
 
 	I2C_REGS->I2CM.SERCOM_ADDR = SERCOM_I2CM_ADDR_ADDR(transfer.devAddr << 1u | 0x1)
