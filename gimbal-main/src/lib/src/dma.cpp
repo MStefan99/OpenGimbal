@@ -1,7 +1,6 @@
 #include "lib/inc/dma.hpp"
 
-#define I2C_REGS SERCOM2_REGS
-#define UART_REGS SERCOM3_REGS
+#define I2C_REGS SERCOM0_REGS
 
 static dmac_descriptor_registers_t __attribute__((section (".lpram"))) DESCRIPTOR_TABLE[DMA_CH_COUNT];
 static dmac_descriptor_registers_t __attribute__((section (".lpram"))) WRITE_BACK_DESCRIPTOR_TABLE[DMA_CH_COUNT];
@@ -32,7 +31,6 @@ extern "C" {
 				case DMA_CH_I2C_TX:
 				case DMA_CH_I2C_RX:
 					completeI2CTransfer(true);
-					break;
 					break;
 			}
 		}

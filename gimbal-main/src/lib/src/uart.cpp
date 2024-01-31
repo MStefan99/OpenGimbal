@@ -93,33 +93,47 @@ static void SERCOM_Handler(sercom_registers_t* regs,
 }
 
 extern "C" {
-    void SERCOM3_Handler() {
-        SERCOM_Handler(SERCOM3_REGS, motorOutQueue, motorInBuffer, motorCallback);
+    void SERCOM1_Handler() {
+        SERCOM_Handler(SERCOM1_REGS, controlOutQueue, controlInBuffer, controlCallback);
     }
     
-//    void SERCOMX_Handler() {
-//        SERCOM_Handler(SERCOMX_REGS, controlOutQueue, controlInBuffer, controlCallback);
-//    }
+    void SERCOM2_Handler() {
+        SERCOM_Handler(SERCOM2_REGS, motorOutQueue, motorInBuffer, motorCallback);
+    }
 }
 
 void uart::init() {
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM3 clock
+    GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM1 clock
+					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM2_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM2 clock
 					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
 
 	// PORT config
-	PORT_REGS->GROUP[0].PORT_PINCFG[22] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 22
-	PORT_REGS->GROUP[0].PORT_PINCFG[23] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 23
-	PORT_REGS->GROUP[0].PORT_PMUX[11] = PORT_PMUX_PMUXE(MUX_PA22C_SERCOM3_PAD0) // Mux pin 22 to SERCOM3
-					| PORT_PMUX_PMUXO(MUX_PA23C_SERCOM3_PAD1); // Mux pin 23 to SERCOM3
+	PORT_REGS->GROUP[0].PORT_PINCFG[8] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 8
+	PORT_REGS->GROUP[0].PORT_PINCFG[16] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 16
+	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE(MUX_PA08D_SERCOM2_PAD0); // Mux pin 8 to SERCOM2
+	PORT_REGS->GROUP[0].PORT_PMUX[8] = PORT_PMUX_PMUXE(MUX_PA16C_SERCOM1_PAD0); // Mux pin 16 to SERCOM1
 
 	// SERCOM config
-    initSERCOM(SERCOM3_REGS);
-    NVIC_EnableIRQ(SERCOM3_IRQn);
+    initSERCOM(SERCOM1_REGS);
+    NVIC_EnableIRQ(SERCOM1_IRQn);
     
-//    initSERCOM(SERCOMX_REGS);
-//    NVIC_EnableIRQ(SERCOMX_IRQn);
+    initSERCOM(SERCOM2_REGS);
+    NVIC_EnableIRQ(SERCOM2_IRQn);
 }
 
+uint8_t uart::print(const char* buf) {
+    if (controlOutQueue.full()) {
+        return 0;
+    }
+    uint8_t len {0};
+    for (; buf[len] && len < 32; ++len); 
+    
+    controlOutQueue.push_back({{}, 0, len});
+    util::copy(controlOutQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+    startTransfer(SERCOM1_REGS, controlOutQueue);
+    return len;
+}
 
 void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
     if (motorOutQueue.full()) {
@@ -128,7 +142,7 @@ void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
     
     motorOutQueue.push_back({{}, 0, len});
     util::copy(motorOutQueue.back().buffer, buf, len);
-    startTransfer(SERCOM3_REGS, motorOutQueue);
+    startTransfer(SERCOM2_REGS, motorOutQueue);
 }
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
@@ -143,7 +157,7 @@ void uart::sendToControl(const uint8_t* buf, uint8_t len) {
     
     motorOutQueue.push_back({{}, 0, len});
     util::copy(motorOutQueue.back().buffer, buf, len);
-//    startTransfer(SERCOMX_REGS, motorOutQueue);
+    startTransfer(SERCOM1_REGS, motorOutQueue);
 }
 
 void uart::setControlCallback(uart::DefaultCallback::callback_type cb) {

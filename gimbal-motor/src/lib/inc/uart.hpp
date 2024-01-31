@@ -10,17 +10,31 @@
 
 #include "device.h"
 
-#include "main.hpp"
+
 #include "lib/inc/util.hpp"
 #include "lib/inc/dma.hpp"
 
 namespace uart {
+    template<class size_type, size_type C>
+    struct Buffer {
+        uint8_t buffer[C] {};
+        size_type transferred {0};
+        size_type remaining {0};
+    };
+
+    template<class size_type, size_type C>
+    struct Callback {
+        using buffer_type = Buffer<size_type, C>;
+        using callback_type = void (*)(const Buffer<size_type, C>&);
+    };
+    using DefaultCallback = Callback<uint8_t, 8>;
+    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
+
     void init();
     
-    enum Command : uint8_t {
-        Ping = 0,
-        Position = 1
-    };
+    uint8_t print(const char* buf);
+    void send(const uint8_t* buf, uint8_t len);
+    void setCallback(DefaultCallback::callback_type cb);
 }
 
 

@@ -31,6 +31,7 @@ namespace uart {
     using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
 
     void init();
+    uint8_t print(const char* buf);
     
     void sendToMotors(const uint8_t* buf, uint8_t len);
     void setMotorCallback(DefaultCallback::callback_type cb);

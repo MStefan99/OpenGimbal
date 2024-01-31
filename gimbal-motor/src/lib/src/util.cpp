@@ -19,8 +19,8 @@ void util::init() { // TODO: move away
      *
      * OSC16M @ 8MHz
      * |
-     * |--> GCLK1 @ 250KHz
-     * |    |
+     * `--> GCLK1 @ 250KHz
+     *      |
      *      `--> ADC @ 250KHz
      *
      * DFLL48M @ 48MHz
