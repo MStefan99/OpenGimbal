@@ -1,6 +1,9 @@
 #include "device.h"
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
+#include <cstdio>
+#include <cinttypes>
+
 #include "main.hpp"
 #include "lib/inc/util.hpp"
 #include "lib/inc/pwm.hpp"
@@ -128,6 +131,9 @@ int main() {
     
     uart::setCallback(processCommand);
     
+    uart::print("Hello uart!\n");
+    printf("Hello printf!\n");
+    
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
 //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
@@ -142,10 +148,16 @@ int main() {
         // Calculate difference between current and set angle
         uint16_t dAngle = (fullRotation + angle - targetAngle) % fullRotation;
         
+        if (util::getTime() % 100 == 0) {
+            printf("target: %" PRIu16 ", angle: %" PRIu16 ", diff: %" PRId16 "\n", targetAngle, angle, dAngle);
+        }
+        
         // Apply torque perpendicular to the current rotor position, taking polarity into account
         bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
             // Vary applied power depending on distance from the setpoint
             util::min(util::abs(static_cast<int16_t>(6144 + angle - targetAngle) % 4096 - 2048) * 9 / 5 + 145, static_cast<int>(maxTorque)));
+        
+        util::sleep(1);
     }
 
     return 1;
