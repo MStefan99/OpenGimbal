@@ -35,18 +35,6 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f3" displayName="lib" projectFiles="true">
-        <logicalFolder name="f1" displayName="tl" projectFiles="true">
-          <itemPath>../src/lib/inc/tl/allocator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/config_tl.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/iterator.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/less.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/list.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/map.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/pair.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/queue.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/stack.hpp</itemPath>
-          <itemPath>../src/lib/inc/tl/vector.hpp</itemPath>
-        </logicalFolder>
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/PID.hpp</itemPath>
@@ -55,6 +43,7 @@
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/bldc.hpp</itemPath>
         <itemPath>../src/lib/inc/as5600.hpp</itemPath>
+        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
