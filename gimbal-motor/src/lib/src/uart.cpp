@@ -38,7 +38,6 @@ static void enableTx(sercom_registers_t* regs) {
     while (regs->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
 }
 
-
 static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue, bool force = false) {
     if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk && !force) { // SERCOM busy
         return;
@@ -51,7 +50,6 @@ static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue
     enableTx(regs);
     regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
 }
-
 
 static void SERCOM_Handler(sercom_registers_t* regs, 
         uart::DefaultQueue& outQueue, 
@@ -116,8 +114,10 @@ uint8_t uart::print(const char* buf) {
     uint8_t len {0};
     for (; buf[len] && len < 32; ++len); 
     
+    __disable_irq();
     outQueue.push_back({{}, 0, len});
     util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+    __enable_irq();
     startTransfer(SERCOM3_REGS, outQueue);
     return len;
 }
@@ -127,8 +127,10 @@ void uart::send(const uint8_t* buf, uint8_t len) {
         return;
     }
     
+    __disable_irq();
     outQueue.push_back({{}, 0, len});
     util::copy(outQueue.back().buffer, buf, len);
+    __enable_irq();
     startTransfer(SERCOM3_REGS, outQueue);
 }
 
