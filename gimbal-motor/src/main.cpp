@@ -118,6 +118,27 @@ void calibrate() {
     bldc::applyTorque(0, 0);
 }
 
+int16_t getDifference(uint16_t angleA, uint16_t angleB) {
+    int16_t diff = static_cast<int16_t>(angleA) - static_cast<int16_t>(angleB);
+    
+    if (diff > 2048) {
+        return diff - 4096;
+    } else if (diff < -2048) {
+        return diff + 4096;
+    } else {
+        return diff;
+    }
+}
+
+void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
+    // Calculate electrical angle from encoder reading
+    uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
+    // Flip the angle if the motor polarity is reversed
+    uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW;
+    
+    bldc::applyTorque(counterclockwise? eAngle + 1024: eAngle + 3072, power);
+}
+
 int main() {
     util::init();
 
@@ -129,34 +150,62 @@ int main() {
     
     calibrate();
     
-    uart::setCallback(processCommand);
+    //uart::setCallback(processCommand);
     
     uart::print("Hello uart!\n");
     printf("Hello printf!\n");
+    
+    util::setInterval(8000, []() -> void {
+        targetAngle = (targetAngle + 2040) % fullRotation;
+        if (targetAngle < 0) {targetAngle += 4096;}
+    });
+    
+    uint16_t angle {0};
+    float v {0};
+    float a {0};
     
     while (1) {
 //        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
 //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
-        uint16_t angle = measureAngle();
-        
-        // Calculate electrical angle from encoder reading
-        uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
-        // Flip the angle if the motor polarity is reversed
-        uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW; 
         // Calculate difference between current and set angle
-        uint16_t dAngle = (fullRotation + angle - targetAngle) % fullRotation;
+//        uint32_t startTime {SysTick->VAL};
+        int16_t dAngle = getDifference(targetAngle, angle);
         
-        if (util::getTime() % 100 == 0) {
-            printf("target: %" PRIu16 ", angle: %" PRIu16 ", diff: %" PRId16 "\n", targetAngle, angle, dAngle);
+        uint16_t prevAngle {angle};
+        angle = measureAngle();
+
+        float newV = v + (getDifference(angle, prevAngle) - v) / 10.0f;
+        float newA {newV - v};
+        v = newV;
+        float D = v * v - 2.0f * a * dAngle;
+        
+        if (D <= 2) {
+            a += (newA - a) / 50.0f;
+        }
+        if (dAngle > 0 == a < 0) {
+            a = -a;
         }
         
-        // Apply torque perpendicular to the current rotor position, taking polarity into account
-        bldc::applyTorque((dAngle > 2048) ^ (data::options.direction < 0)? eAngle + 1024: eAngle + 3072,
-            // Vary applied power depending on distance from the setpoint
-            util::min(util::abs(static_cast<int16_t>(6144 + angle - targetAngle) % 4096 - 2048) * 9 / 5 + 145, static_cast<int>(maxTorque)));
+        if (dAngle < -128 || dAngle > 128) { // TOC maneuver
+            if (-0.005 < a && a < 0.005) { // Acceleration is (near) zero, applying full power to measure
+                applyTorque(angle, 255, dAngle > 0); // Accelerating towards destination
+            } else { // Acceleration measured, using it to predict the stopping distance
+                applyTorque(angle, 255, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
+            }
+            if (util::getTime() % 10 < 1) {
+                printf("v:% 07.3f, a:% 07.4f, D:% 08.1f, dA:% " PRId16 "\n", v, a, D, dAngle);
+            }
+        } else { // Holding position
+            a = 0.0f;
+            applyTorque(angle, util::min(util::abs(dAngle) + 150, 255), dAngle > 0);
+        }
         
+//        if (util::getTime() % 10 < 1) {
+//            printf("t: %" PRIu32 "\n", (startTime - SysTick->VAL) / 48);
+//        }
+        util::runTasks();
         util::sleep(1);
     }
 
