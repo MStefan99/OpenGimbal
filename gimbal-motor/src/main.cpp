@@ -136,7 +136,7 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     // Flip the angle if the motor polarity is reversed
     uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW;
     
-    bldc::applyTorque(counterclockwise? eAngle + 1024: eAngle + 3072, power);
+    bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + 1024: eAngle + 3072, power);
 }
 
 int main() {
@@ -156,7 +156,7 @@ int main() {
     printf("Hello printf!\n");
     
     util::setInterval(8000, []() -> void {
-        targetAngle = (targetAngle + 2040) % fullRotation;
+        targetAngle = (targetAngle + 1024) % fullRotation;
         if (targetAngle < 0) {targetAngle += 4096;}
     });
     
@@ -176,22 +176,22 @@ int main() {
         uint16_t prevAngle {angle};
         angle = measureAngle();
 
-        float newV = v + (getDifference(angle, prevAngle) - v) / 10.0f;
-        float newA {newV - v};
-        v = newV;
-        float D = v * v - 2.0f * a * dAngle;
-        
-        if (D <= 2) {
-            a += (newA - a) / 50.0f;
-        }
-        if (dAngle > 0 == a < 0) {
-            a = -a;
-        }
-        
         if (dAngle < -128 || dAngle > 128) { // TOC maneuver
+            float newV = v + (getDifference(angle, prevAngle) - v) / 10.0f;
+            float newA {newV - v};
+            v = newV;
+            float D = v * v - 2.0f * a * dAngle;
+
+            if (D <= 2) {
+                a += (newA - a) / 50.0f;
+            }
+            if (dAngle > 0 == a < 0) {
+                a = -a;
+            }
+        
             if (-0.005 < a && a < 0.005) { // Acceleration is (near) zero, applying full power to measure
                 applyTorque(angle, 255, dAngle > 0); // Accelerating towards destination
-            } else { // Acceleration measured, using it to predict the stopping distance
+            } else if (util::abs(D) > 2) { // Acceleration measured, using it to predict the stopping distance
                 applyTorque(angle, 255, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
             }
             if (util::getTime() % 10 < 1) {
