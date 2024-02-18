@@ -37,7 +37,6 @@
       <logicalFolder name="f3" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/inc/dma.hpp</itemPath>
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
-        <itemPath>../src/lib/inc/PID.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/data.hpp</itemPath>
