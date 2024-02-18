@@ -13,24 +13,33 @@
 #include "lib/inc/uart.hpp"
 #include "lib/inc/PID.hpp"
 #include "lib/inc/as5600.hpp"
+#include "lib/inc/MovementController.hpp"
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
-static constexpr uint8_t torqueLUT[16] = {0, 64, 101, 128, 148, 165, 179, 191, 202, 212, 221, 229, 236, 243, 249, 255};
-
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
-static uint16_t targetAngle {0};
+static constexpr uint8_t idleTorque {150};
+
+static MovementController movementController {};
 static uint8_t maxTorque {255};
+static uint16_t angle {0};
+static bool dataReady {false};
+static uint16_t offset {0};
 
-bool dataReady {false};
-uint16_t offset {0};
+struct TorqueLUT {
+	uint16_t table[16];
 
-void setTargetAngle(uint16_t angle, uint8_t torque) {
-    if (torque > 15) {torque = 15;}
-    targetAngle = angle;
-    maxTorque = torqueLUT[torque];
-}
+	constexpr TorqueLUT() : table() {
+        table[0] = 0;
+        auto factor = (255.0 - idleTorque) / 15.0;
+		for (auto i = 1; i < 16; ++i) {
+			table[i] = std::floor(factor * i + idleTorque);
+		}
+	}
+};
+
+static constexpr auto torqueLUT = TorqueLUT();
 
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {    
     if ((buffer.buffer[0] & 0x0f) != 0x1) {
@@ -38,10 +47,15 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
     }
     
     switch(buffer.buffer[1] & 0x0f) { // Parse command type
-        case (0x2): {
-            setTargetAngle(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3], buffer.buffer[2] >> 4u);
+        case (0x2): { // Set position
+            movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
+            break;
         }
-        break;
+        case (0x5): { // Set offset
+            movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            break;
+        }
     }
 }
 
@@ -52,13 +66,13 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 //    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
 uint16_t measureAngle() {
-    static uint16_t angle;
+    static uint16_t rawAngle;
     
     dataReady = false;
     auto startTime {util::getTime()};
     
     as5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
-        angle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
+        rawAngle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
         dataReady = true;
     });
     
@@ -66,7 +80,7 @@ uint16_t measureAngle() {
         __WFI();
     }
     
-    return util::switchEndianness(angle);
+    return util::switchEndianness(rawAngle);
 }
 
 void calibrate() {
@@ -151,12 +165,11 @@ int main() {
     srand(SysTick->VAL);
     uart::setCallback(processCommand);
     
-    util::setInterval(8000, []() -> void {
-        targetAngle = (rand() % 4096) - 2048;
-        if (targetAngle < 0) {targetAngle = -targetAngle;}
-    });
-    
-    uint16_t angle {0};
+//    util::setInterval(8000, []() -> void {
+//        uint16_t targetAngle = (rand() % 4096) - 2048;
+//        if (targetAngle < 0) {targetAngle = -targetAngle;}
+//        movementController.setTarget(targetAngle);
+//    });
     float v {0};
     float a {0};
     
@@ -166,9 +179,8 @@ int main() {
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
         // Calculating difference between current and set angle
-        int16_t dAngle = getDifference(targetAngle, angle);
+        int16_t dAngle = getDifference(movementController.getTarget(), angle);
         uint16_t prevAngle {angle};
-        
         angle = measureAngle();
         
         // Updating current speed and acceleration

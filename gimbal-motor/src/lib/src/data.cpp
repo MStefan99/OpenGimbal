@@ -2,6 +2,7 @@
 
 const uint8_t data::NVM_DATA[FLASH_PAGE_SIZE * 4] __attribute__((aligned(FLASH_PAGE_SIZE * 4),keep,space(prog))) = {0};
 const data::Options& data::options {*reinterpret_cast<const data::Options*>(data::NVM_DATA)};
+
 static uint8_t rowCopy[FLASH_PAGE_SIZE * 4] {};
 static bool written {true};
 
