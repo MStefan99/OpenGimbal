@@ -1,8 +1,8 @@
 #include "device.h"
 //#include <xc.h>  // TODO: explore, possibly delete Harmony files
 
-#include <cstdio>
-#include <cinttypes>
+//#include <cstdio>
+//#include <cinttypes>
 
 #include "main.hpp"
 #include "lib/inc/util.hpp"
@@ -23,6 +23,8 @@ static constexpr uint16_t fullRotation {4096};
 static uint16_t targetAngle {0};
 static uint8_t maxTorque {255};
 
+bool dataReady {false};
+uint16_t offset {0};
 
 void setTargetAngle(uint16_t angle, uint8_t torque) {
     if (torque > 15) {torque = 15;}
@@ -30,7 +32,7 @@ void setTargetAngle(uint16_t angle, uint8_t torque) {
     maxTorque = torqueLUT[torque];
 }
 
-void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
+void processCommand(const uart::DefaultCallback::buffer_type& buffer) {    
     if ((buffer.buffer[0] & 0x0f) != 0x1) {
         return; // Command intended for another device
     }
@@ -42,9 +44,6 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         break;
     }
 }
-
-bool dataReady {false};
-uint16_t offset {0};
 
     // Temperature calibration values
 //    uint8_t tempR = NVMTEMP[0] & 0xff;
@@ -150,11 +149,7 @@ int main() {
     
     calibrate();
     srand(SysTick->VAL);
-    
-    //uart::setCallback(processCommand);
-    
-    uart::print("Hello uart!\n");
-    printf("Hello printf!\n");
+    uart::setCallback(processCommand);
     
     util::setInterval(8000, []() -> void {
         targetAngle = (rand() % 4096) - 2048;
@@ -170,47 +165,38 @@ int main() {
 //        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
 //        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
 
-        // Calculate difference between current and set angle
-//        uint32_t startTime {SysTick->VAL};
+        // Calculating difference between current and set angle
         int16_t dAngle = getDifference(targetAngle, angle);
-        
         uint16_t prevAngle {angle};
+        
         angle = measureAngle();
         
+        // Updating current speed and acceleration
         float newV = v + (getDifference(angle, prevAngle) - v) / 30.0f;
         float newA {newV - v};
         v = newV;
         
         if (dAngle < -128 || dAngle > 128) { // Far from target, using time-optimal control
-            float D = v * v - 2.0f * a * dAngle;
+            float D = v * v - 2.0f * a * dAngle; // Calculate if the motor will reach the target (>=0 - yes, <0 - no)
 
-            if (D <= 2) {
+            if (D <= 2) { // Update measured acceleration value during acceleration
                 a += (newA - a) / 20.0f;
             }
-            if (dAngle > 0 == a < 0) {
+            if (dAngle > 0 == a < 0) { // To avoid chatter and incorrect measurements, flip acceleration sign if needed
                 a = -a;
             }
         
             if (-0.005 < a && a < 0.005) { // Acceleration isn't measured yet, applying full power to measure
-                applyTorque(angle, 255, dAngle > 0); // Accelerating towards destination
+                applyTorque(angle, maxTorque, dAngle > 0); // Accelerating towards destination
             } else if (util::abs(D) > 2) { // Acceleration measured, using it to predict the stopping distance
-                applyTorque(angle, 255, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
-            }
-            if (util::getTime() % 10 < 1) {
-                printf("v:% 07.3f, a:% 07.4f, D:% 08.1f, dA:% " PRId16 "\n", v, a, D, dAngle);
+                applyTorque(angle, maxTorque, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
             }
         } else { // Close to target, using sliding mode control
             a = 0.0f;
-            float torque {dAngle - 100 * v};
-            applyTorque(angle, util::min(util::abs(static_cast<int>(torque / 3)) + 150, 255), torque > 0);
-            if (util::getTime() % 10 < 1) {
-                printf("v:% 07.3f, t:% 04.0f, dA:% " PRId16 "\n", v, torque, dAngle);
-            }
+            float torque {dAngle - 100 * v}; // Keeping velocity equal to dAngle / 100
+            applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
         }
         
-//        if (util::getTime() % 10 < 1) {
-//            printf("t: %" PRIu32 "\n", (startTime - SysTick->VAL) / 48);
-//        }
         util::runTasks();
         util::sleep(1);
     }
