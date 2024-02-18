@@ -126,7 +126,12 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
 }
 
 void bldc::tone(uint16_t frequency) {
-    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = 48000000 / frequency - 1;
+    uint16_t period = 48000000 / frequency - 1;
+    if (period < silentPeriod) {
+        silent();
+        return;
+    }
+    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = period;
 }
 
 void bldc::silent() {

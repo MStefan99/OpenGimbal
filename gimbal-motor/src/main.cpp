@@ -1,19 +1,5 @@
-#include "device.h"
-//#include <xc.h>  // TODO: explore, possibly delete Harmony files
-
-//#include <cstdio>
-//#include <cinttypes>
-
 #include "main.hpp"
-#include "lib/inc/util.hpp"
-#include "lib/inc/pwm.hpp"
-#include "lib/inc/data.hpp"
-#include "lib/inc/bldc.hpp"
-#include "lib/inc/i2c.hpp"
-#include "lib/inc/uart.hpp"
-#include "lib/inc/PID.hpp"
-#include "lib/inc/as5600.hpp"
-#include "lib/inc/MovementController.hpp"
+
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
@@ -41,29 +27,41 @@ struct TorqueLUT {
 
 static constexpr auto torqueLUT = TorqueLUT();
 
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {    
     if ((buffer.buffer[0] & 0x0f) != 0x1) {
         return; // Command intended for another device
     }
     
-    switch(buffer.buffer[1] & 0x0f) { // Parse command type
-        case (0x2): { // Set position
+    switch(static_cast<CommandType>(buffer.buffer[1] & 0x0f)) { // Parse command type
+        // TODO: figure out how to wake up from sleep
+//        case (CommandType::Sleep): {
+//            bldc::applyTorque(0, 0);
+//            PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
+//            while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
+//            __WFI();
+//            break;
+//        }
+        case (CommandType::Position): {
             movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
             break;
         }
-        case (0x5): { // Set offset
+        case (CommandType::Tone): {
+            bldc::tone((buffer.buffer[2] << 8u) | buffer.buffer[3]);
+            break;
+        }
+        case (CommandType::Offset): {
             movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             break;
         }
+        // TODO: run outside interrupt
+//        case (CommandType::Calibrate): {
+//            calibrate();
+//            break;
+//        }
     }
 }
-
-    // Temperature calibration values
-//    uint8_t tempR = NVMTEMP[0] & 0xff;
-//    uint16_t adcR = (NVMTEMP[1] & 0xfff00) >> 8u;
-//    uint8_t tempH = (NVMTEMP[0] & 0xff0000) >> 12u;
-//    uint16_t adcH = (NVMTEMP[1] & 0xfff00000) >> 20u;
 
 uint16_t measureAngle() {
     static uint16_t rawAngle;
@@ -83,7 +81,7 @@ uint16_t measureAngle() {
     return util::switchEndianness(rawAngle);
 }
 
-void calibrate() {
+void calibrate(bool recalibrate = false) {
     uint16_t angle {0};
     bldc::applyTorque(0, 255);
     
@@ -94,7 +92,7 @@ void calibrate() {
     } while (offset != angle);
 
     uint16_t torqueAngle {0}; 
-    if (!data::options.polePairs) {
+    if (!data::options.polePairs || recalibrate) {
         uint8_t polePairs {0};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};
@@ -162,22 +160,12 @@ int main() {
     bldc::init();
     
     calibrate();
-    srand(SysTick->VAL);
     uart::setCallback(processCommand);
     
-//    util::setInterval(8000, []() -> void {
-//        uint16_t targetAngle = (rand() % 4096) - 2048;
-//        if (targetAngle < 0) {targetAngle = -targetAngle;}
-//        movementController.setTarget(targetAngle);
-//    });
     float v {0};
     float a {0};
     
     while (1) {
-//        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-//        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-//        data::STATUS_DESCRIPTOR.bTemp = tempR + ((ADC_REGS->ADC_RESULT - adcR) * (tempH - tempR) / (adcH - adcR));
-
         // Calculating difference between current and set angle
         int16_t dAngle = getDifference(movementController.getTarget(), angle);
         uint16_t prevAngle {angle};
@@ -204,7 +192,7 @@ int main() {
                 applyTorque(angle, maxTorque, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
             }
         } else { // Close to target, using sliding mode control
-            a = 0.0f;
+            a = 0.0f; // Resetting acceleration for time-optimal initial measurement
             float torque {dAngle - 100 * v}; // Keeping velocity equal to dAngle / 100
             applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
         }
