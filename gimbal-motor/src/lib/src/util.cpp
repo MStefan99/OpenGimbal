@@ -50,6 +50,7 @@ void util::init() { // TODO: move away
     OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE(calibration >> 26u) // Load calibration value
             | OSCCTRL_DFLLVAL_FINE(512); // Middle value for FINE (0-1023) is a good starting point
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
+            | OSCCTRL_DFLLCTRL_ONDEMAND(1)
             | OSCCTRL_DFLLCTRL_MODE(0); // Run in open-loop mode
 
     // GLCK config

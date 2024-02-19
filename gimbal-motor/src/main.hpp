@@ -38,9 +38,10 @@ enum class CommandType : uint8_t {
 
 
 enum class Mode : uint8_t {
-    Calibrate = 0x0,
-    Drive = 0x1,
-    Haptic = 0x2
+    Sleep = 0x0,
+    Calibrate = 0x1,
+    Drive = 0x2,
+    Haptic = 0x3
 };
 
 

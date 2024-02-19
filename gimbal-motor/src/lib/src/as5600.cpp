@@ -1,7 +1,7 @@
 #include "lib/inc/as5600.hpp"
 
 
-void as5600::init() {    
+void as5600::init() {
     uint8_t reg {0x07};
     i2c::writeRegister(0x36, 0x07, &reg);
 }

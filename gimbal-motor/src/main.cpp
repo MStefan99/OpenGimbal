@@ -38,14 +38,10 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
     }
     
     switch(static_cast<CommandType>(buffer.buffer[1] & 0x0f)) { // Parse command type
-        // TODO: figure out how to wake up from sleep
-//        case (CommandType::Sleep): {
-//            bldc::applyTorque(0, 0);
-//            PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
-//            while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
-//            __WFI();
-//            break;
-//        }
+        case (CommandType::Sleep): {
+            mode = Mode::Sleep;
+            break;
+        }
         case (CommandType::Position): {
             movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
@@ -142,7 +138,6 @@ void calibrate() {
     }
     
     bldc::applyTorque(0, 0);
-    mode = Mode::Drive;
 }
 
 int16_t getDifference(uint16_t angleA, uint16_t angleB) {
@@ -166,6 +161,18 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + 1024: eAngle + 3072, power);
 }
 
+void sleep() {
+    bldc::applyTorque(0, 0);
+    // Motor timers are double-buffered, meaning the outputs aren't disabled immediately
+    // Waiting for the next tick as a workaround, this needs to be fixed later
+    __WFI(); 
+    PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
+    while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
+    __WFI();
+    PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
+    while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
+}
+
 int main() {
     util::init();
 
@@ -183,8 +190,14 @@ int main() {
     
     while (1) {
         switch(mode) {
+            case (Mode::Sleep): {
+                sleep();
+                mode = Mode::Drive;
+                break;
+            }
             case (Mode::Calibrate): {
                 calibrate();
+                mode = Mode::Drive;
                 break;
             }
             case (Mode::Drive): {
