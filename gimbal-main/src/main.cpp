@@ -11,29 +11,16 @@ int main() {
     util::init();
     dma::init();
     i2c::init();
-    lsm6dso::init();
+    //lsm6dso::init();
     uart::init();
-
-    PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
     
-    int16_t setpoint {0};
-    uint8_t buf[4] = {
-        0x41,
-        0x02
-    };
+    PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
+    while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
+    __WFI();
+    uart::print("Wake up!\n");
     
     while (1) {
-        setpoint += lsm6dso::getRot()[1] / 20.0f;
-        if (setpoint < 0) {
-            setpoint = setpoint + 4096;
-        } else if (setpoint > 4096) {
-            setpoint = setpoint - 4096;
-        }
-        buf[2] = 0xf0 | setpoint >> 8u;
-        buf[3] = setpoint & 0xff;
-        uart::sendToMotors(buf, 4);
-        util::sleep(5);
-        lsm6dso::update();
+        __WFI();
     }
 
     return 1;
