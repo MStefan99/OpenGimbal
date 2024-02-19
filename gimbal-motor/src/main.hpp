@@ -26,14 +26,27 @@
 
 
 enum class CommandType : uint8_t {
-    Sleep = 0x1,
-    Position = 0x2,
-    Tone = 0x3,
-    Haptic = 0x4,
-    Offset = 0x5,
-    Calibrate = 0x6,
-    GetVariable = 0x7,
-    SetVariable = 0x8
+    Sleep = 0x0,
+    Position = 0x1,
+    Tone = 0x2,
+    Haptic = 0x3,
+    Offset = 0x4,
+    Calibrate = 0x5,
+    GetVariable = 0x6,
+    SetVariable = 0x7
+};
+
+
+enum class Mode : uint8_t {
+    Calibrate = 0x0,
+    Drive = 0x1,
+    Haptic = 0x2
+};
+
+
+enum class CalibrationMode : uint8_t {
+    Zero = 0u,
+    Pole = 1u
 };
 
 

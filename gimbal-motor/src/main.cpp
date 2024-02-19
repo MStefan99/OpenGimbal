@@ -5,13 +5,17 @@
 
 // The total degrees for one full rotation
 static constexpr uint16_t fullRotation {4096};
+// Minimum torque to get the motor moving
 static constexpr uint8_t idleTorque {150};
+// Maximum allowed torque
+static uint8_t maxTorque {0};
 
 static MovementController movementController {};
-static uint8_t maxTorque {0};
+static Mode mode {Mode::Calibrate};
+static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
+
 static uint16_t angle {0};
 static bool dataReady {false};
-static uint16_t offset {0};
 
 struct TorqueLUT {
 	uint16_t table[16];
@@ -58,11 +62,11 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             data::write();
             break;
         }
-        // TODO: run outside interrupt
-//        case (CommandType::Calibrate): {
-//            calibrate();
-//            break;
-//        }
+        case (CommandType::Calibrate): {
+            mode = Mode::Calibrate;
+            calibrationMode = buffer.buffer[2];
+            break;
+        }
     }
 }
 
@@ -84,18 +88,23 @@ uint16_t measureAngle() {
     return util::switchEndianness(rawAngle);
 }
 
-void calibrate(bool recalibrate = false) {
+void calibrate() {
     uint16_t angle {0};
+    uint16_t phaseOffset {data::options.phaseOffset};
     bldc::applyTorque(0, 255);
     
-    do {
-        util::sleep(20);
-        offset = angle;
-        angle = measureAngle();
-    } while (offset != angle);
-
+    if (calibrationMode) {
+        do {
+            util::sleep(20);
+            phaseOffset = angle;
+            angle = measureAngle();
+        } while (phaseOffset != angle);
+        data::edit(reinterpret_cast<const uint8_t&>(data::options.phaseOffset), reinterpret_cast<uint8_t&>(phaseOffset), sizeof(phaseOffset));
+    }
+    
     uint16_t torqueAngle {0}; 
-    if (!data::options.polePairs || recalibrate) {
+    
+    if (calibrationMode & (1 << static_cast<uint8_t>(CalibrationMode::Pole))) {
         uint8_t polePairs {0};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};
@@ -116,7 +125,7 @@ void calibrate(bool recalibrate = false) {
             bldc::applyTorque(torqueAngle, 255);
 
             angle = measureAngle();
-        } while (util::abs(angle - offset) > 10 || polePairs == 0);
+        } while (util::abs(angle - phaseOffset) > 10 || polePairs == 0);
         
         if (direction > 0) {
             direction = 1;
@@ -126,10 +135,14 @@ void calibrate(bool recalibrate = false) {
         
         data::edit(data::options.polePairs, polePairs);
         data::edit(reinterpret_cast<const uint8_t&>(data::options.direction), reinterpret_cast<uint8_t&>(direction));
+    }
+    
+    if (calibrationMode) {
         data::write();
     }
     
     bldc::applyTorque(0, 0);
+    mode = Mode::Drive;
 }
 
 int16_t getDifference(uint16_t angleA, uint16_t angleB) {
@@ -146,7 +159,7 @@ int16_t getDifference(uint16_t angleA, uint16_t angleB) {
 
 void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     // Calculate electrical angle from encoder reading
-    uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - offset)) % fullRotation;
+    uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - data::options.phaseOffset)) % fullRotation;
     // Flip the angle if the motor polarity is reversed
     uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW;
     
@@ -164,45 +177,53 @@ int main() {
     
     uart::setCallback(processCommand);
     movementController.setOffset(data::options.zeroOffset);
-    calibrate();
     
     float v {0};
     float a {0};
     
     while (1) {
-        // Calculating difference between current and set angle
-        int16_t dAngle = getDifference(movementController.getTarget(), angle);
-        uint16_t prevAngle {angle};
-        angle = measureAngle();
-        
-        // Updating current speed and acceleration
-        float newV = v + (getDifference(angle, prevAngle) - v) / 30.0f;
-        float newA {newV - v};
-        v = newV;
-        
-        if (dAngle < -128 || dAngle > 128) { // Far from target, using time-optimal control
-            float D = v * v - 2.0f * a * dAngle; // Calculate if the motor will reach the target (>=0 - yes, <0 - no)
+        switch(mode) {
+            case (Mode::Calibrate): {
+                calibrate();
+                break;
+            }
+            case (Mode::Drive): {
+                // Calculating difference between current and set angle
+                int16_t dAngle = getDifference(movementController.getTarget(), angle);
+                uint16_t prevAngle {angle};
+                angle = measureAngle();
 
-            if (D <= 2) { // Update measured acceleration value during acceleration
-                a += (newA - a) / 20.0f;
+                // Updating current speed and acceleration
+                float newV = v + (getDifference(angle, prevAngle) - v) / 30.0f;
+                float newA {newV - v};
+                v = newV;
+
+                if (dAngle < -128 || dAngle > 128) { // Far from target, using time-optimal control
+                    float D = v * v - 2.0f * a * dAngle; // Calculate if the motor will reach the target (>=0 - yes, <0 - no)
+
+                    if (D <= 2) { // Update measured acceleration value during acceleration
+                        a += (newA - a) / 20.0f;
+                    }
+                    if (dAngle > 0 == a < 0) { // To avoid chatter and incorrect measurements, flip acceleration sign if needed
+                        a = -a;
+                    }
+
+                    if (-0.005 < a && a < 0.005) { // Acceleration isn't measured yet, applying full power to measure
+                        applyTorque(angle, maxTorque, dAngle > 0); // Accelerating towards destination
+                    } else if (util::abs(D) > 2) { // Acceleration measured, using it to predict the stopping distance
+                        applyTorque(angle, maxTorque, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
+                    }
+                } else { // Close to target, using sliding mode control
+                    a = 0.0f; // Resetting acceleration for time-optimal initial measurement
+                    float torque {dAngle - 100 * v}; // Keeping velocity equal to dAngle / 100
+                    applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
+                }
+
+                util::runTasks();
+                util::sleep(1);
+                break;
             }
-            if (dAngle > 0 == a < 0) { // To avoid chatter and incorrect measurements, flip acceleration sign if needed
-                a = -a;
-            }
-        
-            if (-0.005 < a && a < 0.005) { // Acceleration isn't measured yet, applying full power to measure
-                applyTorque(angle, maxTorque, dAngle > 0); // Accelerating towards destination
-            } else if (util::abs(D) > 2) { // Acceleration measured, using it to predict the stopping distance
-                applyTorque(angle, maxTorque, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
-            }
-        } else { // Close to target, using sliding mode control
-            a = 0.0f; // Resetting acceleration for time-optimal initial measurement
-            float torque {dAngle - 100 * v}; // Keeping velocity equal to dAngle / 100
-            applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
         }
-        
-        util::runTasks();
-        util::sleep(1);
     }
 
     return 1;

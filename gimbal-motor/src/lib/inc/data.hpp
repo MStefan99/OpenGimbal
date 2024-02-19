@@ -20,6 +20,7 @@ namespace data {
     typedef struct __attribute__((packed)) {
         uint8_t polePairs;
         int8_t direction;
+        uint16_t phaseOffset;
         uint16_t zeroOffset;
     } Options;
     
