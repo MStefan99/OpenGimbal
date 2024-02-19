@@ -8,7 +8,7 @@ static constexpr uint16_t fullRotation {4096};
 static constexpr uint8_t idleTorque {150};
 
 static MovementController movementController {};
-static uint8_t maxTorque {255};
+static uint8_t maxTorque {0};
 static uint16_t angle {0};
 static bool dataReady {false};
 static uint16_t offset {0};
@@ -53,6 +53,9 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         }
         case (CommandType::Offset): {
             movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            int16_t offset = movementController.getOffset();
+            data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
+            data::write();
             break;
         }
         // TODO: run outside interrupt
@@ -159,8 +162,9 @@ int main() {
     as5600::init();
     bldc::init();
     
-    calibrate();
     uart::setCallback(processCommand);
+    movementController.setOffset(data::options.zeroOffset);
+    calibrate();
     
     float v {0};
     float a {0};
