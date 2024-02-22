@@ -7,6 +7,8 @@
 static constexpr uint16_t fullRotation {4096};
 // Minimum torque to get the motor moving
 static constexpr uint8_t idleTorque {150};
+// Device address
+static constexpr uint8_t deviceAddress {1};
 // Maximum allowed torque
 static uint8_t maxTorque {0};
 
@@ -32,12 +34,13 @@ struct TorqueLUT {
 static constexpr auto torqueLUT = TorqueLUT();
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processCommand(const uart::DefaultCallback::buffer_type& buffer) {    
-    if ((buffer.buffer[0] & 0x0f) != 0x1) {
+void processCommand(const uart::DefaultCallback::buffer_type& buffer) {   
+    uint8_t address = buffer.buffer[0] & 0x0f;
+    if (address != deviceAddress && address != 0xf) {
         return; // Command intended for another device
     }
     
-    switch(static_cast<CommandType>(buffer.buffer[1] & 0x0f)) { // Parse command type
+    switch(static_cast<CommandType>(buffer.buffer[1] & 0x0f)) { // Switch command type
         case (CommandType::Sleep): {
             mode = Mode::Sleep;
             break;
@@ -61,6 +64,33 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         case (CommandType::Calibrate): {
             mode = Mode::Calibrate;
             calibrationMode = buffer.buffer[2];
+            break;
+        }
+        case (CommandType::GetVariable): {
+            uint8_t buf[16] {
+                static_cast<uint8_t>((0x4 << 8u) || (buffer.buffer[1] >> 8u)), // Destination address
+                static_cast<uint8_t>(deviceAddress << 8u), // Source address
+            };
+            switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
+                case (Variable::Calibration): {
+                    buf[2] = static_cast<uint8_t>(Variable::Calibration);
+                    buf[3] = (!!data::options.polePairs << 1u) | (!!data::options.phaseOffset);
+                }
+            }
+            uart::send(buf, 4);
+            break;
+        }
+        case (CommandType::SetVariable): {
+            switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
+                case (Variable::Offset): {
+                    movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
+                    break;
+                }
+                case (Variable::Range): {
+                    movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
+                    break;
+                }
+            }
             break;
         }
     }

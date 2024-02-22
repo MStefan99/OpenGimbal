@@ -37,6 +37,14 @@ enum class CommandType : uint8_t {
 };
 
 
+enum class Variable : uint8_t {
+    Calibration = 0x0,
+    Offset = 0x1,
+    Range = 0x2,
+    Error = 0xf
+};
+
+
 enum class Mode : uint8_t {
     Sleep = 0x0,
     Calibrate = 0x1,

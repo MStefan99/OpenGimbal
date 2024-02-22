@@ -114,7 +114,7 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
     uint16_t period = TCC0_REGS->TCC_PER + 1;
     uint8_t factor = MAX_VAL / period + 1;
     uint16_t inv = period - (static_cast<uint32_t>(period) * power / 255);
-        
+    
     TCC0_REGS->TCC_CCBUF[0] = power * static_cast<uint16_t>(va + 127) / factor;
     TCC0_REGS->TCC_CCBUF[1] = TCC0_REGS->TCC_CCBUF[0] + inv;
 
@@ -126,14 +126,14 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
 }
 
 void bldc::tone(uint16_t frequency) {
-    uint16_t period = 48000000 / frequency - 1;
+    uint32_t period = 48000000 / frequency - 1;
     if (period < silentPeriod) {
         silent();
-        return;
+    } else {   
+        TCC0_REGS->TCC_PERBUF = TCC1_REGS->TCC_PERBUF = period;
     }
-    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = period;
 }
 
 void bldc::silent() {
-    TCC0_REGS->TCC_PER = TCC1_REGS->TCC_PER = silentPeriod;
+    TCC0_REGS->TCC_PERBUF = TCC1_REGS->TCC_PERBUF = silentPeriod;
 }

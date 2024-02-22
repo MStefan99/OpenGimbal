@@ -45,6 +45,7 @@
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/MovementController.hpp</itemPath>
+        <itemPath>../src/lib/inc/Command.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -217,6 +218,7 @@
         <itemPath>../src/lib/src/bldc.cpp</itemPath>
         <itemPath>../src/lib/src/as5600.cpp</itemPath>
         <itemPath>../src/lib/src/MovementController.cpp</itemPath>
+        <itemPath>../src/lib/src/Command.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
@@ -240,8 +242,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
         <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
+        <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
