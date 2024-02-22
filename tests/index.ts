@@ -18,7 +18,7 @@ async function sendCommand(serialPort: SerialPort, command: Command, delayMs = 1
 			if (err) {
 				return reject(err);
 			}
-			console.log('Command sent:', Array.from(buffer).map(byte => byte.toString(16).padStart(2, '0')).join(' '));
+			console.log('Command sent:', command.toString());
 			resolve();
 		});
 	})
