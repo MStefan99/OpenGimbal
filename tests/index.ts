@@ -55,61 +55,60 @@ async function sendCommand(serialPort: SerialPort | MockPort, command: Command) 
 	})
 }
 
-function openPort(path: string) {
-	return new Promise<SerialPort | MockPort>(resolve => {
-		const port: SerialPort = new SerialPort({
-			path,
-			baudRate: 115200,
-			dataBits: 8,
-			stopBits: 1,
-			parity: 'odd'
-		}, err => {
-			if (err) {
-				console.error(err.message);
-				resolve(new MockPort());
-			} else {
-				resolve(port);
-			}
-		});
+function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
+	const port: SerialPort = new SerialPort({
+		path,
+		baudRate: 115200,
+		dataBits: 8,
+		stopBits: 1,
+		parity: 'odd'
+	}, err => {
+		if (err) {
+			console.error(err.message);
+			cb(new MockPort());
+		}
 	});
+	cb(port);
 }
 
-async function main() {
-	const port = await openPort('COM3');
+function main() {
+	openPort('COM3', port => {
+		port.on('close', () => console.log(port.path, 'closed'));
 
-	port.on('close', () => console.log(port.path, 'closed'));
+		port.on('open', async () => {
+			console.log(port.path, 'opened');
 
-	port.on('open', async () => {
-		console.log(port.path, 'opened');
+			await sendCommand(port, new CalibrationCommand(0, 1,
+				new BitwiseRegister().set(CalibrationBits.Zero).set(CalibrationBits.Pole)));
 
-		await sendCommand(port, new CalibrationCommand(0, 1,
-			new BitwiseRegister().set(CalibrationBits.Zero).set(CalibrationBits.Pole)));
-		await sendCommand(port, new ToneCommand(0, 1, 247));
-		await sendCommand(port, new PositionCommand(0, 1, 15, 0));
-		await delay(210);
-
-		for (let i = 15; i > 4; i -= 5) {
-			await sendCommand(port, new ToneCommand(0, 1, 294));
-			await sendCommand(port, new PositionCommand(0, 1, i, 0));
+			await delay(1000);
+			await sendCommand(port, new ToneCommand(0, 1, 247));
+			await sendCommand(port, new PositionCommand(0, 1, 15, 0));
 			await delay(210);
-			await sendCommand(port, new ToneCommand(0, 1, 392));
-			await sendCommand(port, new PositionCommand(0, 1, i, 0));
-			await delay(210);
-		}
 
-		await sendCommand(port, new ToneCommand(0, 1, 25000));
+			for (let i = 15; i > 4; i -= 5) {
+				await sendCommand(port, new ToneCommand(0, 1, 294));
+				await sendCommand(port, new PositionCommand(0, 1, i, 0));
+				await delay(210);
+				await sendCommand(port, new ToneCommand(0, 1, 392));
+				await sendCommand(port, new PositionCommand(0, 1, i, 0));
+				await delay(210);
+			}
 
-		for (let i = 0; i < 10; ++i) {
-			await sendCommand(port, new PositionCommand(0, 1, 15, Math.random() * 4096))
-			await delay(1200);
-		}
-		await sendCommand(port, new PositionCommand(0, 1, 0, 0));
+			await sendCommand(port, new ToneCommand(0, 1, 25000));
 
-		port.close();
-	});
+			for (let i = 0; i < 10; ++i) {
+				await sendCommand(port, new PositionCommand(0, 1, 15, Math.random() * 4096))
+				await delay(1200);
+			}
+			await sendCommand(port, new PositionCommand(0, 1, 0, 0));
 
-	port.on('error', function (err) {
-		console.log('Error: ', err.message);
+			port.close();
+		});
+
+		port.on('error', function (err) {
+			console.log('Error: ', err.message);
+		});
 	});
 }
 
