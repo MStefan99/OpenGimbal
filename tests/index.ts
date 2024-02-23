@@ -1,7 +1,8 @@
 'use strict';
 
-import {Command, PositionCommand, ToneCommand} from './Command';
+import {CalibrationCommand, Command, PositionCommand, ToneCommand} from './Command';
 import {SerialPort} from 'serialport';
+import {BitwiseRegister, CalibrationBits} from "./BitMask";
 
 
 function delay(ms: number) {
@@ -29,7 +30,7 @@ class MockPort extends EventTarget {
 		if (event === 'close') {
 			this.addEventListener(event, () => cb(new Error('Error: Mock port was closed')));
 		} else {
-		this.addEventListener(event, () => (cb as EventCallback)());
+			this.addEventListener(event, () => (cb as EventCallback)());
 		}
 	}
 
@@ -38,7 +39,7 @@ class MockPort extends EventTarget {
 	}
 }
 
-async function sendCommand(serialPort: SerialPort | MockPort, command: Command, delayMs = 1000) {
+async function sendCommand(serialPort: SerialPort | MockPort, command: Command) {
 	return new Promise<void>((resolve, reject) => {
 		const buffer = new Uint8Array(command.length)
 			.fill(0)
@@ -81,6 +82,8 @@ async function main() {
 	port.on('open', async () => {
 		console.log(port.path, 'opened');
 
+		await sendCommand(port, new CalibrationCommand(0, 1,
+			new BitwiseRegister().set(CalibrationBits.Zero).set(CalibrationBits.Pole)));
 		await sendCommand(port, new ToneCommand(0, 1, 247));
 		await sendCommand(port, new PositionCommand(0, 1, 15, 0));
 		await delay(210);
@@ -96,7 +99,7 @@ async function main() {
 
 		await sendCommand(port, new ToneCommand(0, 1, 25000));
 
-		for (let i = 0; i < 1; ++i) {
+		for (let i = 0; i < 10; ++i) {
 			await sendCommand(port, new PositionCommand(0, 1, 15, Math.random() * 4096))
 			await delay(1200);
 		}

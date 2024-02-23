@@ -1,11 +1,16 @@
 'use strict';
 
+import {BitwiseRegister, CalibrationBits} from "./BitMask";
+
 enum CommandType {
 	Sleep = 0x0,
 	Position = 0x1,
 	Tone = 0x2,
 	Haptic = 0x3,
-	Offset = 0x4
+	Offset = 0x4,
+	Calibration = 0x5,
+	GetVariable = 0x6,
+	SetVariable = 0x7,
 }
 
 export const commandNames: Record<CommandType, string> = {
@@ -13,7 +18,10 @@ export const commandNames: Record<CommandType, string> = {
 	[CommandType.Position]: 'Position',
 	[CommandType.Tone]: 'Tone',
 	[CommandType.Haptic]: 'Haptic',
-	[CommandType.Offset]: 'Offset'
+	[CommandType.Offset]: 'Offset',
+	[CommandType.Calibration]: 'Calibration',
+	[CommandType.GetVariable]: 'Get variable',
+	[CommandType.SetVariable]: 'Set variable',
 }
 
 export class Command {
@@ -65,7 +73,7 @@ export class PositionCommand extends Command {
 		super(srcAddr, destAddr, CommandType.Position, buffer);
 	}
 
-	toString(type?: 'hex'): string {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
@@ -87,12 +95,36 @@ export class ToneCommand extends Command {
 		super(srcAddr, destAddr, CommandType.Tone, buffer);
 	}
 
-	toString(type?: 'hex'): string {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
 				+ `\n  Frequency: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
+		}
+	}
+}
+
+export class CalibrationCommand extends Command {
+	constructor(srcAddr: number, destAddr: number, mode: BitwiseRegister<CalibrationBits>) {
+
+		const buffer = new Uint8Array(1);
+		const view = new DataView(buffer.buffer);
+		view.setUint8(0, mode.value);
+		super(srcAddr, destAddr, CommandType.Calibration, buffer);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Mode: ${new Array(8)
+					.fill(0)
+					.map((v, i) => (1 << i & this.view.getUint8(2)) ? i : null)
+					.filter(v => v !== null)
+					.map(v => CalibrationBits[v])
+					.join(', ')}`;
 		}
 	}
 }

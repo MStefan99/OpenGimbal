@@ -1,21 +1,22 @@
 'use strict';
 
 
-enum CalibrationBits {
+export enum CalibrationBits {
 	Zero = 0x0,
 	Pole = 0x1
 }
 
-type AllBits = CalibrationBits;
+export type AllBits = CalibrationBits;
 
-class BitwiseRegister<T extends AllBits> {
-	private value: number = 0;
+export class BitwiseRegister<T extends AllBits> {
+	#value: number = 0;
 
 	set(bit: T) {
-		this.value |= bit;
+		this.#value |= 1 << bit;
+		return this;
 	}
 
-	getValue(): number {
-		return this.value;
+	get value(): number {
+		return this.#value;
 	}
 }
