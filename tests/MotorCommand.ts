@@ -2,6 +2,8 @@
 
 import {BitwiseRegister, CalibrationBits} from "./BitMask";
 
+const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+
 enum CommandType {
 	Sleep = 0x0,
 	Position = 0x1,
@@ -24,14 +26,14 @@ export const commandNames: Record<CommandType, string> = {
 	[CommandType.SetVariable]: 'Set variable',
 }
 
-export class Command {
+export class MotorCommand {
 	buffer = new Uint8Array(16);
 	view = new DataView(this.buffer.buffer);
 	length = 0;
 
 	constructor(srcAddr: number, destAddr: number, cmdType: CommandType, cmdData: Uint8Array = new Uint8Array()) {
-		srcAddr = Math.floor(srcAddr);
-		destAddr = Math.floor(destAddr);
+		srcAddr = Math.floor(clamp(srcAddr, 0, 14));
+		destAddr = Math.floor(clamp(destAddr, 0, 15));
 
 		this.length = 2 + cmdData.length; // Command byte + type byte + data
 		this.view.setUint8(0, (this.length << 4) | destAddr);
@@ -55,16 +57,16 @@ export class Command {
 	}
 }
 
-export class SleepCommand extends Command {
+export class SleepCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number) {
 		super(srcAddr, destAddr, CommandType.Sleep);
 	}
 }
 
-export class PositionCommand extends Command {
+export class PositionCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, torque: number, position: number) {
-		torque = Math.floor(torque);
-		position = Math.floor(position);
+		torque = Math.floor(clamp(torque, 0, 15));
+		position = Math.floor(clamp(position, 0, 4095));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
@@ -84,9 +86,9 @@ export class PositionCommand extends Command {
 	}
 }
 
-export class ToneCommand extends Command {
+export class ToneCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, frequency: number) {
-		frequency = Math.floor(frequency);
+		frequency = Math.floor(clamp(frequency, 50, 25000));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
@@ -105,7 +107,51 @@ export class ToneCommand extends Command {
 	}
 }
 
-export class CalibrationCommand extends Command {
+export class HapticCommand extends MotorCommand {
+	constructor(srcAddr: number, destAddr: number, intensity: number, duration: number) {
+		intensity = Math.floor(clamp(intensity, 0, 255));
+		duration = Math.floor(clamp(duration, 0, 255));
+
+		const buffer = new Uint8Array(2);
+		const view = new DataView(buffer.buffer);
+		view.setUint8(0, intensity);
+		view.setUint8(1, duration);
+		super(srcAddr, destAddr, CommandType.Haptic, buffer);
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Intensity: ${this.view.getUint8(2)}`
+				+ `\n  Duration: ${this.view.getUint8(3)}`
+		}
+	}
+}
+
+export class OffsetCommand extends MotorCommand {
+	constructor(srcAddr: number, destAddr: number, offset: number) {
+		offset = Math.floor(clamp(offset, 0, 4095));
+
+		const buffer = new Uint8Array(2);
+		const view = new DataView(buffer.buffer);
+		view.setUint8(0, (offset & 0xff00) >> 8);
+		view.setUint8(1, offset & 0xff);
+		super(srcAddr, destAddr, CommandType.Offset, buffer);
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+			+ `\n  Offset: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
+		}
+	}
+}
+
+export class CalibrationCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, mode: BitwiseRegister<CalibrationBits>) {
 
 		const buffer = new Uint8Array(1);

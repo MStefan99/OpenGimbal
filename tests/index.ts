@@ -1,8 +1,9 @@
 'use strict';
 
-import {CalibrationCommand, Command, PositionCommand, ToneCommand} from './Command';
+import {CalibrationCommand, MotorCommand, PositionCommand, ToneCommand} from './MotorCommand';
 import {SerialPort} from 'serialport';
 import {BitwiseRegister, CalibrationBits} from "./BitMask";
+import {Motor} from "./Motor";
 
 
 function delay(ms: number) {
@@ -12,7 +13,7 @@ function delay(ms: number) {
 type ErrorCallback = (err: Error) => void;
 type EventCallback = () => void;
 
-class MockPort extends EventTarget {
+export class MockPort extends EventTarget {
 	path: string = 'Mock';
 
 	constructor() {
@@ -39,22 +40,6 @@ class MockPort extends EventTarget {
 	}
 }
 
-async function sendCommand(serialPort: SerialPort | MockPort, command: Command) {
-	return new Promise<void>((resolve, reject) => {
-		const buffer = new Uint8Array(command.length)
-			.fill(0)
-			.map((v, i) => command.buffer[i]);
-
-		serialPort.write(buffer, (err: any) => {
-			if (err) {
-				return reject(err);
-			}
-			console.log('Command sent:', command.toString());
-			resolve();
-		});
-	})
-}
-
 function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
 	const port: SerialPort = new SerialPort({
 		path,
@@ -78,30 +63,28 @@ function main() {
 		port.on('open', async () => {
 			console.log(port.path, 'opened');
 
-			await sendCommand(port, new CalibrationCommand(0, 1,
-				new BitwiseRegister().set(CalibrationBits.Zero).set(CalibrationBits.Pole)));
+			const motor = new Motor(port, 1);
 
-			await delay(1000);
-			await sendCommand(port, new ToneCommand(0, 1, 247));
-			await sendCommand(port, new PositionCommand(0, 1, 15, 0));
+			await motor.tone(247);
+			await motor.move(0);
 			await delay(210);
 
 			for (let i = 15; i > 4; i -= 5) {
-				await sendCommand(port, new ToneCommand(0, 1, 294));
-				await sendCommand(port, new PositionCommand(0, 1, i, 0));
+				await motor.tone(294);
+				await motor.move(0, i);
 				await delay(210);
-				await sendCommand(port, new ToneCommand(0, 1, 392));
-				await sendCommand(port, new PositionCommand(0, 1, i, 0));
+				await motor.tone(392);
+				await motor.move(0, i);
 				await delay(210);
 			}
 
-			await sendCommand(port, new ToneCommand(0, 1, 25000));
+			await motor.silent();
 
 			for (let i = 0; i < 10; ++i) {
-				await sendCommand(port, new PositionCommand(0, 1, 15, Math.random() * 4096))
+				await motor.move(Math.random() * 4096);
 				await delay(1200);
 			}
-			await sendCommand(port, new PositionCommand(0, 1, 0, 0));
+			await motor.sleep();
 
 			port.close();
 		});
