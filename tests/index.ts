@@ -1,6 +1,6 @@
 'use strict';
 
-import {Command, PositionCommand, SleepCommand, ToneCommand} from './Command';
+import {Command, PositionCommand, ToneCommand} from './Command';
 import {SerialPort} from 'serialport';
 
 
@@ -8,7 +8,37 @@ function delay(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function sendCommand(serialPort: SerialPort, command: Command, delayMs = 1000) {
+type ErrorCallback = (err: Error) => void;
+type EventCallback = () => void;
+
+class MockPort extends EventTarget {
+	path: string = 'Mock';
+
+	constructor() {
+		super();
+		setImmediate(() => this.dispatchEvent(new Event('open')))
+	}
+
+	write(chunk: Uint8Array, cb: (err?: any) => void): void {
+		cb();
+	}
+
+	on(event: 'error', cb: ErrorCallback): void;
+	on(event: string, cb: EventCallback): void;
+	on(event: string, cb: EventCallback | ErrorCallback): void {
+		if (event === 'close') {
+			this.addEventListener(event, () => cb(new Error('Error: Mock port was closed')));
+		} else {
+		this.addEventListener(event, () => (cb as EventCallback)());
+		}
+	}
+
+	close(): void {
+		this.dispatchEvent(new Event('close'));
+	}
+}
+
+async function sendCommand(serialPort: SerialPort | MockPort, command: Command, delayMs = 1000) {
 	return new Promise<void>((resolve, reject) => {
 		const buffer = new Uint8Array(command.length)
 			.fill(0)
@@ -24,16 +54,29 @@ async function sendCommand(serialPort: SerialPort, command: Command, delayMs = 1
 	})
 }
 
-async function main() {
-	const port = new SerialPort({
-		path: 'COM3',
-		baudRate: 115200,
-		dataBits: 8,
-		stopBits: 1,
-		parity: 'odd'
+function openPort(path: string) {
+	return new Promise<SerialPort | MockPort>(resolve => {
+		const port: SerialPort = new SerialPort({
+			path,
+			baudRate: 115200,
+			dataBits: 8,
+			stopBits: 1,
+			parity: 'odd'
+		}, err => {
+			if (err) {
+				console.error(err.message);
+				resolve(new MockPort());
+			} else {
+				resolve(port);
+			}
+		});
 	});
+}
 
-	port.on('close', () => console.log(port.path, 'closed'))
+async function main() {
+	const port = await openPort('COM3');
+
+	port.on('close', () => console.log(port.path, 'closed'));
 
 	port.on('open', async () => {
 		console.log(port.path, 'opened');
@@ -53,7 +96,7 @@ async function main() {
 
 		await sendCommand(port, new ToneCommand(0, 1, 25000));
 
-		for (let i = 0; i < 10; ++i) {
+		for (let i = 0; i < 1; ++i) {
 			await sendCommand(port, new PositionCommand(0, 1, 15, Math.random() * 4096))
 			await delay(1200);
 		}

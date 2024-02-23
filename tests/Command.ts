@@ -33,7 +33,12 @@ export class Command {
 
 	toString(type?: 'hex'): string {
 		if (type === 'hex') {
-			return new Array(this.length).fill(0).map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0')).join(' ');
+			return new Array(this.length)
+				.fill(0)
+				.map((v, idx) => this.view.getUint8(idx)
+					.toString(16)
+					.padStart(2, '0'))
+				.join(' ');
 		} else {
 			return `${commandNames[(this.view.getUint8(1) & 0xf) as CommandType]} command`
 				+ `\n  Source address: ${this.view.getUint8(1) >> 4}`
