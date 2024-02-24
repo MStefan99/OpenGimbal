@@ -58,7 +58,7 @@ export class ReturnCalibrationVariableResponse extends ReturnVariableResponse {
 		super(buffer);
 	}
 
-	get calibrationMode(): CalibrationBits[] {
+	get calibrationMode(): Array<CalibrationBits> {
 		return new Array(8)
 			.fill(0)
 			.map((v, i) => ((1 << i) & this.view.getUint8(3) ? i : null))

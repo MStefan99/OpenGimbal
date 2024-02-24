@@ -44,12 +44,29 @@ export class Motor {
 	#incomingView = new DataView(this.#incomingBuffer.buffer);
 	#bytesReceived = 0;
 	#bytesRemaining = 0;
-	#pendingRequests: Partial<Record<MotorVariableID, (response: MotorResponse) => void>> = {};
+	#pendingRequests: Partial<
+		Record<
+			MotorVariableID,
+			{
+				resolve: (response: MotorResponse) => void;
+				reject: (err: any) => void;
+				timeout: NodeJS.Timeout;
+			}
+		>
+	> = {};
 
 	constructor(port: SerialPort | MockPort, address: number, debug: boolean = false) {
 		this.#address = address;
 		this.#port = port;
 		this.#debug = debug;
+	}
+
+	get address() {
+		return this.#address;
+	}
+
+	toString() {
+		return `Motor ${this.#address}`;
 	}
 
 	async #send(command: Command) {
@@ -77,7 +94,13 @@ export class Motor {
 				}
 				this.#debug &&
 					console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
-				this.#pendingRequests[command.variableID] = resolve as (response: MotorResponse) => void;
+				this.#pendingRequests[command.variableID] = {
+					resolve: resolve as (response: MotorResponse) => void,
+					reject,
+					timeout: setTimeout(() => {
+						reject(new Error('Timed out while waiting for motor response'));
+					}, 100)
+				};
 			});
 		});
 	}
@@ -114,7 +137,8 @@ export class Motor {
 							'\n',
 							response.toString('hex')
 						);
-					this.#pendingRequests[variableResponse.variableID](variableResponse);
+					this.#pendingRequests[variableResponse.variableID].resolve(variableResponse);
+					clearTimeout(this.#pendingRequests[variableResponse.variableID].timeout);
 					delete this.#pendingRequests[variableResponse.variableID];
 				}
 			}
@@ -176,26 +200,32 @@ export class Motor {
 	}
 
 	getCalibration() {
-		return new Promise<CalibrationBits[]>((resolve) =>
+		return new Promise<Array<CalibrationBits>>((resolve, reject) =>
 			this.#request<ReturnCalibrationVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Calibration)
-			).then((res) => resolve(res.calibrationMode))
+			)
+				.then((res) => resolve(res.calibrationMode))
+				.catch((err) => reject(err))
 		);
 	}
 
 	getOffset() {
-		return new Promise<number>((resolve) =>
+		return new Promise<number>((resolve, reject) =>
 			this.#request<ReturnOffsetVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Offset)
-			).then((res) => resolve(res.offset))
+			)
+				.then((res) => resolve(res.offset))
+				.catch((err) => reject(err))
 		);
 	}
 
 	getRange() {
-		return new Promise<number>((resolve) =>
+		return new Promise<number>((resolve, reject) =>
 			this.#request<ReturnRangeVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Range)
-			).then((res) => resolve(res.range))
+			)
+				.then((res) => resolve(res.range))
+				.catch((err) => reject(err))
 		);
 	}
 

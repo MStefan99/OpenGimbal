@@ -174,7 +174,7 @@ export class CalibrationCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Calibration, buffer);
 	}
 
-	get calibrationMode(): CalibrationBits[] {
+	get calibrationMode(): Array<CalibrationBits> {
 		return new Array(8)
 			.fill(0)
 			.map((v, i) => ((1 << i) & this.view.getUint8(2) ? i : null))

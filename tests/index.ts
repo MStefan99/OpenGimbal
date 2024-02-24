@@ -1,7 +1,7 @@
 import {SerialPort} from 'serialport';
+import {MotorManager} from './MotorManager';
 import {Motor} from './Motor';
 import {delay} from './util';
-import {MotorManager} from './MotorManager';
 import {CalibrationBits} from './BitMask';
 
 type ErrorListener = (err: Error) => void;
@@ -66,6 +66,43 @@ function main() {
 
 			const manager = new MotorManager(port);
 			port.on('data', (data: Buffer) => manager.parse(data));
+
+			console.log(
+				'Active motors:',
+				(await manager.enumerate()).filter((e) => e.active).map((e) => e.motor.address)
+			);
+
+			for (const motor of manager.active) {
+				console.log(
+					`Motor ${motor.address} status:` +
+						`\n  Calibration: ${(await motor.getCalibration()).map((b) => CalibrationBits[b]).join(', ')}` +
+						`\n  Offset: ${await motor.getOffset()}` +
+						`\n  Range: ${await motor.getRange()}`
+				);
+
+				await motor.tone(247);
+				await motor.move(0);
+				await delay(210);
+
+				for (let i = 15; i > 4; i -= 5) {
+					await motor.tone(294);
+					await motor.move(0, i);
+					await delay(210);
+					await motor.tone(392);
+					await motor.move(0, i);
+					await delay(210);
+				}
+
+				await motor.silent();
+
+				for (let i = 0; i < 10; ++i) {
+					await motor.move(Math.random() * 4096);
+					await delay(1200);
+				}
+
+				await motor.disable();
+				await motor.sleep();
+			}
 
 			port.close();
 		});
