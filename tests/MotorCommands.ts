@@ -206,7 +206,7 @@ export class GetVariableCommand extends MotorCommand {
 	}
 
 	get variableID(): MotorVariableID {
-		return this.view.getUint8(2) << 8;
+		return this.view.getUint8(2);
 	}
 
 	override toString(type?: "hex"): string {
@@ -231,11 +231,11 @@ export class SetVariableCommand extends MotorCommand {
 			view.setUint8(length - i, value);
 			value >>= 8;
 		}
-		super(srcAddr, destAddr, MotorCommandType.GetVariable, buffer);
+		super(srcAddr, destAddr, MotorCommandType.SetVariable, buffer);
 	}
 
 	get variableID(): MotorVariableID {
-		return this.view.getUint8(2) << 8;
+		return this.view.getUint8(2);
 	}
 
 	override toString(type?: "hex"): string {

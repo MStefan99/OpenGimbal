@@ -61,19 +61,13 @@ function main() {
 		port.on('open', async () => {
 			console.log(port.path, 'opened');
 
-			const manager = new MotorManager(port);
-
-			port.on('data', (data: Buffer) => console.log(
-				Array.from(new Uint8Array(data))
-					.map(b =>
-						b.toString(16)
-							.padStart(2, '0'))
-			));
+			port.on('data', (data: Buffer) => motor.parse(data));
 
 			const motor = new Motor(port, 1);
 
-			await motor.setOffsetVariable(1024);
-			await motor.setRangeVariable(3072);
+			console.log('calibration', await motor.getCalibration());
+			console.log('offset', await motor.getOffset());
+			console.log('range', await motor.getRange());
 
 			await motor.tone(247);
 			await motor.move(0);

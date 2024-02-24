@@ -22,6 +22,7 @@ namespace data {
         int8_t direction;
         uint16_t phaseOffset;
         uint16_t zeroOffset;
+        uint16_t range;
     } Options;
     
     extern const Options& options;

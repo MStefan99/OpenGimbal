@@ -43,7 +43,8 @@ public:
 
 template <class T>
 ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, data_type variableIndex, T variable): 
-Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
+    Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
+    this->buffer[2] = variableIndex;
     for (size_type i {0}; i < sizeof(T); ++i) {
         this->buffer[sizeof(T) + 2 - i] = variable;
         variable >>= 8;

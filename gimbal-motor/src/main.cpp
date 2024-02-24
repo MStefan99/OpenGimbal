@@ -74,6 +74,18 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
                             static_cast<uint8_t>((!!data::options.polePairs << 1u) | (!!data::options.phaseOffset)));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
+                } case (Variable::Offset): {
+                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                            static_cast<uint8_t>(Variable::Offset), 
+                            static_cast<uint16_t>(movementController.getOffset()));
+                    uart::send(command.getBuffer(), command.getLength());
+                    break;
+                } case (Variable::Range): {
+                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                            static_cast<uint8_t>(Variable::Range), 
+                            movementController.getRange());
+                    uart::send(command.getBuffer(), command.getLength());
+                    break;
                 }
             }
             break;
@@ -82,10 +94,16 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
                 case (Variable::Offset): {
                     movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
+                    int16_t offset = movementController.getOffset();
+                    data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
+                    data::write();
                     break;
                 }
                 case (Variable::Range): {
                     movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
+                    int16_t range = movementController.getRange();
+                    data::edit(reinterpret_cast<const uint8_t&>(data::options.range), reinterpret_cast<uint8_t&>(range), sizeof(range));
+                    data::write();
                     break;
                 }
             }
@@ -212,6 +230,7 @@ int main() {
     
     uart::setCallback(processCommand);
     movementController.setOffset(data::options.zeroOffset);
+    movementController.setRange(data::options.range);
     
     float v {0};
     float a {0};

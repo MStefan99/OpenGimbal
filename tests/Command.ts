@@ -12,7 +12,9 @@ export class Command {
 	constructor(srcAddr: number, destAddr: number, cmdType: CommandType, cmdData?: Uint8Array);
 	constructor(srcAddr: number | Uint8Array, destAddr?: number, cmdType?: CommandType, cmdData: Uint8Array = new Uint8Array()) {
 		if (srcAddr instanceof Uint8Array) {
-			this.buffer = srcAddr;
+			const view = new DataView(srcAddr.buffer);
+			this.buffer = Uint8Array.from({length: view.getUint8(0) >> 4}, (v, i) => view.getUint8(i));
+			this.view = new DataView(this.buffer.buffer);
 		} else {
 			srcAddr = Math.floor(clamp(srcAddr, 0, 14));
 			destAddr = Math.floor(clamp(destAddr, 0, 15));
@@ -26,11 +28,11 @@ export class Command {
 	}
 
 	get length() {
-		return this.view.getUint8(0 >> 4);
+		return this.buffer.byteLength;
 	}
 
 	get srcAddr() {
-		return this.view.getUint8(1) & 0xf;
+		return this.view.getUint8(1) >> 4;
 	}
 
 	get destAddr() {
