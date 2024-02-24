@@ -33,6 +33,10 @@ export enum MotorVariableID {
 
 
 export class MotorCommand extends Command {
+	get type(): MotorCommandType {
+		return this.view.getUint8(1) & 0xf;
+	}
+
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return new Array(this.length)
@@ -67,13 +71,21 @@ export class PositionCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Position, buffer);
 	}
 
+	get torque() {
+		return this.view.getUint8(2) >> 4;
+	}
+
+	get position() {
+		return ((this.view.getUint8(2) & 0xf) << 8) | this.view.getUint8(3)
+	}
+
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Torque: ${this.view.getUint8(2) >> 4}`
-				+ `\n  Position: ${((this.view.getUint8(2) & 0xf) << 8) | this.view.getUint8(3)}`
+				+ `\n  Torque: ${this.torque}`
+				+ `\n  Position: ${this.position}`
 		}
 	}
 }
@@ -89,12 +101,16 @@ export class ToneCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Tone, buffer);
 	}
 
+	get frequency() {
+		return (this.view.getUint8(2) << 8) | this.view.getUint8(3);
+	}
+
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Frequency: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
+				+ `\n  Frequency: ${this.frequency}`
 		}
 	}
 }
@@ -111,13 +127,21 @@ export class HapticCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Haptic, buffer);
 	}
 
+	get intensity() {
+		return this.view.getUint8(2);
+	}
+
+	get duration() {
+		return this.view.getUint8(3);
+	}
+
 	override toString(type?: "hex"): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Intensity: ${this.view.getUint8(2)}`
-				+ `\n  Duration: ${this.view.getUint8(3)}`
+				+ `\n  Intensity: ${this.intensity}`
+				+ `\n  Duration: ${this.duration}`
 		}
 	}
 }
@@ -133,12 +157,16 @@ export class OffsetCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Offset, buffer);
 	}
 
+	get offset() {
+		return (this.view.getUint8(2) << 8) | this.view.getUint8(3);
+	}
+
 	override toString(type?: "hex"): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Offset: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
+				+ `\n  Offset: ${this.offset}`
 		}
 	}
 }
@@ -152,17 +180,19 @@ export class CalibrationCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Calibration, buffer);
 	}
 
+	get calibrationMode(): CalibrationBits[] {
+		return new Array(8)
+			.fill(0)
+			.map((v, i) => (1 << i & this.view.getUint8(2)) ? i : null)
+			.filter(v => v !== null);
+	}
+
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Mode: ${new Array(8)
-					.fill(0)
-					.map((v, i) => (1 << i & this.view.getUint8(2)) ? i : null)
-					.filter(v => v !== null)
-					.map(v => CalibrationBits[v])
-					.join(', ')}`;
+				+ `\n  Mode: ${this.calibrationMode.map(v => CalibrationBits[v]).join(', ')}`;
 		}
 	}
 }
@@ -175,12 +205,16 @@ export class GetVariableCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.GetVariable, buffer);
 	}
 
+	get variableID(): MotorVariableID {
+		return this.view.getUint8(2) << 8;
+	}
+
 	override toString(type?: "hex"): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
 			return super.toString()
-				+ `\n  Variable: ${MotorVariableID[(this.view.getUint8(2) << 8)]}`
+				+ `\n  Variable: ${MotorVariableID[this.variableID]}`
 		}
 	}
 }
@@ -199,16 +233,55 @@ export class SetVariableCommand extends MotorCommand {
 		}
 		super(srcAddr, destAddr, MotorCommandType.GetVariable, buffer);
 	}
+
+	get variableID(): MotorVariableID {
+		return this.view.getUint8(2) << 8;
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Variable: ${MotorVariableID[this.variableID]}`
+		}
+	}
 }
 
 export class SetOffsetVariableCommand extends SetVariableCommand {
 	constructor(srcAddr: number, destAddr: number, offset: number) {
 		super(srcAddr, destAddr, MotorVariableID.Offset, offset, 2);
 	}
+
+	get offset() {
+		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Offset: ${this.offset}`
+		}
+	}
 }
 
 export class SetRangeVariableCommand extends SetVariableCommand {
 	constructor(srcAddr: number, destAddr: number, range: number) {
 		super(srcAddr, destAddr, MotorVariableID.Range, range, 2);
+	}
+
+	get range() {
+		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Range: ${this.range}`
+		}
 	}
 }
