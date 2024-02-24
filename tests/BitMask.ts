@@ -1,6 +1,3 @@
-'use strict';
-
-
 export enum CalibrationBits {
 	Zero = 0x0,
 	Pole = 0x1

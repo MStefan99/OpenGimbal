@@ -1,17 +1,12 @@
-'use strict';
-
-import {CalibrationCommand, MotorCommand, PositionCommand, ToneCommand} from './MotorCommand';
 import {SerialPort} from 'serialport';
-import {BitwiseRegister, CalibrationBits} from "./BitMask";
 import {Motor} from "./Motor";
+import {delay} from "./util";
+import {MotorManager} from "./MotorManager";
 
 
-function delay(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-type ErrorCallback = (err: Error) => void;
-type EventCallback = () => void;
+type ErrorListener = (err: Error) => void;
+type DataListener = (chunk: any) => void;
+type EventListener = () => void;
 
 export class MockPort extends EventTarget {
 	path: string = 'Mock';
@@ -25,13 +20,16 @@ export class MockPort extends EventTarget {
 		cb();
 	}
 
-	on(event: 'error', cb: ErrorCallback): void;
-	on(event: string, cb: EventCallback): void;
-	on(event: string, cb: EventCallback | ErrorCallback): void {
+	on(event: 'error', listener: ErrorListener): void;
+	on(event: 'data', listener: DataListener): void;
+	on(event: string, listener: EventListener): void;
+	on(event: string, cb: EventListener | DataListener | ErrorListener): void {
 		if (event === 'close') {
 			this.addEventListener(event, () => cb(new Error('Error: Mock port was closed')));
+		} else if (event === 'data') {
+			this.addEventListener(event, () => (cb as DataListener)(null));
 		} else {
-			this.addEventListener(event, () => (cb as EventCallback)());
+			this.addEventListener(event, () => (cb as EventListener)());
 		}
 	}
 
@@ -63,7 +61,19 @@ function main() {
 		port.on('open', async () => {
 			console.log(port.path, 'opened');
 
+			const manager = new MotorManager(port);
+
+			port.on('data', (data: Buffer) => console.log(
+				Array.from(new Uint8Array(data))
+					.map(b =>
+						b.toString(16)
+							.padStart(2, '0'))
+			));
+
 			const motor = new Motor(port, 1);
+
+			await motor.setOffsetVariable(1024);
+			await motor.setRangeVariable(3072);
 
 			await motor.tone(247);
 			await motor.move(0);

@@ -1,28 +1,34 @@
-'use strict';
-
 import {SerialPort} from "serialport";
+import {
+	Command,
+} from "./Command";
+import {MockPort} from "./index";
+import {BitwiseRegister, CalibrationBits} from "./BitMask";
+import {MotorResponse} from "./MotorResponses";
 import {
 	CalibrationCommand,
 	HapticCommand,
-	MotorCommand, OffsetCommand,
-	PositionCommand,
+	OffsetCommand,
+	PositionCommand, SetOffsetVariableCommand, SetRangeVariableCommand,
 	SleepCommand,
 	ToneCommand
-} from "./MotorCommand";
-import {MockPort} from "./index";
-import {BitwiseRegister, CalibrationBits} from "./BitMask";
+} from "./MotorCommands";
 
 
 export class Motor {
-	#address: number;
+	readonly #address: number;
 	#port: SerialPort | MockPort;
+	#incomingBuffer = new Uint8Array(16);
+	#incomingView = new DataView(this.#incomingBuffer.buffer);
+	#bytesReceived = 0;
+	#bytesRemaining = 0;
 
 	constructor(port: SerialPort | MockPort, address: number) {
 		this.#address = address;
 		this.#port = port;
 	}
 
-	async #send(command: MotorCommand) {
+	async #send(command: Command) {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length)
 				.fill(0)
@@ -38,11 +44,30 @@ export class Motor {
 		})
 	}
 
+	async parse(data: Uint8Array): Promise<MotorResponse | null> {
+		for (const byte of data) {
+			console.log(byte);
+
+			if (!this.#bytesRemaining) {
+				this.#bytesRemaining = byte >> 4;
+				this.#bytesReceived = 0;
+			}
+
+			this.#incomingView.setUint8(this.#bytesReceived++, byte);
+		}
+
+		if (--this.#bytesRemaining === 0) {
+			//parse
+		} else {
+			return null;
+		}
+	}
+
 	sleep() {
 		return this.#send(new SleepCommand(0, this.#address));
 	}
 
-	// Technically not needed as any command would wake the device up, but it's nice to have an opposite of sleep()
+	// Technically not needed since any command would wake the device up, but it's nice to have an opposite of sleep()
 	wakeup() {
 		return this.disable();
 	}
@@ -90,9 +115,14 @@ export class Motor {
 		return this.#send(new CalibrationCommand(0, this.#address, mode));
 	}
 
-	setVariable() {
+	getCalibration() {
 	}
 
-	getVariable() {
+	setOffsetVariable(offset: number) {
+		return this.#send(new SetOffsetVariableCommand(0, this.#address, offset));
+	}
+
+	setRangeVariable(range: number) {
+		return this.#send(new SetRangeVariableCommand(0, this.#address, range));
 	}
 }

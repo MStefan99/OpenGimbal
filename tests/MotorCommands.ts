@@ -1,10 +1,8 @@
-'use strict';
-
+import {clamp} from "./util";
 import {BitwiseRegister, CalibrationBits} from "./BitMask";
+import {Command} from "./Command";
 
-const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-
-enum CommandType {
+export enum MotorCommandType {
 	Sleep = 0x0,
 	Position = 0x1,
 	Tone = 0x2,
@@ -15,33 +13,27 @@ enum CommandType {
 	SetVariable = 0x7,
 }
 
-export const commandNames: Record<CommandType, string> = {
-	[CommandType.Sleep]: 'Sleep',
-	[CommandType.Position]: 'Position',
-	[CommandType.Tone]: 'Tone',
-	[CommandType.Haptic]: 'Haptic',
-	[CommandType.Offset]: 'Offset',
-	[CommandType.Calibration]: 'Calibration',
-	[CommandType.GetVariable]: 'Get variable',
-	[CommandType.SetVariable]: 'Set variable',
+export const motorCommandNames: Record<MotorCommandType, string> = {
+	[MotorCommandType.Sleep]: 'Sleep',
+	[MotorCommandType.Position]: 'Position',
+	[MotorCommandType.Tone]: 'Tone',
+	[MotorCommandType.Haptic]: 'Haptic',
+	[MotorCommandType.Offset]: 'Offset',
+	[MotorCommandType.Calibration]: 'Calibration',
+	[MotorCommandType.GetVariable]: 'Get variable',
+	[MotorCommandType.SetVariable]: 'Set variable',
 }
 
-export class MotorCommand {
-	buffer = new Uint8Array(16);
-	view = new DataView(this.buffer.buffer);
-	length = 0;
+export enum MotorVariableID {
+	Calibration = 0x0,
+	Offset = 0x1,
+	Range = 0x2,
+	Error = 0xf
+}
 
-	constructor(srcAddr: number, destAddr: number, cmdType: CommandType, cmdData: Uint8Array = new Uint8Array()) {
-		srcAddr = Math.floor(clamp(srcAddr, 0, 14));
-		destAddr = Math.floor(clamp(destAddr, 0, 15));
 
-		this.length = 2 + cmdData.length; // Command byte + type byte + data
-		this.view.setUint8(0, (this.length << 4) | destAddr);
-		this.view.setUint8(1, (srcAddr << 4) | cmdType);
-		this.buffer.set(cmdData, 2);
-	}
-
-	toString(type?: 'hex'): string {
+export class MotorCommand extends Command {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return new Array(this.length)
 				.fill(0)
@@ -50,7 +42,7 @@ export class MotorCommand {
 					.padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${commandNames[(this.view.getUint8(1) & 0xf) as CommandType]} command`
+			return `${motorCommandNames[(this.view.getUint8(1) & 0xf) as MotorCommandType]} command`
 				+ `\n  Source address: ${this.view.getUint8(1) >> 4}`
 				+ `\n  Destination address: ${this.view.getUint8(0) & 0xf}`
 		}
@@ -59,7 +51,7 @@ export class MotorCommand {
 
 export class SleepCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number) {
-		super(srcAddr, destAddr, CommandType.Sleep);
+		super(srcAddr, destAddr, MotorCommandType.Sleep);
 	}
 }
 
@@ -72,7 +64,7 @@ export class PositionCommand extends MotorCommand {
 		const view = new DataView(buffer.buffer);
 		view.setUint8(0, torque << 4 | ((position & 0xf00) >> 8));
 		view.setUint8(1, position & 0xff);
-		super(srcAddr, destAddr, CommandType.Position, buffer);
+		super(srcAddr, destAddr, MotorCommandType.Position, buffer);
 	}
 
 	override toString(type?: 'hex'): string {
@@ -94,7 +86,7 @@ export class ToneCommand extends MotorCommand {
 		const view = new DataView(buffer.buffer);
 		view.setUint8(0, (frequency & 0xff00) >> 8);
 		view.setUint8(1, frequency & 0xff);
-		super(srcAddr, destAddr, CommandType.Tone, buffer);
+		super(srcAddr, destAddr, MotorCommandType.Tone, buffer);
 	}
 
 	override toString(type?: 'hex'): string {
@@ -116,7 +108,7 @@ export class HapticCommand extends MotorCommand {
 		const view = new DataView(buffer.buffer);
 		view.setUint8(0, intensity);
 		view.setUint8(1, duration);
-		super(srcAddr, destAddr, CommandType.Haptic, buffer);
+		super(srcAddr, destAddr, MotorCommandType.Haptic, buffer);
 	}
 
 	override toString(type?: "hex"): string {
@@ -138,7 +130,7 @@ export class OffsetCommand extends MotorCommand {
 		const view = new DataView(buffer.buffer);
 		view.setUint8(0, (offset & 0xff00) >> 8);
 		view.setUint8(1, offset & 0xff);
-		super(srcAddr, destAddr, CommandType.Offset, buffer);
+		super(srcAddr, destAddr, MotorCommandType.Offset, buffer);
 	}
 
 	override toString(type?: "hex"): string {
@@ -146,7 +138,7 @@ export class OffsetCommand extends MotorCommand {
 			return super.toString(type);
 		} else {
 			return super.toString()
-			+ `\n  Offset: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
+				+ `\n  Offset: ${(this.view.getUint8(2) << 8) | this.view.getUint8(3)}`
 		}
 	}
 }
@@ -157,7 +149,7 @@ export class CalibrationCommand extends MotorCommand {
 		const buffer = new Uint8Array(1);
 		const view = new DataView(buffer.buffer);
 		view.setUint8(0, mode.value);
-		super(srcAddr, destAddr, CommandType.Calibration, buffer);
+		super(srcAddr, destAddr, MotorCommandType.Calibration, buffer);
 	}
 
 	override toString(type?: 'hex'): string {
@@ -172,5 +164,51 @@ export class CalibrationCommand extends MotorCommand {
 					.map(v => CalibrationBits[v])
 					.join(', ')}`;
 		}
+	}
+}
+
+export class GetVariableCommand extends MotorCommand {
+	constructor(srcAddr: number, destAddr: number, id: MotorVariableID) {
+		const buffer = new Uint8Array(1);
+		const view = new DataView(buffer.buffer);
+		view.setUint8(0, id);
+		super(srcAddr, destAddr, MotorCommandType.GetVariable, buffer);
+	}
+
+	override toString(type?: "hex"): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString()
+				+ `\n  Variable: ${MotorVariableID[(this.view.getUint8(2) << 8)]}`
+		}
+	}
+}
+
+export class SetVariableCommand extends MotorCommand {
+	constructor(srcAddr: number, destAddr: number, id: MotorVariableID, value: number, length: number) {
+		value = Math.round(value);
+		length = Math.floor(clamp(length + 1, 0, 13));
+
+		const buffer = new Uint8Array(length);
+		const view = new DataView(buffer.buffer);
+		view.setUint8(0, id);
+		for (let i = 1; i < length; ++i) {
+			view.setUint8(length - i, value);
+			value >>= 8;
+		}
+		super(srcAddr, destAddr, MotorCommandType.GetVariable, buffer);
+	}
+}
+
+export class SetOffsetVariableCommand extends SetVariableCommand {
+	constructor(srcAddr: number, destAddr: number, offset: number) {
+		super(srcAddr, destAddr, MotorVariableID.Offset, offset, 2);
+	}
+}
+
+export class SetRangeVariableCommand extends SetVariableCommand {
+	constructor(srcAddr: number, destAddr: number, range: number) {
+		super(srcAddr, destAddr, MotorVariableID.Range, range, 2);
 	}
 }
