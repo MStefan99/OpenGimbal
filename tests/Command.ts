@@ -1,6 +1,5 @@
-import {clamp} from "./util";
-import {MotorCommandType} from "./MotorCommands";
-
+import {clamp} from './util';
+import {MotorCommandType} from './MotorCommands';
 
 type CommandType = MotorCommandType;
 
@@ -10,7 +9,12 @@ export class Command {
 
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number, cmdType: CommandType, cmdData?: Uint8Array);
-	constructor(srcAddr: number | Uint8Array, destAddr?: number, cmdType?: CommandType, cmdData: Uint8Array = new Uint8Array()) {
+	constructor(
+		srcAddr: number | Uint8Array,
+		destAddr?: number,
+		cmdType?: CommandType,
+		cmdData: Uint8Array = new Uint8Array()
+	) {
 		if (srcAddr instanceof Uint8Array) {
 			const view = new DataView(srcAddr.buffer);
 			this.buffer = Uint8Array.from({length: view.getUint8(0) >> 4}, (v, i) => view.getUint8(i));
@@ -43,14 +47,14 @@ export class Command {
 		if (type === 'hex') {
 			return new Array(this.buffer.byteLength)
 				.fill(0)
-				.map((v, idx) => this.view.getUint8(idx)
-					.toString(16)
-					.padStart(2, '0'))
+				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `Command ${(this.view.getUint8(1) & 0xf)}`
-				+ `\n  Source address: ${this.view.getUint8(1) >> 4}`
-				+ `\n  Destination address: ${this.view.getUint8(0) & 0xf}`
+			return (
+				`Command ${this.view.getUint8(1) & 0xf}` +
+				`\n  Source address: ${this.view.getUint8(1) >> 4}` +
+				`\n  Destination address: ${this.view.getUint8(0) & 0xf}`
+			);
 		}
 	}
 }

@@ -1,7 +1,7 @@
-import {SerialPort} from "serialport";
-import {Command,} from "./Command";
-import {MockPort} from "./index";
-import {BitwiseRegister, CalibrationBits} from "./BitMask";
+import {SerialPort} from 'serialport';
+import {Command} from './Command';
+import {MockPort} from './index';
+import {BitwiseRegister, CalibrationBits} from './BitMask';
 import {
 	MotorResponse,
 	MotorResponseType,
@@ -10,7 +10,7 @@ import {
 	ReturnOffsetVariableResponse,
 	ReturnRangeVariableResponse,
 	ReturnVariableResponse
-} from "./MotorResponses";
+} from './MotorResponses';
 import {
 	CalibrationCommand,
 	GetVariableCommand,
@@ -22,19 +22,19 @@ import {
 	SetRangeVariableCommand,
 	SleepCommand,
 	ToneCommand
-} from "./MotorCommands";
-
+} from './MotorCommands';
 
 const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
-	[MotorResponseType.ReturnVariable]: buffer => new ReturnVariableResponse(buffer)
+	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
 };
 
-const getVariableResponse: Record<MotorVariableID, (buffer: Uint8Array) => ReturnVariableResponse> = {
-	[MotorVariableID.Calibration]: buffer => new ReturnCalibrationVariableResponse(buffer),
-	[MotorVariableID.Offset]: buffer => new ReturnOffsetVariableResponse(buffer),
-	[MotorVariableID.Range]: buffer => new ReturnRangeVariableResponse(buffer),
-	[MotorVariableID.Error]: buffer => new ReturnErrorVariableResponse(buffer)
-};
+const getVariableResponse: Record<MotorVariableID, (buffer: Uint8Array) => ReturnVariableResponse> =
+	{
+		[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
+		[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
+		[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
+		[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
+	};
 
 export class Motor {
 	readonly #debug: boolean;
@@ -49,36 +49,34 @@ export class Motor {
 	constructor(port: SerialPort | MockPort, address: number, debug: boolean = false) {
 		this.#address = address;
 		this.#port = port;
-		this.#debug = debug
+		this.#debug = debug;
 	}
 
 	async #send(command: Command) {
 		return new Promise<void>((resolve, reject) => {
-			const buffer = new Uint8Array(command.length)
-				.fill(0)
-				.map((v, i) => command.buffer[i]);
+			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
 			this.#port.write(buffer, (err: any) => {
 				if (err) {
 					return reject(err);
 				}
-				this.#debug && console.log('Command sent:', command.toString(), '\n', command.toString('hex'));
+				this.#debug &&
+					console.log('Command sent:', command.toString(), '\n', command.toString('hex'));
 				resolve();
 			});
-		})
+		});
 	}
 
 	async #request<T extends MotorResponse>(command: GetVariableCommand) {
 		return new Promise<T>((resolve, reject) => {
-			const buffer = new Uint8Array(command.length)
-				.fill(0)
-				.map((v, i) => command.buffer[i]);
+			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
 			this.#port.write(buffer, (err: any) => {
 				if (err) {
 					return reject(err);
 				}
-				this.#debug && console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
+				this.#debug &&
+					console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
 				this.#pendingRequests[command.variableID] = resolve as (response: MotorResponse) => void;
 			});
 		});
@@ -96,8 +94,11 @@ export class Motor {
 			this.#incomingView.setUint8(this.#bytesReceived++, byte);
 			if (--this.#bytesRemaining === 0) {
 				const genericResponse = new MotorResponse(this.#incomingBuffer);
-				if (genericResponse.destAddr !== 0 // Command not intended for this device
-					|| genericResponse.srcAddr !== this.#address) {  // Command coming from a different motor
+				if (
+					genericResponse.destAddr !== 0 || // Command not intended for this device
+					genericResponse.srcAddr !== this.#address
+				) {
+					// Command coming from a different motor
 					continue;
 				}
 
@@ -106,9 +107,15 @@ export class Motor {
 
 				if (response instanceof ReturnVariableResponse) {
 					const variableResponse = getVariableResponse[response.variableID](this.#incomingBuffer);
-					this.#debug && console.log('Response received:', variableResponse.toString(), '\n', response.toString('hex'));
+					this.#debug &&
+						console.log(
+							'Response received:',
+							variableResponse.toString(),
+							'\n',
+							response.toString('hex')
+						);
 					this.#pendingRequests[variableResponse.variableID](variableResponse);
-					delete (this.#pendingRequests[variableResponse.variableID]);
+					delete this.#pendingRequests[variableResponse.variableID];
 				}
 			}
 		}
@@ -169,24 +176,27 @@ export class Motor {
 	}
 
 	getCalibration() {
-		return new Promise<CalibrationBits[]>(resolve =>
+		return new Promise<CalibrationBits[]>((resolve) =>
 			this.#request<ReturnCalibrationVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Calibration))
-				.then(res => resolve(res.calibrationMode)));
+				new GetVariableCommand(0, this.#address, MotorVariableID.Calibration)
+			).then((res) => resolve(res.calibrationMode))
+		);
 	}
 
 	getOffset() {
-		return new Promise<number>(resolve =>
+		return new Promise<number>((resolve) =>
 			this.#request<ReturnOffsetVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Offset))
-				.then(res => resolve(res.offset)));
+				new GetVariableCommand(0, this.#address, MotorVariableID.Offset)
+			).then((res) => resolve(res.offset))
+		);
 	}
 
 	getRange() {
-		return new Promise<number>(resolve =>
+		return new Promise<number>((resolve) =>
 			this.#request<ReturnRangeVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Range))
-				.then(res => resolve(res.range)));
+				new GetVariableCommand(0, this.#address, MotorVariableID.Range)
+			).then((res) => resolve(res.range))
+		);
 	}
 
 	setOffsetVariable(offset: number) {

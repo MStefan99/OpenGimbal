@@ -1,15 +1,14 @@
-import {Command} from "./Command";
-import {MotorVariableID} from "./MotorCommands";
-import {CalibrationBits} from "./BitMask";
+import {Command} from './Command';
+import {MotorVariableID} from './MotorCommands';
+import {CalibrationBits} from './BitMask';
 
 export enum MotorResponseType {
-	ReturnVariable = 0x0,
+	ReturnVariable = 0x0
 }
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
-	[MotorResponseType.ReturnVariable]: 'Return variable',
-}
-
+	[MotorResponseType.ReturnVariable]: 'Return variable'
+};
 
 export class MotorResponse extends Command {
 	constructor(buffer: Uint8Array) {
@@ -24,14 +23,14 @@ export class MotorResponse extends Command {
 		if (type === 'hex') {
 			return new Array(this.length)
 				.fill(0)
-				.map((v, idx) => this.view.getUint8(idx)
-					.toString(16)
-					.padStart(2, '0'))
+				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${motorResponseNames[(this.view.getUint8(1) & 0xf) as MotorResponseType]} command`
-				+ `\n  Source address: ${this.view.getUint8(1) >> 4}`
-				+ `\n  Destination address: ${this.view.getUint8(0) & 0xf}`
+			return (
+				`${motorResponseNames[(this.view.getUint8(1) & 0xf) as MotorResponseType]} command` +
+				`\n  Source address: ${this.view.getUint8(1) >> 4}` +
+				`\n  Destination address: ${this.view.getUint8(0) & 0xf}`
+			);
 		}
 	}
 }
@@ -45,12 +44,11 @@ export class ReturnVariableResponse extends MotorResponse {
 		return this.view.getUint8(2);
 	}
 
-	override toString(type?: "hex"): string {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString()
-				+ `\n  Variable: ${MotorVariableID[this.variableID]}`
+			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID]}`;
 		}
 	}
 }
@@ -63,16 +61,18 @@ export class ReturnCalibrationVariableResponse extends ReturnVariableResponse {
 	get calibrationMode(): CalibrationBits[] {
 		return new Array(8)
 			.fill(0)
-			.map((v, i) => (1 << i & this.view.getUint8(3)) ? i : null)
-			.filter(v => v !== null);
+			.map((v, i) => ((1 << i) & this.view.getUint8(3) ? i : null))
+			.filter((v) => v !== null);
 	}
 
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString()
-				+ `\n  Mode: ${this.calibrationMode.map(v => CalibrationBits[v]).join(', ')}`;
+			return (
+				super.toString() +
+				`\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
+			);
 		}
 	}
 }
@@ -86,12 +86,11 @@ export class ReturnOffsetVariableResponse extends ReturnVariableResponse {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 
-	override toString(type?: "hex"): string {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString()
-				+ `\n  Offset: ${this.offset}`
+			return super.toString() + `\n  Offset: ${this.offset}`;
 		}
 	}
 }
@@ -105,15 +104,13 @@ export class ReturnRangeVariableResponse extends ReturnVariableResponse {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 
-	override toString(type?: "hex"): string {
+	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString()
-				+ `\n  Range: ${this.range}`
+			return super.toString() + `\n  Range: ${this.range}`;
 		}
 	}
 }
 
-export class ReturnErrorVariableResponse extends ReturnVariableResponse {
-}
+export class ReturnErrorVariableResponse extends ReturnVariableResponse {}

@@ -1,9 +1,8 @@
 import {SerialPort} from 'serialport';
-import {Motor} from "./Motor";
-import {delay} from "./util";
-import {MotorManager} from "./MotorManager";
-import {CalibrationBits} from "./BitMask";
-
+import {Motor} from './Motor';
+import {delay} from './util';
+import {MotorManager} from './MotorManager';
+import {CalibrationBits} from './BitMask';
 
 type ErrorListener = (err: Error) => void;
 type DataListener = (chunk: any) => void;
@@ -14,7 +13,7 @@ export class MockPort extends EventTarget {
 
 	constructor() {
 		super();
-		setImmediate(() => this.dispatchEvent(new Event('open')))
+		setImmediate(() => this.dispatchEvent(new Event('open')));
 	}
 
 	write(chunk: Uint8Array, cb: (err?: any) => void): void {
@@ -40,55 +39,33 @@ export class MockPort extends EventTarget {
 }
 
 function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
-	const port: SerialPort = new SerialPort({
-		path,
-		baudRate: 115200,
-		dataBits: 8,
-		stopBits: 1,
-		parity: 'odd'
-	}, err => {
-		if (err) {
-			console.error(err.message);
-			cb(new MockPort());
+	const port: SerialPort = new SerialPort(
+		{
+			path,
+			baudRate: 115200,
+			dataBits: 8,
+			stopBits: 1,
+			parity: 'odd'
+		},
+		(err) => {
+			if (err) {
+				console.error(err.message);
+				cb(new MockPort());
+			}
 		}
-	});
+	);
 	cb(port);
 }
 
 function main() {
-	openPort('COM3', port => {
+	openPort('COM3', (port) => {
 		port.on('close', () => console.log(port.path, 'closed'));
 
 		port.on('open', async () => {
 			console.log(port.path, 'opened');
 
-			const motor = new Motor(port, 1);
-			port.on('data', (data: Buffer) => motor.parse(data));
-
-			console.log('Calibration', (await motor.getCalibration()).map(b => CalibrationBits[b]));
-			console.log('Offset', await motor.getOffset());
-			console.log('Range', await motor.getRange());
-
-			await motor.tone(247);
-			await motor.move(0);
-			await delay(210);
-
-			for (let i = 15; i > 4; i -= 5) {
-				await motor.tone(294);
-				await motor.move(0, i);
-				await delay(210);
-				await motor.tone(392);
-				await motor.move(0, i);
-				await delay(210);
-			}
-
-			await motor.silent();
-
-			for (let i = 0; i < 10; ++i) {
-				await motor.move(Math.random() * 4096);
-				await delay(1200);
-			}
-			await motor.sleep();
+			const manager = new MotorManager(port);
+			port.on('data', (data: Buffer) => manager.parse(data));
 
 			port.close();
 		});
