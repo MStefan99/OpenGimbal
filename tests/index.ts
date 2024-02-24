@@ -2,6 +2,7 @@ import {SerialPort} from 'serialport';
 import {Motor} from "./Motor";
 import {delay} from "./util";
 import {MotorManager} from "./MotorManager";
+import {CalibrationBits} from "./BitMask";
 
 
 type ErrorListener = (err: Error) => void;
@@ -61,13 +62,12 @@ function main() {
 		port.on('open', async () => {
 			console.log(port.path, 'opened');
 
+			const motor = new Motor(port, 1);
 			port.on('data', (data: Buffer) => motor.parse(data));
 
-			const motor = new Motor(port, 1);
-
-			console.log('calibration', await motor.getCalibration());
-			console.log('offset', await motor.getOffset());
-			console.log('range', await motor.getRange());
+			console.log('Calibration', (await motor.getCalibration()).map(b => CalibrationBits[b]));
+			console.log('Offset', await motor.getOffset());
+			console.log('Range', await motor.getRange());
 
 			await motor.tone(247);
 			await motor.move(0);

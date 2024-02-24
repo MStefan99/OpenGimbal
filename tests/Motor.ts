@@ -37,6 +37,7 @@ const getVariableResponse: Record<MotorVariableID, (buffer: Uint8Array) => Retur
 };
 
 export class Motor {
+	readonly #debug: boolean;
 	readonly #address: number;
 	#port: SerialPort | MockPort;
 	#incomingBuffer = new Uint8Array(16);
@@ -45,9 +46,10 @@ export class Motor {
 	#bytesRemaining = 0;
 	#pendingRequests: Partial<Record<MotorVariableID, (response: MotorResponse) => void>> = {};
 
-	constructor(port: SerialPort | MockPort, address: number) {
+	constructor(port: SerialPort | MockPort, address: number, debug: boolean = false) {
 		this.#address = address;
 		this.#port = port;
+		this.#debug = debug
 	}
 
 	async #send(command: Command) {
@@ -60,7 +62,7 @@ export class Motor {
 				if (err) {
 					return reject(err);
 				}
-				console.log('Command sent:', command.toString(), '\n', command.toString('hex'));
+				this.#debug && console.log('Command sent:', command.toString(), '\n', command.toString('hex'));
 				resolve();
 			});
 		})
@@ -76,7 +78,7 @@ export class Motor {
 				if (err) {
 					return reject(err);
 				}
-				console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
+				this.#debug && console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
 				this.#pendingRequests[command.variableID] = resolve as (response: MotorResponse) => void;
 			});
 		});
@@ -104,7 +106,7 @@ export class Motor {
 
 				if (response instanceof ReturnVariableResponse) {
 					const variableResponse = getVariableResponse[response.variableID](this.#incomingBuffer);
-					console.log('Response received:', variableResponse.toString(), '\n', response.toString('hex'));
+					this.#debug && console.log('Response received:', variableResponse.toString(), '\n', response.toString('hex'));
 					this.#pendingRequests[variableResponse.variableID](variableResponse);
 					delete (this.#pendingRequests[variableResponse.variableID]);
 				}
