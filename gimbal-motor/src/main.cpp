@@ -67,17 +67,15 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (CommandType::GetVariable): {
-            uint8_t buf[16] {
-                static_cast<uint8_t>((0x4 << 8u) || (buffer.buffer[1] >> 8u)), // Destination address
-                static_cast<uint8_t>(deviceAddress << 8u), // Source address
-            };
             switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
                 case (Variable::Calibration): {
-                    buf[2] = static_cast<uint8_t>(Variable::Calibration);
-                    buf[3] = (!!data::options.polePairs << 1u) | (!!data::options.phaseOffset);
+                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                            static_cast<uint8_t>(Variable::Calibration), 
+                            static_cast<uint8_t>((!!data::options.polePairs << 1u) | (!!data::options.phaseOffset)));
+                    uart::send(command.getBuffer(), command.getLength());
+                    break;
                 }
             }
-            uart::send(buf, 4);
             break;
         }
         case (CommandType::SetVariable): {

@@ -23,6 +23,7 @@
 #include "lib/inc/PID.hpp"
 #include "lib/inc/as5600.hpp"
 #include "lib/inc/MovementController.hpp"
+#include "lib/inc/Command.hpp"
 
 
 enum class CommandType : uint8_t {
