@@ -9,9 +9,11 @@ export type MotorEntry = {
 };
 
 export class MotorManager {
+	#port: SerialPort | MockPort;
 	#motorEntries: Array<MotorEntry>;
 
 	constructor(port: SerialPort | MockPort) {
+		this.#port = port;
 		this.#motorEntries = Array.from({length: 14}, (v, i) => ({
 			motor: new Motor(port, i + 1),
 			active: false
@@ -28,6 +30,14 @@ export class MotorManager {
 
 	get active(): Array<Motor> {
 		return this.#motorEntries.filter((e) => e.active).map((e) => e.motor);
+	}
+
+	get(address: Motor['address']): Motor {
+		return this.motors.find(e => e.address === address);
+	}
+
+	all() {
+		return new Motor(this.#port, 15);
 	}
 
 	async parse(data: Uint8Array): Promise<Array<MotorResponse>> {

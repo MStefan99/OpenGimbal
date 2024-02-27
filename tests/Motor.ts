@@ -99,7 +99,7 @@ export class Motor {
 					reject,
 					timeout: setTimeout(() => {
 						reject(new Error('Timed out while waiting for motor response'));
-					}, 100)
+					}, 20)
 				};
 			});
 		});
@@ -156,7 +156,7 @@ export class Motor {
 		return this.disable();
 	}
 
-	move(position: number, torque: number = 15) {
+	move(position: number = 0, torque: number = 15) {
 		return this.#send(new PositionCommand(0, this.#address, torque, position));
 	}
 
@@ -174,7 +174,7 @@ export class Motor {
 		return this.#send(new ToneCommand(0, this.#address, 25000));
 	}
 
-	haptic(intensity: number, duration: number) {
+	haptic(intensity: number, duration: number = 50) {
 		return this.#send(new HapticCommand(0, this.#address, intensity, duration));
 	}
 
@@ -187,15 +187,15 @@ export class Motor {
 	 *
 	 * Example:
 	 * motor.move(1024) // Position is now 1024
-	 * motor.setOffset(3072) // Offset was changed so that the current position is now 3072 even though the motor didn't move
+	 * motor.adjustOffset(3072) // Offset was changed so that the current position is now 3072 even though the motor didn't move
 	 * motor.move(3072) // Position is now 3072, which is the same as 1024 used to be, the motor still doesn't move
 	 * motor.move(2048) // Motor moves from 3072 (old 1024) to 2048 (old 0)
 	 */
-	setOffset(offset: number) {
+	adjustOffset(offset: number = 0) {
 		return this.#send(new OffsetCommand(0, this.#address, offset));
 	}
 
-	calibrate(mode: BitwiseRegister<CalibrationBits>) {
+	calibrate(mode: BitwiseRegister<CalibrationBits> = new BitwiseRegister<CalibrationBits>().set(CalibrationBits.Zero)) {
 		return this.#send(new CalibrationCommand(0, this.#address, mode));
 	}
 

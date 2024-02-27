@@ -1,8 +1,7 @@
 import {SerialPort} from 'serialport';
 import {MotorManager} from './MotorManager';
-import {Motor} from './Motor';
 import {delay} from './util';
-import {CalibrationBits} from './BitMask';
+import {BitwiseRegister, CalibrationBits} from './BitMask';
 
 type ErrorListener = (err: Error) => void;
 type DataListener = (chunk: any) => void;
@@ -67,11 +66,7 @@ function main() {
 			const manager = new MotorManager(port);
 			port.on('data', (data: Buffer) => manager.parse(data));
 
-			console.log(
-				'Active motors:',
-				(await manager.enumerate()).filter((e) => e.active).map((e) => e.motor.address)
-			);
-
+			await manager.enumerate();
 			for (const motor of manager.active) {
 				console.log(
 					`Motor ${motor.address} status:` +
@@ -79,29 +74,40 @@ function main() {
 						`\n  Offset: ${await motor.getOffset()}` +
 						`\n  Range: ${await motor.getRange()}`
 				);
+			}
 
-				await motor.tone(247);
-				await motor.move(0);
-				await delay(210);
+			if (!manager.active.length) {
+				console.error('No motors found');
+			} else {
+				const all = manager.all();
 
+				await all.tone(247);
+				await all.move(0);
+				await delay(205);
 				for (let i = 15; i > 4; i -= 5) {
-					await motor.tone(294);
-					await motor.move(0, i);
-					await delay(210);
-					await motor.tone(392);
-					await motor.move(0, i);
-					await delay(210);
+					await all.tone(294);
+					await all.move(0, i);
+					await delay(205);
+					await all.tone(392);
+					await all.move(0, i);
+					await delay(205);
+				}
+				await all.silent();
+
+				await all.move();
+				await delay(2000);
+				for (let i = 0; i < 256; ++i) {
+					await manager.get(1).move(3 * i);
+					await manager.get(2).move(4096 - 4 * i);
+					await manager.get(3).move(2 * i);
+					await delay(10);
+				}
+				for (const motor of manager.active) {
+					await motor.move(0, 5);
+					await delay(1000);
 				}
 
-				await motor.silent();
-
-				for (let i = 0; i < 10; ++i) {
-					await motor.move(Math.random() * 4096);
-					await delay(1200);
-				}
-
-				await motor.disable();
-				await motor.sleep();
+				await all.disable();
 			}
 
 			port.close();
