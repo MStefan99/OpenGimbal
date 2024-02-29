@@ -232,8 +232,9 @@ int main() {
     movementController.setOffset(data::options.zeroOffset);
     movementController.setRange(data::options.range);
     
-    float v {0};
-    float a {0};
+    float v {0.0f};
+    float a {0.0f};
+    float torque {0.0f};
     
     while (1) {
         switch(mode) {
@@ -275,7 +276,7 @@ int main() {
                     }
                 } else { // Close to target, using sliding mode control
                     a = 0.0f; // Resetting acceleration for time-optimal initial measurement
-                    float torque {dAngle - 100 * v}; // Keeping velocity equal to dAngle / 100
+                    torque += ((dAngle - 100 * v) - torque) / 10.0f; // Keeping velocity equal to dAngle / 100
                     applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
                 }
 
