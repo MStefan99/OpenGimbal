@@ -97,9 +97,9 @@ function main() {
 				await all.move();
 				await delay(2000);
 				for (let i = 0; i < 256; ++i) {
-					await manager.get(1).move(3 * i);
-					await manager.get(2).move(4096 - 4 * i);
-					await manager.get(3).move(2 * i);
+					await manager.motor(1).move(3 * i);
+					await manager.motor(2).move(4096 - 4 * i);
+					await manager.motor(3).move(2 * i);
 					await delay(10);
 				}
 				for (const motor of manager.active) {

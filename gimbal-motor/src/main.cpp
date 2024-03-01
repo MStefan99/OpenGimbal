@@ -233,7 +233,6 @@ int main() {
     movementController.setRange(data::options.range);
     
     float v {0.0f};
-    float a {0.0f};
     float torque {0.0f};
     
     while (1) {
@@ -254,31 +253,11 @@ int main() {
                 uint16_t prevAngle {angle};
                 angle = measureAngle();
 
-                // Updating current speed and acceleration
-                float newV = v + (getDifference(angle, prevAngle) - v) / 30.0f;
-                float newA {newV - v};
-                v = newV;
-
-                if (dAngle < -128 || dAngle > 128) { // Far from target, using time-optimal control
-                    float D = v * v - 2.0f * a * dAngle; // Calculate if the motor will reach the target (>=0 - yes, <0 - no)
-
-                    if (D <= 2) { // Update measured acceleration value during acceleration
-                        a += (newA - a) / 20.0f;
-                    }
-                    if (dAngle > 0 == a < 0) { // To avoid chatter and incorrect measurements, flip acceleration sign if needed
-                        a = -a;
-                    }
-
-                    if (-0.005 < a && a < 0.005) { // Acceleration isn't measured yet, applying full power to measure
-                        applyTorque(angle, maxTorque, dAngle > 0); // Accelerating towards destination
-                    } else if (util::abs(D) > 2) { // Acceleration measured, using it to predict the stopping distance
-                        applyTorque(angle, maxTorque, dAngle > 0 == D <= 0); // Accelerating or decelerating based on prediction
-                    }
-                } else { // Close to target, using sliding mode control
-                    a = 0.0f; // Resetting acceleration for time-optimal initial measurement
-                    torque += ((dAngle - 100 * v) - torque) / 10.0f; // Keeping velocity equal to dAngle / 100
-                    applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
-                }
+                // Updating current speed
+                v += (getDifference(angle, prevAngle) - v) / 30.0f;
+                // Keeping velocity equal to dAngle / 100
+                torque += ((dAngle - 100 * v) - torque) / 10.0f;
+                applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
 
                 util::runTasks();
                 util::sleep(1);
