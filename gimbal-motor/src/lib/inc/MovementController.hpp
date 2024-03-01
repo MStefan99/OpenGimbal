@@ -35,7 +35,7 @@ protected:
 
 	int32_t offset {0};
 	uint16_t target {0};
-	uint16_t allowedRange {2048}; // 0 indicates no limit
+	uint16_t allowedRange {0}; // 0 indicates no limit
 	int32_t deflection {0};
 	int32_t desiredDeflection {0};
 };

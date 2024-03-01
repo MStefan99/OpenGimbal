@@ -9,8 +9,8 @@ export type MotorEntry = {
 };
 
 export class MotorManager {
-	#port: SerialPort | MockPort;
-	#motorEntries: Array<MotorEntry>;
+	readonly #port: SerialPort | MockPort;
+	readonly #motorEntries: Array<MotorEntry>;
 
 	constructor(port: SerialPort | MockPort) {
 		this.#port = port;
@@ -18,10 +18,6 @@ export class MotorManager {
 			motor: new Motor(port, i + 1),
 			active: false
 		}));
-	}
-
-	get motorEntries(): Array<MotorEntry> {
-		return this.#motorEntries;
 	}
 
 	get motors(): Array<Motor> {
@@ -32,7 +28,7 @@ export class MotorManager {
 		return this.#motorEntries.filter((e) => e.active).map((e) => e.motor);
 	}
 
-	get(address: Motor['address']): Motor {
+	motor(address: Motor['address'] = 1): Motor {
 		return this.motors.find(e => e.address === address);
 	}
 
@@ -50,7 +46,7 @@ export class MotorManager {
 		return responses;
 	}
 
-	async enumerate(): Promise<Array<MotorEntry>> {
+	async enumerate(): Promise<Array<Motor>> {
 		for (const entry of this.#motorEntries) {
 			try {
 				entry.active = !!(await entry.motor.getCalibration()).length;
@@ -58,6 +54,6 @@ export class MotorManager {
 				// Nothing to do
 			}
 		}
-		return this.#motorEntries;
+		return this.motors;
 	}
 }

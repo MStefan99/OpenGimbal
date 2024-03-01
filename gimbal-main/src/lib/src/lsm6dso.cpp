@@ -10,23 +10,23 @@ static float rot[3] {0};
 
 
 void lsm6dso::init() {
-//    uint8_t ctrl1_xl {0x30};
-    uint8_t ctrl2_g {0x70};
-//    i2c::writeRegister(LSM6DSO_ADDR, 0x10, &ctrl1_xl);
+    uint8_t ctrl1_xl {0x40};
+    uint8_t ctrl2_g {0x40};
+    i2c::writeRegister(LSM6DSO_ADDR, 0x10, &ctrl1_xl);
     i2c::writeRegister(LSM6DSO_ADDR, 0x11, &ctrl2_g);
 }
 
 
 void lsm6dso::update() {
-//	i2c::readRegister(LSM6DSO_ADDR, 0x28, 6, [](bool success, const dma::I2CTransfer& transfer) {
-//        for (uint8_t i {0}; i < 3; ++i) {
-//            acc[i] = transfer.buf[i] * ACC_LSB;
-//        }
-//    });
-	i2c::readRegister(LSM6DSO_ADDR, 0x22, 6, [](bool success, const dma::I2CTransfer& transfer) {
-       for (uint8_t i {0}; i < 3; ++i) {
-            rot[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ROT_LSB;
-        } 
+	i2c::readRegister(LSM6DSO_ADDR, 0x28, 6, [](bool success, const dma::I2CTransfer& transfer) {
+        for (uint8_t i {0}; i < 3; ++i) {
+            acc[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ACC_LSB;
+        }
+        i2c::readRegister(LSM6DSO_ADDR, 0x22, 6, [](bool success, const dma::I2CTransfer& transfer) {
+           for (uint8_t i {0}; i < 3; ++i) {
+                rot[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ROT_LSB;
+            } 
+        });
     });
 }
 
