@@ -11,6 +11,14 @@ static constexpr uint8_t idleTorque {150};
 static constexpr uint8_t deviceAddress {1};
 // Maximum allowed torque
 static uint8_t maxTorque {0};
+/* This value is used for sliding mode control
+ *
+ * The difference between the current and target angle will be divided by this value
+ * and the result will be used as a target speed.
+ * The lower the value, the faster and more aggressive the control will be
+ * but raising it too high will result in overshoot and oscillation.
+ */
+static float speedMultiplier {100.0f};
 
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
@@ -231,9 +239,11 @@ int main() {
     uart::setCallback(processCommand);
     movementController.setOffset(data::options.zeroOffset);
     movementController.setRange(data::options.range);
-    
+
     float v {0.0f};
     float torque {0.0f};
+    int16_t prevTarget {0};
+    int16_t dTarget {0};
     
     while (1) {
         switch(mode) {
@@ -248,17 +258,20 @@ int main() {
                 break;
             }
             case (Mode::Drive): {
-                // Calculating difference between current and set angle
-                int16_t dAngle = getDifference(movementController.getTarget(), angle);
                 uint16_t prevAngle {angle};
                 angle = measureAngle();
+                // Calculating difference between current and target angle
+                int16_t dAngle = getDifference(movementController.getTarget(), angle);
+                // Calculating how much target has moved (velocity of a target value)
+                dTarget = (getDifference(movementController.getTarget(), prevTarget) - dTarget) / 10.0f;
 
                 // Updating current speed
-                v += (getDifference(angle, prevAngle) - v) / 30.0f;
-                // Keeping velocity equal to dAngle / 100
-                torque += ((dAngle - 100 * v) - torque) / 10.0f;
+                v = getDifference(angle, prevAngle);
+                // Maintaining velocity
+                torque += ((dAngle - speedMultiplier * v + speedMultiplier * dTarget) - torque) / 50.0f;
                 applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
-
+                
+                prevTarget = movementController.getTarget();
                 util::runTasks();
                 util::sleep(1);
                 break;
