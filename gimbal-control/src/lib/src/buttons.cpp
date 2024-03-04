@@ -98,8 +98,22 @@ void buttons::init() {
 }
 
 
+static void sleep() {
+    SCB->SCR = SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk;
+    PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_APB;
+    while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_APB);
+    __WFI();
+    SCB->SCR = SCB_SCR_SEVONPEND_Msk;
+    PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_CPU;
+    while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_CPU);
+}
+
 void buttons::update() {
     switch (currentState) {
+        case (State::Idle): {
+            sleep();
+            break;
+        }
         case (State::Short): {
             if (util::getTime() - switchTime > MAX_SHORT_PRESS_TIME) {
                 currentState = State::Idle;
