@@ -18,4 +18,3 @@ const Command::buffer_type& Command::getBuffer() {
 Command::size_type Command::getLength() {
     return this->length;
 }
-

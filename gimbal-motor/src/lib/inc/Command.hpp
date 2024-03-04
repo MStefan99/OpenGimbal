@@ -19,6 +19,29 @@ public:
     using buffer_type = data_type[16];
     using size_type = uint8_t;
     
+    enum class CommandType : uint8_t {
+        Sleep = 0x0,
+        Position = 0x1,
+        Tone = 0x2,
+        Haptic = 0x3,
+        Offset = 0x4,
+        Calibrate = 0x5,
+        GetVariable = 0x6,
+        SetVariable = 0x7
+    };
+
+    enum class Variable : uint8_t {
+        Calibration = 0x0,
+        Offset = 0x1,
+        Range = 0x2,
+        Error = 0xf
+    };
+
+    enum class CalibrationMode : uint8_t {
+        Zero = 0u,
+        Pole = 1u
+    };
+    
     Command(data_type srcAddr, data_type destAddr, data_type cmdType, data_type cmdLength, buffer_type cmdData);
     
     const buffer_type& getBuffer();
@@ -38,16 +61,16 @@ class GetVariableCommand : Command {
 class ReturnVariableCommand : public Command {
 public:
     template <class T>
-    ReturnVariableCommand(data_type srcAddr, data_type destAddr, data_type variableLength, T variable);
+    ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value);
 };
 
 template <class T>
-ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, data_type variableIndex, T variable): 
+ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value): 
     Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
-    this->buffer[2] = variableIndex;
+    this->buffer[2] = static_cast<uint8_t>(variableID);
     for (size_type i {0}; i < sizeof(T); ++i) {
-        this->buffer[sizeof(T) + 2 - i] = variable;
-        variable >>= 8;
+        this->buffer[sizeof(T) + 2 - i] = value;
+        value >>= 8;
     }
 }
 

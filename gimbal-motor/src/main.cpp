@@ -48,49 +48,49 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         return; // Command intended for another device
     }
     
-    switch(static_cast<CommandType>(buffer.buffer[1] & 0x0f)) { // Switch command type
-        case (CommandType::Sleep): {
+    switch(static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) { // Switch command type
+        case (Command::CommandType::Sleep): {
             mode = Mode::Sleep;
             break;
         }
-        case (CommandType::Position): {
+        case (Command::CommandType::Position): {
             movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
             break;
         }
-        case (CommandType::Tone): {
+        case (Command::CommandType::Tone): {
             bldc::tone((buffer.buffer[2] << 8u) | buffer.buffer[3]);
             break;
         }
-        case (CommandType::Offset): {
+        case (Command::CommandType::Offset): {
             movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             int16_t offset = movementController.getOffset();
             data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
             data::write();
             break;
         }
-        case (CommandType::Calibrate): {
+        case (Command::CommandType::Calibrate): {
             mode = Mode::Calibrate;
             calibrationMode = buffer.buffer[2];
             break;
         }
-        case (CommandType::GetVariable): {
-            switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
-                case (Variable::Calibration): {
+        case (Command::CommandType::GetVariable): {
+            switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
+                case (Command::Variable::Calibration): {
                     auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
-                            static_cast<uint8_t>(Variable::Calibration), 
+                            Command::Variable::Calibration, 
                             static_cast<uint8_t>((!!data::options.polePairs << 1u) | (!!data::options.phaseOffset)));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
-                } case (Variable::Offset): {
+                } case (Command::Variable::Offset): {
                     auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
-                            static_cast<uint8_t>(Variable::Offset), 
+                            Command::Variable::Offset, 
                             static_cast<uint16_t>(movementController.getOffset()));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
-                } case (Variable::Range): {
+                } case (Command::Variable::Range): {
                     auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
-                            static_cast<uint8_t>(Variable::Range), 
+                            Command::Variable::Range, 
                             movementController.getRange());
                     uart::send(command.getBuffer(), command.getLength());
                     break;
@@ -98,16 +98,16 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             }
             break;
         }
-        case (CommandType::SetVariable): {
-            switch (static_cast<Variable>(buffer.buffer[2])) { // Switch variable
-                case (Variable::Offset): {
+        case (Command::CommandType::SetVariable): {
+            switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
+                case (Command::Variable::Offset): {
                     movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
                     int16_t offset = movementController.getOffset();
                     data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
                     data::write();
                     break;
                 }
-                case (Variable::Range): {
+                case (Command::Variable::Range): {
                     movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
                     int16_t range = movementController.getRange();
                     data::edit(reinterpret_cast<const uint8_t&>(data::options.range), reinterpret_cast<uint8_t&>(range), sizeof(range));
@@ -154,7 +154,7 @@ void calibrate() {
     
     uint16_t torqueAngle {0}; 
     
-    if (calibrationMode & (1 << static_cast<uint8_t>(CalibrationMode::Pole))) {
+    if (calibrationMode & (1 << static_cast<uint8_t>(Command::CalibrationMode::Pole))) {
         uint8_t polePairs {0};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};

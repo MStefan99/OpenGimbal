@@ -26,38 +26,11 @@
 #include "lib/inc/Command.hpp"
 
 
-enum class CommandType : uint8_t {
-    Sleep = 0x0,
-    Position = 0x1,
-    Tone = 0x2,
-    Haptic = 0x3,
-    Offset = 0x4,
-    Calibrate = 0x5,
-    GetVariable = 0x6,
-    SetVariable = 0x7
-};
-
-
-enum class Variable : uint8_t {
-    Calibration = 0x0,
-    Offset = 0x1,
-    Range = 0x2,
-    Error = 0xf
-};
-
-
 enum class Mode : uint8_t {
     Sleep = 0x0,
     Calibrate = 0x1,
     Drive = 0x2,
     Haptic = 0x3
 };
-
-
-enum class CalibrationMode : uint8_t {
-    Zero = 0u,
-    Pole = 1u
-};
-
 
 #endif	/* MAIN_HPP */
