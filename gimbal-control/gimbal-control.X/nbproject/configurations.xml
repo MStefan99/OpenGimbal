@@ -38,7 +38,7 @@
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/pwm.hpp</itemPath>
         <itemPath>../src/lib/inc/buttons.hpp</itemPath>
-        <itemPath>../src/lib/inc/main_board.hpp</itemPath>
+        <itemPath>../src/lib/inc/Command.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
@@ -114,6 +114,7 @@
           </logicalFolder>
         </logicalFolder>
       </logicalFolder>
+      <itemPath>../src/main.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -153,7 +154,7 @@
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="stdio" displayName="stdio" projectFiles="true">
-            <itemPath>../src/config/default/stdio/xc32_monitor.c</itemPath>
+            <itemPath>../src/config/default/stdio/xc32_monitor.cpp</itemPath>
           </logicalFolder>
           <itemPath>../src/config/default/exceptions.c</itemPath>
           <itemPath>../src/config/default/libc_syscalls.c</itemPath>
@@ -167,7 +168,7 @@
         <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/pwm.cpp</itemPath>
         <itemPath>../src/lib/src/buttons.cpp</itemPath>
-        <itemPath>../src/lib/src/main_board.cpp</itemPath>
+        <itemPath>../src/lib/src/Command.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
@@ -189,8 +190,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
         <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
+        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>

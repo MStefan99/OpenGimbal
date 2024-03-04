@@ -37,18 +37,22 @@
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
-#include <stddef.h>
+#include <cstddef>
 
-extern int read(int handle, void *buffer, unsigned int len);
-extern int write(int handle, void * buffer, size_t count);
+#include "lib/inc/uart.hpp"
 
 
-int read(int handle, void *buffer, unsigned int len)
-{
-   return -1;
-}
+extern "C" {
+    extern int read(int handle, void *buffer, unsigned int len);
+    extern int write(int handle, void * buffer, size_t count);
 
-int write(int handle, void * buffer, size_t count)
-{
-   return -1;
+
+    int read(int handle, void *buffer, unsigned int len) {
+       return -1;
+    }
+
+    int write(int handle, void * buffer, size_t count) {   
+        uart::send(reinterpret_cast<const uint8_t*>(buffer), count);
+        return count;
+    }
 }
