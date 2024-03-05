@@ -57,12 +57,12 @@ void util::init() { // TODO: move away
     GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 0
             | GCLK_GENCTRL_SRC_DFLL48M; // Set DFLL48M as a source
     
-    GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
-            | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source
-            | GCLK_GENCTRL_DIVSEL_DIV2 // Set division mode (2^(x+1))
-            | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
-    GCLK_REGS->GCLK_PCHCTRL[30] = GCLK_PCHCTRL_CHEN(1) // Enable ADC clock
-            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
+//    GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
+//            | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source
+//            | GCLK_GENCTRL_DIVSEL_DIV2 // Set division mode (2^(x+1))
+//            | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
+//    GCLK_REGS->GCLK_PCHCTRL[30] = GCLK_PCHCTRL_CHEN(1) // Enable ADC clock
+//            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
     
     // SysTick config
     SysTick_Config(48000);
@@ -73,11 +73,11 @@ void util::init() { // TODO: move away
     NVIC_EnableIRQ(SysTick_IRQn);
 
     // ADC config
-    ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTREF; // Set ADC reference voltage
-    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-            | ADC_INPUTCTRL_MUXPOS_TEMP; // Set temperature sensor as positive input
-    ADC_REGS->ADC_INTENSET = ADC_INTFLAG_RESRDY(1); // Enable result ready interrupt
-    ADC_REGS->ADC_CTRLA = ADC_CTRLA_ENABLE(1); // Enable ADC
+//    ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTREF; // Set ADC reference voltage
+//    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
+//            | ADC_INPUTCTRL_MUXPOS_TEMP; // Set temperature sensor as positive input
+//    ADC_REGS->ADC_INTENSET = ADC_INTFLAG_RESRDY(1); // Enable result ready interrupt
+//    ADC_REGS->ADC_CTRLA = ADC_CTRLA_ENABLE(1); // Enable ADC
 }
 
 uint32_t util::getTime() {

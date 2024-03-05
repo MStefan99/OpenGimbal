@@ -75,4 +75,3 @@ ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAd
 }
 
 #endif	/* COMMAND_HPP */
-

@@ -3,22 +3,7 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
-// The total degrees for one full rotation
-static constexpr uint16_t fullRotation {4096};
-// Minimum torque to get the motor moving
-static constexpr uint8_t idleTorque {150};
-// Device address
-static constexpr uint8_t deviceAddress {1};
-// Maximum allowed torque
 static uint8_t maxTorque {0};
-/* This value is used for sliding mode control
- *
- * The difference between the current and target angle will be divided by this value
- * and the result will be used as a target speed.
- * The lower the value, the faster and more aggressive the control will be
- * but raising it too high will result in overshoot and oscillation.
- */
-static float speedMultiplier {100.0f};
 
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
@@ -162,7 +147,7 @@ void calibrate() {
         do {
             torqueAngle += 10;
 
-            if (torqueAngle >= fullRotation) {
+            if (torqueAngle >= fullRevolution) {
                 torqueAngle = 0;
                 if (angle > lastPoleAngle) {
                     ++direction;
@@ -208,9 +193,9 @@ int16_t getDifference(uint16_t angleA, uint16_t angleB) {
 
 void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     // Calculate electrical angle from encoder reading
-    uint16_t eAngleCW = (data::options.polePairs * (fullRotation + angle - data::options.phaseOffset)) % fullRotation;
+    uint16_t eAngleCW = (data::options.polePairs * (fullRevolution + angle - data::options.phaseOffset)) % fullRevolution;
     // Flip the angle if the motor polarity is reversed
-    uint16_t eAngle = data::options.direction < 0? fullRotation - eAngleCW : eAngleCW;
+    uint16_t eAngle = data::options.direction < 0? fullRevolution - eAngleCW : eAngleCW;
     
     bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + 1024: eAngle + 3072, power);
 }
@@ -240,10 +225,9 @@ int main() {
     movementController.setOffset(data::options.zeroOffset);
     movementController.setRange(data::options.range);
 
-    float v {0.0f};
-    float torque {0.0f};
-    int16_t prevTarget {0};
-    int16_t dTarget {0};
+    LowPassFilter angleFilter {1000, 50};
+    LowPassFilter velocityFilter {1000, 50};
+    LowPassFilter torqueFilter {1000, 5};
     
     while (1) {
         switch(mode) {
@@ -261,17 +245,17 @@ int main() {
                 uint16_t prevAngle {angle};
                 angle = measureAngle();
                 // Calculating difference between current and target angle
-                int16_t dAngle = getDifference(movementController.getTarget(), angle);
-                // Calculating how much target has moved (velocity of a target value)
-                dTarget = (getDifference(movementController.getTarget(), prevTarget) - dTarget) / 10.0f;
-
-                // Updating current speed
-                v = getDifference(angle, prevAngle);
-                // Maintaining velocity
-                torque += ((dAngle - speedMultiplier * v + speedMultiplier * dTarget) - torque) / 50.0f;
-                applyTorque(angle, util::min(static_cast<int16_t>(util::abs(torque) + 140), static_cast<int16_t>(maxTorque)), torque > 0);
+                float dAngle = angleFilter.process(getDifference(movementController.getTarget(), angle));
                 
-                prevTarget = movementController.getTarget();
+                // Updating current speed
+                float v = velocityFilter.process(getDifference(angle, prevAngle));
+                // Maintaining velocity
+                float deadZoneCoefficient = (maxTorque - util::min(idleTorque, maxTorque))
+                    / (deadZone * fullRevolution / 360);
+                float torque = torqueFilter.process(deadZoneCoefficient * (dAngle - speedMultiplier * v));
+                applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
+                        static_cast<uint16_t>(maxTorque)), torque > 0);
+                
                 util::runTasks();
                 util::sleep(1);
                 break;
