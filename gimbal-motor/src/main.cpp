@@ -60,6 +60,9 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (Command::CommandType::GetVariable): {
+            if (address == 0xf) { // Get variable commands cannot be issued to all devices at once
+                break;
+            }
             switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
                 case (Command::Variable::Calibration): {
                     auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
@@ -212,6 +215,20 @@ void sleep() {
     while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
 
+float countsToRad(int16_t counts) {
+    return static_cast<float>(counts) / fullRevolution * TWO_PI; 
+}
+
+#if DV_OUT
+struct Data {
+    uint8_t header {0x03};
+    float dAngle {};
+    float v {};
+    float u {};
+    uint8_t footer {0xfc};
+} __attribute__((packed));
+#endif
+
 int main() {
     util::init();
 
@@ -225,9 +242,8 @@ int main() {
     movementController.setOffset(data::options.zeroOffset);
     movementController.setRange(data::options.range);
 
-    LowPassFilter angleFilter {1000, 50};
-    LowPassFilter velocityFilter {1000, 50};
-    LowPassFilter torqueFilter {1000, 5};
+    LowPassFilter angleFilter {1000, 10};
+    LowPassFilter velocityFilter {1000, 10};
     
     while (1) {
         switch(mode) {
@@ -248,13 +264,24 @@ int main() {
                 float dAngle = angleFilter.process(getDifference(movementController.getTarget(), angle));
                 
                 // Updating current speed
-                float v = velocityFilter.process(getDifference(angle, prevAngle));
+                float v = velocityFilter.process(getDifference(prevAngle, angle) * 1000.0f);
                 // Maintaining velocity
-                float deadZoneCoefficient = (maxTorque - util::min(idleTorque, maxTorque))
-                    / (deadZone * fullRevolution / 360);
-                float torque = torqueFilter.process(deadZoneCoefficient * (dAngle - speedMultiplier * v));
+                auto x = Matrix<float, uint8_t, 2, 1> {{countsToRad(dAngle)}, {countsToRad(v)}};
+                auto u = K * x;
+                float torque = u[0][0] * ((maxTorque - idleTorque) / 10);
+                
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                         static_cast<uint16_t>(maxTorque)), torque > 0);
+                
+                #if DV_OUT
+                    if (util::getTime() % 10 == 0) {
+                        Data data {};
+                        data.dAngle = x[0][0];
+                        data.v = x[1][0];
+                        data.u = u[0][0];
+                        uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+                    }
+                #endif
                 
                 util::runTasks();
                 util::sleep(1);
