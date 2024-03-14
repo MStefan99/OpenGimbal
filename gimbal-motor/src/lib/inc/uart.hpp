@@ -28,7 +28,7 @@ namespace uart {
         using callback_type = void (*)(const Buffer<size_type, C>&);
     };
     using DefaultCallback = Callback<uint8_t, 8>;
-    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 16>;
+    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 32>, uint8_t, 8>;
 
     void init();
     

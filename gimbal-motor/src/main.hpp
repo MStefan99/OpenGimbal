@@ -26,12 +26,13 @@
 #include "lib/inc/Command.hpp"
 #include "lib/inc/LowPassFilter.hpp"
 #include "lib/inc/Matrix.hpp"
+#include "lib/inc/Kalman.hpp"
 
 /* This will enable diagnostic output for Data Visualizer
  * Only use when no other devices are connected as the data sent
  * might be misinterpreted by them
  */
-#define DV_OUT 1
+#define DV_OUT 0
 
 // Encoder counts per one full revolution
 static constexpr uint16_t fullRevolution {4096};
@@ -40,7 +41,23 @@ static constexpr uint8_t idleTorque {140};
 // Device address
 static constexpr uint8_t deviceAddress {1};
 // Full state feedback gain matrix
-auto K = Matrix<float, uint8_t, 1, 2>{{25, 2.5}};
+constexpr auto K = Matrix<float, uint8_t, 1, 2>{{50, 5}};
+
+// Kalman filter matrices
+constexpr auto x0 = Matrix<float,
+		unsigned, 3, 1> {{0},
+                         {0},
+                         {0}};
+constexpr auto P0 = Matrix<float,
+		unsigned, 3, 3> {{PI, 0,  0 },
+                         {0,  5,  0 },
+                         {0,  0,  20}};
+constexpr auto Q = Matrix<float,
+		unsigned, 3, 3> {{0.0001, 0, 0},
+                         {0, 0.0001, 0},
+                         {0, 0, 0.0001}};
+constexpr auto R = Matrix<float,
+		unsigned, 1, 1> {{100}};
 
 enum class Mode : uint8_t {
     Sleep = 0x0,
