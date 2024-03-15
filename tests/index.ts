@@ -1,7 +1,8 @@
 import {SerialPort} from 'serialport';
 import {MotorManager} from './MotorManager';
-import {delay} from './util';
+import {delay, interpolate} from './util';
 import {BitwiseRegister, CalibrationBits} from './BitMask';
+import {Motor} from './Motor';
 
 type ErrorListener = (err: Error) => void;
 type DataListener = (chunk: any) => void;
@@ -68,6 +69,11 @@ function main() {
 
 			await manager.enumerate();
 			for (const motor of manager.active) {
+				if ((await motor.getOffset()) === 0) {
+					await motor.adjustOffset();
+					await delay(20);
+				}
+
 				console.log(
 					`Motor ${motor.address} status:` +
 						`\n  Calibration: ${(await motor.getCalibration()).map((b) => CalibrationBits[b]).join(', ')}` +
@@ -79,35 +85,23 @@ function main() {
 			if (!manager.active.length) {
 				console.error('No motors found');
 			} else {
-				const all = manager.all();
-
-				await all.tone(247);
-				await all.move(0);
-				await delay(205);
-				for (let i = 15; i > 4; i -= 5) {
-					await all.tone(294);
-					await all.move(0, i);
-					await delay(205);
-					await all.tone(392);
-					await all.move(0, i);
-					await delay(205);
+				async function run(motor: Motor) {
+					await interpolate(0, 1024, 1000, 20, async (value) => await motor.move(value));
+					await interpolate(1024, -1024, 1000, 20, async (value) => await motor.move(value));
+					await interpolate(-1024, 2048, 2000, 20, async (value) => await motor.move(value));
+					await interpolate(2048, 256, 500, 20, async (value) => await motor.move(value));
+					await interpolate(256, 0, 1000, 20, async (value) => await motor.move(value));
 				}
-				await all.silent();
 
-				await all.move();
-				await delay(2000);
-				for (let i = 0; i < 256; ++i) {
-					await manager.motor(1).move(3 * i);
-					await manager.motor(2).move(4096 - 4 * i);
-					await manager.motor(3).move(2 * i);
-					await delay(10);
-				}
+				await manager.all.move();
+				await delay(1000);
+
 				for (const motor of manager.active) {
-					await motor.move(0, 5);
-					await delay(1000);
+					await run(motor);
 				}
+				await run(manager.all);
 
-				await all.disable();
+				await manager.all.disable();
 			}
 
 			port.close();

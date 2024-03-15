@@ -58,7 +58,8 @@ void Kalman<scalar, size_type, nx, nu, nz>::predict(const Matrix<scalar, size_ty
 template <class scalar, class size_type, size_type nx, size_type nu, size_type nz>
 void Kalman<scalar, size_type, nx, nu, nz>::correct(const Matrix<scalar, size_type, nz, nx>& H,
                                                     const Matrix<scalar, size_type, nz, 1>& z) {
-	auto K {_P * H.transpose() * (H * _P * H.transpose() + _R).inverse()};
+    auto Ht {H.transpose()};
+	auto K {_P * Ht * (H * _P * Ht + _R).inverse()};
 	_x = _x + K * (z - H * _x);
 
 	auto IKH {Matrix<scalar, size_type, nx, nx>::identity() - K * H};

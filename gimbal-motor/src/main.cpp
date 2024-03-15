@@ -13,6 +13,17 @@ static uint16_t rawTarget {0};
 static uint16_t angle {0};
 static bool dataReady {false};
 
+auto kalman = Kalman<float, unsigned, 3, 1, 1> {x0, P0, Q, R};
+
+constexpr float dt {1}; // In milliseconds, speed and velocity need to be multiplied by 1000
+constexpr auto F = Matrix<float, unsigned, 3, 3> {{1, dt, dt * dt / 2},
+                                        {0, 1, dt},
+                                        {0, 0,  1}};
+constexpr auto G = Matrix<float, unsigned, 3, 1> {{0},
+                                        {0},
+                                        {1}};
+constexpr auto H = Matrix<float, unsigned, 1, 3> {{1, 0, 0}};
+
 struct TorqueLUT {
 	uint16_t table[16];
 
@@ -208,7 +219,7 @@ void sleep() {
     bldc::applyTorque(0, 0);
     // Motor timers are double-buffered, meaning the outputs aren't disabled immediately
     // Waiting for the next tick as a workaround, this needs to be fixed later
-    __WFI(); 
+    __WFI();
     PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
     while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
     __WFI();
@@ -244,19 +255,8 @@ int main() {
     uart::setCallback(processCommand);
     movementController.setOffset(data::options.zeroOffset);
     movementController.setRange(data::options.range);
-
-    auto kalman = Kalman<float, unsigned, 3, 1, 1> {x0, P0, Q, R};
-
-    float dt {1};
-	auto F = Matrix<float, unsigned, 3, 3> {{1, dt, dt * dt / 2},
-	                                        {0, 1, dt},
-	                                        {0, 0,  1}};
-	auto G = Matrix<float, unsigned, 3, 1> {{0},
-	                                        {0},
-	                                        {1}};
-	auto H = Matrix<float, unsigned, 1, 3> {{1, 0, 0}};
     
-    LowPassFilter targetFilter {1000, 2};
+    LowPassFilter targetFilter {1000, 5};
     
     while (1) {
         switch(mode) {
@@ -276,12 +276,17 @@ int main() {
                     auto start = SysTick->VAL;
                 #endif
                 
+                if (rawTarget - targetFilter.getState() > 2048) {
+                    targetFilter.force(targetFilter.getState() + 4096);
+                } else if (rawTarget - targetFilter.getState() < -2048) {
+                    targetFilter.force(targetFilter.getState() - 4096);
+                }
                 movementController.setTarget(targetFilter.process(rawTarget));
                 angle = measureAngle();
                 // Calculating difference between current and target angle
                 float dAngle = countsToRad(getDifference(movementController.getTarget(), angle));
                 
-                // Estimating position
+                // Estimating state
                 auto z = Matrix<float, unsigned, 1, 1> {{dAngle}};
                 kalman.correct(H, z);
                 
@@ -295,8 +300,8 @@ int main() {
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                         static_cast<uint16_t>(maxTorque)), torque > 0);
                 
-                auto u = Matrix<float, unsigned, 1, 1> {{0}};
-                kalman.predict(F, G, u);
+                // Predicting next state
+                kalman.predict(F, G, {});
                 
                 util::runTasks();
                 #if DV_OUT
@@ -313,7 +318,7 @@ int main() {
                     }
                 #endif
                 
-                util::sleep(1);
+                util::sleep(1); // Waiting until next tick
                 break;
             }
         }

@@ -28,12 +28,12 @@ export class MotorManager {
 		return this.#motorEntries.filter((e) => e.active).map((e) => e.motor);
 	}
 
-	motor(address: Motor['address'] = 1): Motor {
-		return this.motors.find(e => e.address === address);
+	get all() {
+		return new Motor(this.#port, 15);
 	}
 
-	all() {
-		return new Motor(this.#port, 15);
+	motor(address: Motor['address'] = 1): Motor {
+		return this.motors.find(e => e.address === address);
 	}
 
 	async parse(data: Uint8Array): Promise<Array<MotorResponse>> {

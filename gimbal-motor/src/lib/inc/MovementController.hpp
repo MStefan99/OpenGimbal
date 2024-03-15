@@ -14,7 +14,7 @@ public:
 	void setRange(uint16_t range);
 	void setTarget(uint16_t newTarget);
 	void setOffset(int32_t newOffset);
-	void adjustOffset(uint16_t sourcePosition, uint16_t targetPosition);
+	void adjustOffset(int32_t sourcePosition, int32_t targetPosition);
 
 	uint16_t getRange() const;
 	int32_t getOffset() const;

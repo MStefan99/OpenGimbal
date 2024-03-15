@@ -58,8 +58,11 @@ void MovementController::setOffset(int32_t newOffset) {
 	offset = newOffset;
 }
 
-void MovementController::adjustOffset(uint16_t sourcePosition, uint16_t desiredPosition) {
-	int32_t adjustedOffset = static_cast<int32_t>(sourcePosition) - static_cast<int32_t>(desiredPosition);
+void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPosition) {
+    sourcePosition = wrapValue(sourcePosition);
+    desiredPosition = wrapValue(desiredPosition);
+    
+	int32_t adjustedOffset = sourcePosition - desiredPosition;
 	while (adjustedOffset < 0) adjustedOffset += 4096;
 	while (adjustedOffset >= 4096) adjustedOffset -= 4096;
 	setOffset(adjustedOffset);

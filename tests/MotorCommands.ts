@@ -1,4 +1,4 @@
-import {clamp} from './util';
+import {clamp, mod} from './util';
 import {BitwiseRegister, CalibrationBits} from './BitMask';
 import {Command} from './Command';
 
@@ -61,7 +61,7 @@ export class SleepCommand extends MotorCommand {
 export class PositionCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, torque: number, position: number) {
 		torque = Math.floor(clamp(torque, 0, 15));
-		position = Math.floor(clamp(position, 0, 4095));
+		position = Math.floor(mod(position, 4096));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
@@ -144,7 +144,7 @@ export class HapticCommand extends MotorCommand {
 
 export class OffsetCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, offset: number) {
-		offset = Math.floor(clamp(offset, 0, 4095));
+		offset = Math.floor(mod(offset, 4096));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
@@ -250,7 +250,7 @@ export class SetVariableCommand extends MotorCommand {
 
 export class SetOffsetVariableCommand extends SetVariableCommand {
 	constructor(srcAddr: number, destAddr: number, offset: number) {
-		super(srcAddr, destAddr, MotorVariableID.Offset, offset, 2);
+		super(srcAddr, destAddr, MotorVariableID.Offset, mod(offset, 4096), 2);
 	}
 
 	get offset() {
