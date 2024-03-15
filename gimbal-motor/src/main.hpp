@@ -41,7 +41,7 @@ static constexpr uint8_t idleTorque {140};
 // Device address
 static constexpr uint8_t deviceAddress {1};
 // Full state feedback gain matrix
-constexpr auto K = Matrix<float, uint8_t, 1, 2>{{50, 5}};
+constexpr auto K = Matrix<float, uint8_t, 1, 2>{{31.622776601683820,8.015332382588245}};
 
 // Kalman filter matrices
 constexpr auto x0 = Matrix<float,

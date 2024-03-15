@@ -14,10 +14,10 @@
 class LowPassFilter {
 public:
     LowPassFilter(float sampleRate, float cutoffFrequency) {
-        setFilterCoefficients(sampleRate, cutoffFrequency);
+        setCoefficients(sampleRate, cutoffFrequency);
     }
 
-    void setFilterCoefficients(float sampleRate, float cutoffFrequency) {
+    void setCoefficients(float sampleRate, float cutoffFrequency) {
         // Calculate the filter coefficient
         float RC = 1.0 / (cutoffFrequency * TWO_PI);
         float dt = 1.0 / sampleRate;
@@ -27,6 +27,15 @@ public:
     float process(float inputSample) {
         // Apply the filter: simple low-pass IIR filter equation
         y = y + alpha * (inputSample - y);
+        return y;
+    }
+    
+    float getState() {
+        return y;
+    }
+    
+    float force(float state) {
+        y = state;
         return y;
     }
 

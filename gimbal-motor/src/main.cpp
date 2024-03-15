@@ -8,6 +8,7 @@ static uint8_t maxTorque {0};
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
 static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
+static uint16_t rawTarget {0};
 
 static uint16_t angle {0};
 static bool dataReady {false};
@@ -39,7 +40,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (Command::CommandType::Position): {
-            movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            rawTarget = ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3];
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
             break;
         }
@@ -222,6 +223,7 @@ float countsToRad(int16_t counts) {
 #if DV_OUT
 struct Data {        
     uint8_t header {0x03};
+    uint16_t dt {};
     float x {};
     float v {};
     float a {};
@@ -254,7 +256,7 @@ int main() {
 	                                        {1}};
 	auto H = Matrix<float, unsigned, 1, 3> {{1, 0, 0}};
     
-    LowPassFilter torqueFilter {1000, 10};
+    LowPassFilter targetFilter {1000, 2};
     
     while (1) {
         switch(mode) {
@@ -270,6 +272,11 @@ int main() {
                 break;
             }
             case (Mode::Drive): {
+                #if DV_OUT
+                    auto start = SysTick->VAL;
+                #endif
+                
+                movementController.setTarget(targetFilter.process(rawTarget));
                 angle = measureAngle();
                 // Calculating difference between current and target angle
                 float dAngle = countsToRad(getDifference(movementController.getTarget(), angle));
@@ -283,8 +290,7 @@ int main() {
                 auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
                 
                 // Calculating and applying torque
-                // Low pass filter simply to reduce audible noise
-                float torque = torqueFilter.process((K * x)[0][0] * 10);
+                float torque = (K * x)[0][0] * 10;
                 
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                         static_cast<uint16_t>(maxTorque)), torque > 0);
@@ -292,11 +298,13 @@ int main() {
                 auto u = Matrix<float, unsigned, 1, 1> {{0}};
                 kalman.predict(F, G, u);
                 
+                util::runTasks();
                 #if DV_OUT
                     if (util::getTime() % 10 < 1) {
                         Data data {};
                         auto kx = kalman.x();
                         
+                        data.dt = (start - SysTick->VAL) / 48;
                         data.x = kx[0][0];
                         data.v = kx[1][0] * 1000;
                         data.a = kx[2][0] * 1000;
@@ -305,7 +313,6 @@ int main() {
                     }
                 #endif
                 
-                util::runTasks();
                 util::sleep(1);
                 break;
             }
