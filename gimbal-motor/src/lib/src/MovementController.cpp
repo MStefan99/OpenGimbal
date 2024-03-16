@@ -4,20 +4,16 @@
 
 #include "lib/inc/MovementController.hpp"
 
-int32_t MovementController::wrapValue(int32_t value) {
-	value %= 4096;
-	if (value < 0) {
-		value += 4096;
-	}
-	return value;
+int32_t mod(int32_t a, int32_t b) {
+	return ((a % b) + b) % b;
 }
 
 void MovementController::setRange(uint16_t range) {
 	allowedRange = range;
 }
 
-void MovementController::setTarget(uint16_t newTarget) {
-	newTarget = wrapValue(newTarget + offset);
+void MovementController::setTarget(int32_t newTarget) {
+	newTarget = mod(newTarget + offset, 4096);
 	int32_t newDeflection = deflection + newTarget - target;
 	int32_t newDesiredDeflection = newDeflection;
 
@@ -40,10 +36,10 @@ void MovementController::setTarget(uint16_t newTarget) {
 	if (allowedRange) {
 		if (newDeflection > allowedRange) {
 			newDeflection = allowedRange;
-			newTarget = wrapValue(newDeflection);
+			newTarget = mod(newDeflection, 4096);
 		} else if (newDeflection < -allowedRange) {
 			newDeflection = -allowedRange;
-			newTarget = wrapValue(newDeflection);
+			newTarget = mod(newDeflection, 4096);
 		}
 	}
 
@@ -59,8 +55,8 @@ void MovementController::setOffset(int32_t newOffset) {
 }
 
 void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPosition) {
-    sourcePosition = wrapValue(sourcePosition);
-    desiredPosition = wrapValue(desiredPosition);
+    sourcePosition = mod(sourcePosition, 4096);
+    desiredPosition = mod(desiredPosition, 4096);
     
 	int32_t adjustedOffset = sourcePosition - desiredPosition;
 	while (adjustedOffset < 0) adjustedOffset += 4096;

@@ -12,7 +12,7 @@
 class MovementController {
 public:
 	void setRange(uint16_t range);
-	void setTarget(uint16_t newTarget);
+	void setTarget(int32_t newTarget);
 	void setOffset(int32_t newOffset);
 	void adjustOffset(int32_t sourcePosition, int32_t targetPosition);
 
