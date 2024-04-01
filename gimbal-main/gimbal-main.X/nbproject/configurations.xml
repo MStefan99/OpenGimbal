@@ -44,6 +44,8 @@
         <itemPath>../src/lib/inc/lsm6dso.hpp</itemPath>
         <itemPath>../src/lib/inc/adc.hpp</itemPath>
         <itemPath>../src/lib/inc/AttitudeEstimator.hpp</itemPath>
+        <itemPath>../src/lib/inc/IKSolver.hpp</itemPath>
+        <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -216,6 +218,7 @@
         <itemPath>../src/lib/src/lsm6dso.cpp</itemPath>
         <itemPath>../src/lib/src/adc.cpp</itemPath>
         <itemPath>../src/lib/src/AttitudeEstimator.cpp</itemPath>
+        <itemPath>../src/lib/src/IKSolver.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
@@ -239,8 +242,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
         <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
+        <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -368,7 +371,7 @@
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-cross-reference-file" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
-        <property key="heap-size" value="512"/>
+        <property key="heap-size" value="0"/>
         <property key="input-libraries" value=""/>
         <property key="kseg-length" value=""/>
         <property key="kseg-origin" value=""/>
