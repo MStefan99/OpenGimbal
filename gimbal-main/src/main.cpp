@@ -10,6 +10,8 @@
 #include "lib/inc/uart.hpp"
 #include "lib/inc/AttitudeEstimator.hpp"
 
+#define DV_OUT true
+
 static constexpr float FACTOR {2048 / PI};
 using angles = float[3];
 
@@ -53,6 +55,19 @@ void calculateAngles(float x, float y, float z, angles& result) {
     result[0] = std::asin(sinAlpha);
 }
 
+#if DV_OUT
+struct Data {        
+    uint8_t header {0x03};
+    uint16_t dt {};
+    //float x {};
+    //float y {};
+    //float z {};
+    float a {};
+    float b {};
+    float c {};
+    uint8_t footer {0xfc};
+} __attribute__((packed));
+#endif
 
 int main() {
     util::init();
@@ -68,6 +83,9 @@ int main() {
     while (1) {
         lsm6dso::update();
         util::sleep(10);
+        #if DV_OUT
+            auto start = SysTick->VAL;
+        #endif
         estimator.update(lsm6dso::getRot(), lsm6dso::getAcc(), 0.01f);
         
         angles a {0.0f};
@@ -88,6 +106,20 @@ int main() {
         }
         
         uart::sendToMotors(buf, 12);
+        
+        #if DV_OUT
+            if (util::getTime() % 10 < 1) {
+                Data data {};
+
+                data.dt = (start - SysTick->VAL) / 48;
+                //data.x = estimator.getPitch();
+                //data.z = estimator.getRoll();
+                data.a = a[0];
+                data.b = a[1];
+                data.c = a[2];
+                uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+            }
+        #endif
     }
 
     return 1;
