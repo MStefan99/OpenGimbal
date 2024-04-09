@@ -49,6 +49,7 @@
         <itemPath>../src/lib/inc/LowPassFilter.hpp</itemPath>
         <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
         <itemPath>../src/lib/inc/Kalman.hpp</itemPath>
+        <itemPath>../src/lib/inc/interop.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -222,6 +223,7 @@
         <itemPath>../src/lib/src/as5600.cpp</itemPath>
         <itemPath>../src/lib/src/MovementController.cpp</itemPath>
         <itemPath>../src/lib/src/Command.cpp</itemPath>
+        <itemPath>../src/lib/src/interop.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>

@@ -95,7 +95,7 @@ void bldc::init() {
 
     // PORT config
     for (uint8_t i{0}; i < 6; ++i) {
-        uint8_t pin{getPin(i)};
+        uint8_t pin {getPin(i)};
         PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin
         if (pin & 0x1) { // Odd pin
             PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] = (PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] & 0xf)
@@ -104,6 +104,15 @@ void bldc::init() {
             PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] = (i == 2 ? PORT_PMUX_PMUXE_F : PORT_PMUX_PMUXE_E)
                     | (PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] & 0xf0);
         }
+    }
+}
+
+
+void bldc::disable() {
+    // PORT config
+    for (uint8_t i{0}; i < 6; ++i) {
+        uint8_t pin {getPin(i)};
+        PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(0); // Enable mux on pin
     }
 }
 

@@ -69,9 +69,8 @@ extern void Dummy_Handler(void);
 /* Brief default interrupt handler for unused IRQs.*/
 void __attribute__((optimize("-O1"), long_call, noreturn, used))Dummy_Handler(void)
 {
-    while (true)
-    {
-    }
+    bldcDisable();
+    while (true) __WFI();
 }
 
 /* MISRAC 2012 deviation block start */

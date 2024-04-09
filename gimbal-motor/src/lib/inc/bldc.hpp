@@ -16,6 +16,7 @@
 
 namespace bldc {
     void init();
+    void disable();
     
     // Angle from 0 to 4096 (0 = 0deg, 4096 = 360deg), power from 0 to 255
     void applyTorque(uint16_t angle, uint8_t power = 100);
