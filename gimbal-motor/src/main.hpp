@@ -38,6 +38,8 @@
 static constexpr uint16_t fullRevolution {4096};
 // Minimum torque to get the motor moving
 static constexpr uint8_t idleTorque {140};
+// Interval in milliseconds at which torque direction will flip in haptic mode
+static constexpr uint8_t hapticCycleDuration {25};
 // Device address
 static constexpr uint8_t deviceAddress {1};
 // Full state feedback gain matrix

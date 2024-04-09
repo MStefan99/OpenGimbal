@@ -13,6 +13,11 @@ static uint16_t rawTarget {0};
 static uint16_t angle {0};
 static bool dataReady {false};
 
+static uint32_t hapticEnd {0};
+static uint16_t hapticPower {0};
+static uint8_t hapticDuration {0};
+static bool hapticDirection {false};
+
 auto kalman = Kalman<float, unsigned, 3, 1, 1> {x0, P0, Q, R};
 
 constexpr float dt {1}; // In milliseconds, speed and velocity need to be multiplied by 1000
@@ -57,6 +62,12 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         }
         case (Command::CommandType::Tone): {
             bldc::tone((buffer.buffer[2] << 8u) | buffer.buffer[3]);
+            break;
+        }
+        case (Command::CommandType::Haptic): {
+            mode = Mode::Haptic;
+            hapticPower = buffer.buffer[2];
+            hapticEnd = util::getTime() + buffer.buffer[3];
             break;
         }
         case (Command::CommandType::Offset): {
@@ -317,6 +328,22 @@ int main() {
                         uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
                     }
                 #endif
+                
+                util::sleep(1); // Waiting until next tick
+                break;
+            }
+            case (Mode::Haptic): {
+                if (hapticDuration++ > hapticCycleDuration) {
+                    hapticDuration = 0;
+                    hapticDirection = !hapticDirection;
+                }
+                
+                applyTorque(measureAngle(), hapticPower, hapticDirection);
+                
+                if (util::getTime() > hapticEnd) {
+                    mode = Mode::Drive;
+                    hapticDuration = 0;
+                }
                 
                 util::sleep(1); // Waiting until next tick
                 break;
