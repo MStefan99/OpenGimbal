@@ -8,7 +8,7 @@ export type AllBits = CalibrationBits;
 export class BitwiseRegister<T extends AllBits> {
 	#value: number = 0;
 
-	set(bit: T) {
+	set(bit: T): BitwiseRegister<T> {
 		this.#value |= 1 << bit;
 		return this;
 	}

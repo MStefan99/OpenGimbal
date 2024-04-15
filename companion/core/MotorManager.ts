@@ -1,6 +1,7 @@
-import {Motor} from './Motor';
+// @ts-expect-error Import works fine
 import {SerialPort} from 'serialport';
 import {MockPort} from './index';
+import {Motor} from './Motor';
 import {MotorResponse} from './MotorResponses';
 
 export type MotorEntry = {
@@ -28,12 +29,12 @@ export class MotorManager {
 		return this.#motorEntries.filter((e) => e.active).map((e) => e.motor);
 	}
 
-	get all() {
+	get all(): Motor {
 		return new Motor(this.#port, 15);
 	}
 
 	motor(address: Motor['address'] = 1): Motor {
-		return this.motors.find(e => e.address === address);
+		return this.motors.find((e) => e.address === address);
 	}
 
 	async parse(data: Uint8Array): Promise<Array<MotorResponse>> {

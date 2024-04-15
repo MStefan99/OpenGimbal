@@ -1,9 +1,10 @@
 export function delay(ms: number): Promise<void> {
-	if (ms < 50) { // High-resolution delay is taxing on the CPU, only using for small delays
+	if (ms < 50) {
+		// High-resolution delay is taxing on the CPU, only using for small delays
 		return new Promise((resolve) => {
 			const startTime = process.hrtime();
 
-			function check() {
+			function check(): void {
 				if (process.hrtime(startTime)[1] / 1000000 < ms) {
 					process.nextTick(check);
 				} else {
@@ -18,7 +19,7 @@ export function delay(ms: number): Promise<void> {
 	}
 }
 
-export function clamp(val: number, min: number, max: number) {
+export function clamp(val: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, val));
 }
 
@@ -27,7 +28,7 @@ export function mod(a: number, b: number): number {
 	return ((a % b) + b) % b;
 }
 
-export async function time(callback: () => void | Promise<void>) {
+export async function time(callback: () => void | Promise<void>): Promise<number> {
 	const startTime = process.hrtime();
 	await callback();
 	return process.hrtime(startTime)[1] / 1000000;
@@ -39,7 +40,7 @@ export async function interpolate(
 	duration: number,
 	stepDelay: number,
 	callback: (value: number, fraction: number) => void | Promise<void>
-) {
+): Promise<void> {
 	// Calculate the number of steps required to complete the interpolation
 	const numSteps = Math.ceil(duration / stepDelay);
 

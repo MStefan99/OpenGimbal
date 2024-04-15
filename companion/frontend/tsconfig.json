@@ -1,16 +1,20 @@
 {
 	"compilerOptions": {
-		"module": "nodenext",
+		"module": "ESNext",
 		"target": "ESNext",
-		"moduleResolution": "nodenext",
+		"moduleResolution": "NodeNext",
 		"isolatedModules": true,
+		"sourceMap": true,
 		"alwaysStrict": true,
 		"noImplicitAny": true,
 		"noImplicitOverride": true,
 		"noImplicitThis": true,
 		"strict": true,
 		"strictNullChecks": false,
-		"allowSyntheticDefaultImports": true,
-		"resolveJsonModule": true
-	}
+		"skipLibCheck": true,
+		"types": ["vite/client"],
+		"lib": ["ESNext"]
+	},
+	"exclude": ["node_modules"],
+	"include": ["src/**/*.ts"]
 }

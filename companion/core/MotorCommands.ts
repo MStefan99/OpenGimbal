@@ -70,11 +70,11 @@ export class PositionCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Position, buffer);
 	}
 
-	get torque() {
+	get torque(): number {
 		return this.view.getUint8(2) >> 4;
 	}
 
-	get position() {
+	get position(): number {
 		return ((this.view.getUint8(2) & 0xf) << 8) | this.view.getUint8(3);
 	}
 
@@ -98,7 +98,7 @@ export class ToneCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Tone, buffer);
 	}
 
-	get frequency() {
+	get frequency(): number {
 		return (this.view.getUint8(2) << 8) | this.view.getUint8(3);
 	}
 
@@ -123,11 +123,11 @@ export class HapticCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Haptic, buffer);
 	}
 
-	get intensity() {
+	get intensity(): number {
 		return this.view.getUint8(2);
 	}
 
-	get duration() {
+	get duration(): number {
 		return this.view.getUint8(3);
 	}
 
@@ -153,7 +153,7 @@ export class OffsetCommand extends MotorCommand {
 		super(srcAddr, destAddr, MotorCommandType.Offset, buffer);
 	}
 
-	get offset() {
+	get offset(): number {
 		return (this.view.getUint8(2) << 8) | this.view.getUint8(3);
 	}
 
@@ -253,7 +253,7 @@ export class SetOffsetVariableCommand extends SetVariableCommand {
 		super(srcAddr, destAddr, MotorVariableID.Offset, mod(offset, 4096), 2);
 	}
 
-	get offset() {
+	get offset(): number {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 
@@ -271,7 +271,7 @@ export class SetRangeVariableCommand extends SetVariableCommand {
 		super(srcAddr, destAddr, MotorVariableID.Range, range, 2);
 	}
 
-	get range() {
+	get range(): number {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 

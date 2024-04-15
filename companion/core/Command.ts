@@ -31,15 +31,15 @@ export class Command {
 		}
 	}
 
-	get length() {
+	get length(): number {
 		return this.buffer.byteLength;
 	}
 
-	get srcAddr() {
+	get srcAddr(): number {
 		return this.view.getUint8(1) >> 4;
 	}
 
-	get destAddr() {
+	get destAddr(): number {
 		return this.view.getUint8(0) & 0xf;
 	}
 

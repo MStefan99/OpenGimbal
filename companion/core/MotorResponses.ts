@@ -82,7 +82,7 @@ export class ReturnOffsetVariableResponse extends ReturnVariableResponse {
 		super(buffer);
 	}
 
-	get offset() {
+	get offset(): number {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 
@@ -100,7 +100,7 @@ export class ReturnRangeVariableResponse extends ReturnVariableResponse {
 		super(buffer);
 	}
 
-	get range() {
+	get range(): number {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 

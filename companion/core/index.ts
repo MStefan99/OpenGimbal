@@ -1,11 +1,12 @@
+// @ts-expect-error Import works fine
 import {SerialPort} from 'serialport';
 import {MotorManager} from './MotorManager';
 import {delay, interpolate} from './util';
-import {BitwiseRegister, CalibrationBits} from './BitMask';
+import {CalibrationBits} from './BitMask';
 import {Motor} from './Motor';
 
 type ErrorListener = (err: Error) => void;
-type DataListener = (chunk: any) => void;
+type DataListener = (chunk: Buffer) => void;
 type EventListener = () => void;
 
 export class MockPort extends EventTarget {
@@ -16,15 +17,17 @@ export class MockPort extends EventTarget {
 		setImmediate(() => this.dispatchEvent(new Event('open')));
 	}
 
-	write(chunk: Uint8Array, cb: (err?: any) => void): void {
+	write(chunk: Uint8Array, cb: (err?: Error) => void): void {
 		cb();
 	}
 
 	on(event: 'error', listener: ErrorListener): void;
+	on(event: 'close', listener: ErrorListener): void;
 	on(event: 'data', listener: DataListener): void;
 	on(event: string, listener: EventListener): void;
 	on(event: string, cb: EventListener | DataListener | ErrorListener): void {
 		if (event === 'close') {
+			// @ts-expect-error Type definitions cover this case
 			this.addEventListener(event, () => cb(new Error('Error: Mock port was closed')));
 		} else if (event === 'data') {
 			this.addEventListener(event, () => (cb as DataListener)(null));
@@ -38,7 +41,7 @@ export class MockPort extends EventTarget {
 	}
 }
 
-function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
+function openPort(path: string, cb: (port: SerialPort | MockPort) => void): SerialPort | MockPort {
 	const port: SerialPort = new SerialPort(
 		{
 			path,
@@ -47,7 +50,7 @@ function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
 			stopBits: 1,
 			parity: 'odd'
 		},
-		(err) => {
+		(err: Error) => {
 			if (err) {
 				console.error(err.message);
 				cb(new MockPort());
@@ -57,7 +60,7 @@ function openPort(path: string, cb: (port: SerialPort | MockPort) => void) {
 	cb(port);
 }
 
-function main() {
+function main(): void {
 	openPort('COM3', (port) => {
 		port.on('close', () => console.log(port.path, 'closed'));
 
@@ -85,7 +88,8 @@ function main() {
 			if (!manager.active.length) {
 				console.error('No motors found');
 			} else {
-				async function run(motor: Motor) {
+				//eslint-disable-next-line
+				async function run(motor: Motor): Promise<void> {
 					await interpolate(0, 1024, 1000, 20, async (value) => await motor.move(value));
 					await interpolate(1024, -1024, 1000, 20, async (value) => await motor.move(value));
 					await interpolate(-1024, 2048, 2000, 20, async (value) => await motor.move(value));
@@ -96,10 +100,11 @@ function main() {
 				await manager.all.move();
 				await delay(1000);
 
-				for (const motor of manager.active) {
-					await run(motor);
+				for (let i = 0; i < 3; i++) {
+					await manager.motor(1).haptic(255, 1);
+					await delay(200);
 				}
-				await run(manager.all);
+				await delay(1000);
 
 				await manager.all.disable();
 			}
@@ -107,7 +112,7 @@ function main() {
 			port.close();
 		});
 
-		port.on('error', function (err) {
+		port.on('error', function (err: Error) {
 			console.log('Error: ', err.message);
 		});
 	});

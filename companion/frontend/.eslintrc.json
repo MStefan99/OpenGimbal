@@ -1,0 +1,21 @@
+{
+	"env": {
+		"browser": true
+	},
+	"extends": [
+		"../.eslintrc.json",
+		"plugin:vue/vue3-essential",
+		"plugin:vue-pug/vue3-recommended",
+		"@vue/typescript/recommended"
+	],
+	"parserOptions": {
+		"ecmaVersion": "latest",
+		"parser": "@typescript-eslint/parser",
+		"sourceType": "module"
+	},
+	"rules": {
+		"prettier/prettier": "warn",
+		"@vue/multi-word-components": "off",
+		"@typescript-eslint/no-inferrable-types": "off"
+	}
+}

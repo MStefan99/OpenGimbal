@@ -1,3 +1,4 @@
+// @ts-expect-error Import works fine
 import {SerialPort} from 'serialport';
 import {Command} from './Command';
 import {MockPort} from './index';
@@ -49,7 +50,7 @@ export class Motor {
 			MotorVariableID,
 			{
 				resolve: (response: MotorResponse) => void;
-				reject: (err: any) => void;
+				reject: (err: Error) => void;
 				timeout: NodeJS.Timeout;
 			}
 		>
@@ -61,19 +62,19 @@ export class Motor {
 		this.#debug = debug;
 	}
 
-	get address() {
+	get address(): number {
 		return this.#address;
 	}
 
-	toString() {
+	toString(): string {
 		return `Motor ${this.#address}`;
 	}
 
-	async #send(command: Command) {
+	async #send(command: Command): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
-			this.#port.write(buffer, (err: any) => {
+			this.#port.write(buffer, (err: Error) => {
 				if (err) {
 					return reject(err);
 				}
@@ -84,11 +85,11 @@ export class Motor {
 		});
 	}
 
-	async #request<T extends MotorResponse>(command: GetVariableCommand) {
+	async #request<T extends MotorResponse>(command: GetVariableCommand): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
-			this.#port.write(buffer, (err: any) => {
+			this.#port.write(buffer, (err: Error) => {
 				if (err) {
 					return reject(err);
 				}
@@ -147,34 +148,34 @@ export class Motor {
 		return responses;
 	}
 
-	sleep() {
+	sleep(): Promise<void> {
 		return this.#send(new SleepCommand(0, this.#address));
 	}
 
 	// Technically not needed since any command would wake the device up, but it's nice to have an opposite of sleep()
-	wakeup() {
+	wakeup(): Promise<void> {
 		return this.disable();
 	}
 
-	move(position: number = 0, torque: number = 15) {
+	move(position: number = 0, torque: number = 15): Promise<void> {
 		return this.#send(new PositionCommand(0, this.#address, torque, position));
 	}
 
 	// Disables the motor, same as sending any position with the torque of 0
-	disable() {
+	disable(): Promise<void> {
 		return this.#send(new PositionCommand(0, this.#address, 0, 0));
 	}
 
-	tone(frequency: number) {
+	tone(frequency: number): Promise<void> {
 		return this.#send(new ToneCommand(0, this.#address, frequency));
 	}
 
 	// Same as sending any frequency above 24kHz
-	silent() {
+	silent(): Promise<void> {
 		return this.#send(new ToneCommand(0, this.#address, 25000));
 	}
 
-	haptic(intensity: number, duration: number = 50) {
+	haptic(intensity: number, duration: number = 5): Promise<void> {
 		return this.#send(new HapticCommand(0, this.#address, intensity, duration));
 	}
 
@@ -191,15 +192,19 @@ export class Motor {
 	 * motor.move(3072) // Position is now 3072, which is the same as 1024 used to be, the motor still doesn't move
 	 * motor.move(2048) // Motor moves from 3072 (old 1024) to 2048 (old 0)
 	 */
-	adjustOffset(offset: number = 0) {
+	adjustOffset(offset: number = 0): Promise<void> {
 		return this.#send(new OffsetCommand(0, this.#address, offset));
 	}
 
-	calibrate(mode: BitwiseRegister<CalibrationBits> = new BitwiseRegister<CalibrationBits>().set(CalibrationBits.Zero)) {
+	calibrate(
+		mode: BitwiseRegister<CalibrationBits> = new BitwiseRegister<CalibrationBits>().set(
+			CalibrationBits.Zero
+		)
+	): Promise<void> {
 		return this.#send(new CalibrationCommand(0, this.#address, mode));
 	}
 
-	getCalibration() {
+	getCalibration(): Promise<Array<CalibrationBits>> {
 		return new Promise<Array<CalibrationBits>>((resolve, reject) =>
 			this.#request<ReturnCalibrationVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Calibration)
@@ -209,7 +214,7 @@ export class Motor {
 		);
 	}
 
-	getOffset() {
+	getOffset(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this.#request<ReturnOffsetVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Offset)
@@ -219,7 +224,7 @@ export class Motor {
 		);
 	}
 
-	getRange() {
+	getRange(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this.#request<ReturnRangeVariableResponse>(
 				new GetVariableCommand(0, this.#address, MotorVariableID.Range)
@@ -229,11 +234,11 @@ export class Motor {
 		);
 	}
 
-	setOffsetVariable(offset: number) {
+	setOffsetVariable(offset: number): Promise<void> {
 		return this.#send(new SetOffsetVariableCommand(0, this.#address, offset));
 	}
 
-	setRangeVariable(range: number) {
+	setRangeVariable(range: number): Promise<void> {
 		return this.#send(new SetRangeVariableCommand(0, this.#address, range));
 	}
 }
