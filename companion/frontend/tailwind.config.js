@@ -13,10 +13,6 @@ module.exports = {
 				light: 'var(--color-light)',
 				muted: 'var(--color-muted)',
 				accent: 'var(--color-accent)',
-				red: 'var(--color-red)',
-				yellow: 'var(--color-yellow)',
-				green: 'var(--color-red)',
-				blue: 'var(--color-blue)'
 			}
 		}
 	},

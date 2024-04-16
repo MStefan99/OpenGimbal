@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Server state</title>
+</head>
+<body>
+<main>
+	<button id="button" onclick="increment()"></button>
+	<button onclick="immutable()">Immutable</button>
+	<button onclick="nested()">Nested</button>
+</main>
+<script>
+	const button = document.getElementById('button');
+	const store = {};
+	const ws = new WebSocket('ws://192.168.1.11:3014');
+
+	// Handle incoming messages from the server
+	ws.onmessage = (event) => {
+		const message = JSON.parse(event.data);
+
+		switch (message.type) {
+			case 'state':
+				// Update the Vue store object with new state data
+				Object.assign(store, message.state);
+				button.innerText = store.count;
+				break;
+			default:
+				console.log(`Unknown message type: ${message.type}`);
+		}
+	};
+
+	// Define a method to send update messages to the server
+	function sendUpdate(variable, value) {
+		ws.send(JSON.stringify({type: 'update', variable, value}));
+	}
+
+	// Define a method to increment the count variable in the Vue store
+	function increment() {
+		sendUpdate('count', store.count + 1);
+	}
+
+	function immutable() {
+		sendUpdate('immutable', 420);
+	}
+
+	function nested() {
+		sendUpdate('nested/a/b/c/d', Math.random());
+	}
+</script>
+</body>
+</html>

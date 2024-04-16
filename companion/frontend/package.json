@@ -1,5 +1,4 @@
 {
-	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
@@ -8,6 +7,7 @@
 		"fmt": "eslint \"./{*,**/*}.{ts,vue}\" --fix && prettier -w ."
 	},
 	"dependencies": {
+		"pug": "^3.0.2",
 		"vue": "^3.4.22",
 		"vue-router": "^4.3.0"
 	},
@@ -22,7 +22,6 @@
 		"prettier": "^3.2.5",
 		"tailwindcss": "^3.4.3",
 		"vite": "^5.2.8",
-		"vite-plugin-pug": "^0.3.2",
 		"vue-tsc": "^2.0.13"
 	}
 }

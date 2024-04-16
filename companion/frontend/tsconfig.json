@@ -13,7 +13,7 @@
 		"strictNullChecks": false,
 		"skipLibCheck": true,
 		"types": ["vite/client"],
-		"lib": ["ESNext"]
+		"lib": ["ESNext", "dom"]
 	},
 	"exclude": ["node_modules"],
 	"include": ["src/**/*.ts"]

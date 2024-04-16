@@ -1,0 +1,370 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Setup */
+html {
+	font-family: sans-serif;
+	scroll-behavior: smooth;
+	--color-white: white;
+	--color-black: black;
+
+	--color-background: var(--color-white);
+	--color-foreground: var(--color-black);
+	--color-muted: #888;
+	--color-light: #ccc;
+	--color-accent: #258600;
+	--color-gradient: #017375;
+
+	--color-red-bright: #f33910;
+	--color-yellow-bright: #ffd200;
+	--color-green-bright: #1cc212;
+	--color-blue-bright: #13a1de;
+
+	--color-overlay: #fffb;
+	--color-shadow: #0001;
+
+	color: var(--color-foreground);
+	background-color: var(--color-background);
+}
+
+body {
+	margin: 0;
+	display: flex;
+	flex-flow: column nowrap;
+	justify-content: space-between;
+	min-height: 100vh;
+}
+
+header {
+	padding: 1rem 2rem;
+	background-image: linear-gradient(90deg, var(--color-accent), var(--color-gradient));
+	color: var(--color-background);
+	border-radius: 0 0 1rem 1rem;
+}
+
+nav {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+}
+
+nav span a:not(:last-child) {
+	@apply mr-2;
+}
+
+main {
+	margin: 2rem auto;
+	flex-grow: 1;
+	max-width: min(90vw, 1440px);
+}
+
+footer {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	padding: 1rem 2rem;
+	background-color: #f2f2f2;
+}
+
+/* Utility */
+a {
+	color: inherit;
+}
+
+.router-link-active {
+	text-decoration: underline;
+}
+
+.row {
+	@apply flex flex-wrap justify-between gap-4;
+}
+
+.row > * {
+	@apply min-w-0 max-w-full flex-grow flex-shrink;
+}
+
+.col {
+	@apply flex flex-col;
+}
+
+.code {
+	white-space: pre-wrap;
+	word-break: break-all;
+	font-family: monospace;
+}
+
+.snippet {
+	@apply p-4 rounded;
+	background-color: var(--color-background);
+	color: var(--color-foreground);
+}
+
+.clickable {
+	cursor: pointer;
+}
+
+.filter-panel {
+	position: absolute;
+}
+
+.glass {
+	@apply bg-white/80;
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	z-index: 1;
+}
+
+.footer-logo {
+	max-height: 3rem;
+}
+
+.popup-wrapper {
+	@apply glass;
+	position: fixed;
+	display: flex;
+	flex-flow: column nowrap;
+	justify-content: center;
+	align-items: center;
+	left: 0;
+	top: 0;
+	right: 0;
+	min-height: 100vh;
+	background-color: var(--color-overlay);
+	overflow-y: scroll;
+}
+
+.popup-wrapper .popup {
+	width: min(768px, 90vw);
+	border-radius: 1rem;
+	color: var(--color-foreground);
+	background-color: var(--color-overlay);
+	box-shadow: 0 1rem 3rem var(--color-shadow);
+	overflow: hidden;
+}
+
+.popup .popup-title,
+.popup .popup-content {
+	padding: 2rem min(4rem, 10%);
+}
+
+.popup .popup-title {
+	color: var(--color-background);
+	background-image: linear-gradient(90deg, var(--color-accent), var(--color-gradient));
+}
+
+.popup-enter-from,
+.popup-leave-to {
+	opacity: 0;
+	transform: scale(120%);
+}
+
+.popup-enter-active,
+.popup-leave-active {
+	transition: all 0.3s ease;
+}
+
+h1 {
+	@apply text-4xl text-accent mb-4 pb-2 border-b;
+}
+
+h2 {
+	@apply text-2xl mb-3;
+}
+
+h3 {
+	@apply text-lg font-bold mb-2;
+}
+
+h4 {
+	@apply font-bold my-2;
+}
+
+table {
+	@apply mb-2;
+}
+
+table th {
+	text-align: left;
+}
+
+table.cells td,
+table.cells th {
+	@apply border;
+	padding: 0.2rem 1ch;
+}
+
+th,
+td {
+	padding: 0.2rem 0.2ch;
+}
+
+.large {
+	@apply text-5xl my-4;
+}
+
+.chart {
+	@apply w-full mb-4;
+	min-width: 180px;
+	height: 300px;
+}
+
+.card {
+	border-radius: 1rem;
+	padding: 1rem 2ch;
+	border: 1px solid var(--color-shadow);
+	box-shadow: 0 0.25rem 0.5rem var(--color-shadow);
+}
+
+.card.accent {
+	@apply text-white;
+	background-image: linear-gradient(135deg, var(--color-accent), var(--color-gradient));
+}
+
+input,
+textarea,
+select,
+button,
+.btn,
+[type='button'] {
+	display: block;
+	padding: 0.5rem 1ch;
+	border-radius: 10px;
+	appearance: none;
+	background-color: var(--color-background);
+	border: 0.1rem solid var(--color-accent);
+	@apply my-2;
+	transition:
+		color 0.2s ease,
+		background-color 0.2s ease,
+		border-color 0.2s ease;
+}
+
+button,
+.btn {
+	color: var(--color-accent);
+	border: 0.1rem solid var(--color-accent);
+}
+
+button:hover,
+.btn:hover {
+	color: var(--color-background);
+	border-color: var(--color-background);
+	background-color: var(--color-accent);
+}
+
+button.disabled,
+.btn.disabled {
+	color: var(--color-muted);
+	border: 0.1rem solid var(--color-muted);
+	background-color: var(--color-background);
+}
+
+input[type='checkbox'] {
+	appearance: none;
+	width: 6ch;
+	padding: 0.2rem;
+	line-height: 0;
+	--handle-size: 2ch;
+	@apply mb-1;
+}
+
+input[type='checkbox']:active {
+	--handle-size: 100%;
+}
+
+input[type='checkbox']:before {
+	position: relative;
+	vertical-align: middle;
+	display: inline-block;
+	content: '';
+	height: 0.75rem;
+	width: var(--handle-size);
+	left: 0;
+	background-color: var(--color-red-bright);
+	border-radius: 10px;
+	transition:
+		left 0.2s cubic-bezier(0, 0, 0, 1.3),
+		width 0.2s cubic-bezier(0, 0, 0, 1.3),
+		background-color 0.1s ease;
+}
+
+input[type='checkbox'] {
+	display: inline-block;
+	border-color: var(--color-gradient);
+}
+
+input[type='checkbox']:checked:before {
+	left: calc(100% - var(--handle-size));
+	background-color: var(--color-green-bright);
+}
+
+input[type='checkbox']:active:before {
+	background-color: var(--color-yellow-bright);
+}
+
+input[type='checkbox']:disabled {
+	background-color: var(--color-light);
+	border-color: var(--color-black);
+}
+
+input[type='checkbox']:disabled:before {
+	background-color: var(--color-muted);
+}
+
+input:not([type='checkbox']).red,
+textarea.red,
+select.red,
+button.red,
+.btn.red {
+	@apply text-rose-700 border-rose-700;
+}
+
+button.red:hover,
+.btn.red:hover {
+	@apply text-white bg-rose-700;
+}
+
+.popups button,
+.popups .btn {
+	display: inline-block;
+}
+
+.log-level {
+	padding: 0.5rem 0.5ch;
+	text-align: center;
+}
+
+.log-level.log-2 {
+	@apply bg-yellow-200;
+}
+
+.log-level.log-3 {
+	@apply bg-orange-200;
+	font-weight: bold;
+}
+
+.log-level.log-4 {
+	@apply bg-rose-300;
+	font-weight: bold;
+}
+
+.log-row.log-0 {
+	@apply bg-indigo-50 text-indigo-700;
+}
+
+.log-row.log-1 {
+	@apply bg-emerald-50 text-emerald-700;
+}
+
+.log-row.log-2 {
+	@apply bg-yellow-50 text-yellow-700;
+}
+
+.log-row.log-3 {
+	@apply bg-orange-50 text-orange-700;
+}
+
+.log-row.log-4 {
+	@apply bg-rose-50 text-rose-700;
+}
