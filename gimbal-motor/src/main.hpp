@@ -55,11 +55,11 @@ constexpr auto P0 = Matrix<float,
                          {0,  5,  0 },
                          {0,  0,  20}};
 constexpr auto Q = Matrix<float,
-		unsigned, 3, 3> {{0.0001, 0, 0},
-                         {0, 0.0001, 0},
-                         {0, 0, 0.0001}};
+		unsigned, 3, 3> {{1e-4, 0, 0},
+                         {0, 1e-4, 0},
+                         {0, 0, 1e-4}};
 constexpr auto R = Matrix<float,
-		unsigned, 1, 1> {{15}};
+		unsigned, 1, 1> {{30}};
 
 enum class Mode : uint8_t {
     Sleep = 0x0,
