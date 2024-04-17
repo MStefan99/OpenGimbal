@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "serve": "ts-node index.ts",
+    "lint": "tsc --noEmit && eslint \"./{*,**/*}.{ts,vue}\" --max-warnings=0 && prettier --check .",
+    "fmt": "eslint \"./{*,**/*}.{ts,vue}\" --fix && prettier -w ."
+  },
+  "dependencies": {
+    "serialport": "^12.0.0",
+    "ts-node": "^10.9.2"
+  }
+}

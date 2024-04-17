@@ -6,13 +6,10 @@
 </head>
 <body>
 <main>
-	<button id="button" onclick="increment()"></button>
-	<button onclick="immutable()">Immutable</button>
-	<button onclick="nested()">Nested</button>
+	<input type="range" min="-4095" max="4095" step="1" oninput="move(this.value)">
+	<button onclick="disable()">Disable</button>
 </main>
 <script>
-	const button = document.getElementById('button');
-	const store = {};
 	const ws = new WebSocket('ws://192.168.1.11:3014');
 
 	// Handle incoming messages from the server
@@ -22,8 +19,6 @@
 		switch (message.type) {
 			case 'state':
 				// Update the Vue store object with new state data
-				Object.assign(store, message.state);
-				button.innerText = store.count;
 				break;
 			default:
 				console.log(`Unknown message type: ${message.type}`);
@@ -36,16 +31,13 @@
 	}
 
 	// Define a method to increment the count variable in the Vue store
-	function increment() {
-		sendUpdate('count', store.count + 1);
+	function move(position) {
+		sendUpdate('motors/0/torque', 8);
+		sendUpdate('motors/0/position', position);
 	}
 
-	function immutable() {
-		sendUpdate('immutable', 420);
-	}
-
-	function nested() {
-		sendUpdate('nested/a/b/c/d', Math.random());
+	function disable() {
+		sendUpdate('motors/0/enabled', false);
 	}
 </script>
 </body>

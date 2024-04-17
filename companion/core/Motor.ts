@@ -1,7 +1,5 @@
-// @ts-expect-error Import works fine
 import {SerialPort} from 'serialport';
 import {Command} from './Command';
-import {MockPort} from './index';
 import {BitwiseRegister, CalibrationBits} from './BitMask';
 import {
 	MotorResponse,
@@ -24,6 +22,7 @@ import {
 	SleepCommand,
 	ToneCommand
 } from './MotorCommands';
+import {MockPort} from "./Port";
 
 const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
 	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)

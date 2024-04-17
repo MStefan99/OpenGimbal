@@ -1,8 +1,7 @@
-// @ts-expect-error Import works fine
 import {SerialPort} from 'serialport';
-import {MockPort} from './index';
 import {Motor} from './Motor';
 import {MotorResponse} from './MotorResponses';
+import {MockPort} from "./Port";
 
 export type MotorEntry = {
 	motor: Motor;
