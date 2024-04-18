@@ -50,6 +50,7 @@
         <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
         <itemPath>../src/lib/inc/Kalman.hpp</itemPath>
         <itemPath>../src/lib/inc/interop.h</itemPath>
+        <itemPath>../src/lib/inc/PID.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">

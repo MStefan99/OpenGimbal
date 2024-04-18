@@ -2,7 +2,7 @@
 
 
 void as5600::init() {
-    uint8_t reg {0x07};
+    uint8_t reg {0x04};
     i2c::writeRegister(0x36, 0x07, &reg);
 }
 

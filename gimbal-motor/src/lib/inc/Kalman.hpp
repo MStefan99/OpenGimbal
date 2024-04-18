@@ -18,6 +18,7 @@ public:
 	       const Matrix<scalar, size_type, nx, nx>& Q,
 	       const Matrix<scalar, size_type, nz, nz>& R);
 
+	void predict(const Matrix<scalar, size_type, nx, nx>& F);
 	void predict(const Matrix<scalar, size_type, nx, nx>& F,
 	             const Matrix<scalar, size_type, nx, nu>& G,
 	             const Matrix<scalar, size_type, nu, 1>& u);
@@ -43,6 +44,13 @@ Kalman<scalar, size_type, nx, nu, nz>::Kalman(
 		const Matrix<scalar, size_type, nz, nz>& R):
 		_x {x0}, _P {P0}, _Q {Q}, _R {R} {
 	// Nothing to do
+}
+        
+        
+template <class scalar, class size_type, size_type nx, size_type nu, size_type nz>
+void Kalman<scalar, size_type, nx, nu, nz>::predict(const Matrix<scalar, size_type, nx, nx>& F) {
+	_x = F * _x;
+	_P = F * _P * F.transpose() + _Q;
 }
 
 
