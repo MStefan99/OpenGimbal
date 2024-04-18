@@ -265,7 +265,7 @@ int main() {
     movementController.setRange(data::options.range);
     
     LowPassFilter targetFilter {1000, 5};
-    LowPassFilter loadFilter {1000, 0.5f};
+    LowPassFilter loadFilter {1000, 1e-2};
     
     while (1) {
         switch(mode) {
@@ -304,7 +304,7 @@ int main() {
                 
                 // Calculating and applying torque
                 auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
-                float torque = (K * x)[0][0] * 10;
+                float torque = (K * x)[0][0] * gain;
                 
                 if (util::abs(kx[2][0]) > switchAcceleration / 1000) {
                     loadFilter.force(0.0f);

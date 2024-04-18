@@ -55,6 +55,15 @@ static constexpr uint8_t deviceAddress {1};
         
 // LQG feedback gain matrix
 constexpr auto K = Matrix<float, uint8_t, 1, 2>{{31.622776601683820,8.015332382588245}};
+/* Controller gain
+ * In the ideal case this wouldn't be needed but we need this adjustment since
+ * moment of inertia of the load connected to the motor can't be known
+ * in advance.
+ * 
+ * Higher values make controller more aggressive at the cost of power and 
+ * possible oscillations/vibrations.
+ */
+constexpr float gain {10.0f};
 
 // Kalman filter matrices
 constexpr auto x0 = Matrix<float,

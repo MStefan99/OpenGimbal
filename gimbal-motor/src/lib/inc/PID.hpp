@@ -15,7 +15,7 @@ struct PID {
 	PID() = default;
 	PID(T kp, T ki, T kd, T iLim);
 
-	T update(T sp, T val);
+	T process(T sp, T val);
 
 	T kp {};
 	T ki {};
@@ -35,7 +35,7 @@ PID<T>::PID(T kp, T ki, T kd, T iLim):
 }
     
 template <class T>
-T PID<T>::update(T val, T sp) {
+T PID<T>::process(T val, T sp) {
 	T error {val - sp};
 	
 	_sum = util::clamp(_sum + error, -iLim, iLim);
