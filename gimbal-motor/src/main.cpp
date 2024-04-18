@@ -265,7 +265,7 @@ int main() {
     movementController.setRange(data::options.range);
     
     LowPassFilter targetFilter {1000, 5};
-    bool loadPresent {false};
+    LowPassFilter loadFilter {1000, 0.5f};
     
     while (1) {
         switch(mode) {
@@ -295,10 +295,10 @@ int main() {
                 
                 // Calculating difference between current and target angle
                 angle = measureAngle();
-                float dAngle = getDifference(movementController.getTarget(), angle);
+                float dAngle = countsToRad(getDifference(movementController.getTarget(), angle));
                 
                 // Estimating state
-                auto z = Matrix<float, unsigned, 1, 1> {{countsToRad(dAngle)}};
+                auto z = Matrix<float, unsigned, 1, 1> {{dAngle}};
                 kalman.correct(H, z);
                 auto kx {kalman.x()};
                 
@@ -306,15 +306,12 @@ int main() {
                 auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
                 float torque = (K * x)[0][0] * 10;
                 
-                if (util::abs(dAngle) > 64) {
-                    loadPresent = true;
-                } 
-                if (util::abs(kx[2][0]) > 0.2f / 1000) {
-                    loadPresent = false;
+                if (util::abs(kx[2][0]) > switchAcceleration / 1000) {
+                    loadFilter.force(0.0f);
+                } else if (loadFilter.getState() < 1.0f) {
+                    loadFilter.process(util::abs(dAngle) / switchSmoothness);
                 }
-                if (!loadPresent) {
-                    torque = dAngle * 0.7f;
-                }
+                torque = util::interpolate(dAngle * pGain, torque, loadFilter.getState());
                 
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                     static_cast<uint16_t>(maxTorque)), torque > 0);
@@ -326,7 +323,6 @@ int main() {
                 #if DV_OUT
                     if (util::getTime() % 5 < 1) {
                         Data data {};
-                        auto kx = kalman.x();
                         
                         data.dt = (start - SysTick->VAL) / 48;
                         data.x = kx[0][0];

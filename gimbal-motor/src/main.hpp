@@ -42,7 +42,18 @@ static constexpr uint8_t idleTorque {140};
 static constexpr uint8_t hapticCycleDuration {25};
 // Device address
 static constexpr uint8_t deviceAddress {1};
-// Full state feedback gain matrix
+
+/* There are two controllers used in different situations.
+ * LQG is used when there is a load (a smartphone, for example) is attached
+ * to a motor for smooth control. However, if no load is attached to the motor,
+ * system characteristics change significantly and a simple proportional
+ * controller with no filtering/smoothing can provide better results due to a
+ * much lower phase delay.
+*/
+
+// LQG settings
+        
+// LQG feedback gain matrix
 constexpr auto K = Matrix<float, uint8_t, 1, 2>{{31.622776601683820,8.015332382588245}};
 
 // Kalman filter matrices
@@ -59,7 +70,19 @@ constexpr auto Q = Matrix<float,
                          {0, 1e-4, 0},
                          {0, 0, 1e-4}};
 constexpr auto R = Matrix<float,
-		unsigned, 1, 1> {{30}};
+		unsigned, 1, 1> {{20}};
+        
+// Mode switch settings
+
+// Switch into no-load mode if acceleration exceeds this value (rad/s)
+constexpr float switchAcceleration {0.2f};
+// Smoothly interpolate between LQG and proportional controllers over this range (rad)
+constexpr float switchSmoothness {0.1f};
+
+// Proportional controller settings
+
+// Gain for proportional controller (rad -> torque)
+constexpr float pGain {400.0f};
 
 enum class Mode : uint8_t {
     Sleep = 0x0,

@@ -103,6 +103,11 @@ namespace util {
     T map(T val, T minSrc, T maxSrc, T minTgt, T maxTgt) {
         return (val - minSrc) * (maxTgt - minTgt) / (maxSrc - minSrc) + minTgt;
     }
+    
+    template <class T>
+    T interpolate(T p1, T p2, float t) {
+      return p1 + (p2 - p1) * util::clamp<float>(t, 0.0f, 1.0f);
+    }
 
 	template <class T>
 	T switchEndianness(T val) {
