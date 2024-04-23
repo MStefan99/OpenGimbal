@@ -44,6 +44,9 @@
         <itemPath>../src/lib/inc/lsm6dso.hpp</itemPath>
         <itemPath>../src/lib/inc/adc.hpp</itemPath>
         <itemPath>../src/lib/inc/AttitudeEstimator.hpp</itemPath>
+        <itemPath>../src/lib/inc/Quaternion.hpp</itemPath>
+        <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
+        <itemPath>../src/lib/inc/Mahony.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -216,6 +219,8 @@
         <itemPath>../src/lib/src/lsm6dso.cpp</itemPath>
         <itemPath>../src/lib/src/adc.cpp</itemPath>
         <itemPath>../src/lib/src/AttitudeEstimator.cpp</itemPath>
+        <itemPath>../src/lib/src/Quaternion.cpp</itemPath>
+        <itemPath>../src/lib/src/Mahony.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>

@@ -73,6 +73,20 @@ void util::init() { // TODO: move away
     NVIC_EnableIRQ(SysTick_IRQn);
 }
 
+// Fast inverse square root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+float util::invSqrt(float x) {
+  float halfx = 0.5f * x;
+  union {
+    float f;
+    long i;
+  } conv = {x};
+  conv.i = 0x5f3759df - (conv.i >> 1);
+  conv.f *= 1.5f - (halfx * conv.f * conv.f);
+  conv.f *= 1.5f - (halfx * conv.f * conv.f);
+  return conv.f;
+}
+
 uint32_t util::getTime() {
     return ticks;
 }

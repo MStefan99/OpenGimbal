@@ -11,6 +11,8 @@
 
 #include "device.h"
 
+#include "Matrix.hpp"
+
 constexpr float TWO_PI {6.283185307179586476925286766559};
 constexpr float PI {3.1415926535897932384626433832795};
 constexpr float HALF_PI {1.5707963267948966192313216916398};
@@ -109,6 +111,8 @@ namespace util {
 			return val;
 		}
 	}
+    
+    float invSqrt(float a);
 }
 
 #endif	/* SYSTEM_H */
