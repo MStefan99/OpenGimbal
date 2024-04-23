@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <algorithm>
 
+#include "data.hpp"
+
 class MovementController {
 public:
 	void setRange(uint16_t range);
@@ -33,9 +35,9 @@ public:
 protected:
 	static int32_t wrapValue(int32_t value);
 
-	int32_t offset {0};
+	int32_t offset {data::options.zeroOffset};
 	uint16_t target {0};
-	uint16_t allowedRange {0}; // 0 indicates no limit
+	uint16_t allowedRange {data::options.range}; // 0 indicates no limit
 	int32_t deflection {0};
 	int32_t desiredDeflection {0};
 };

@@ -53,7 +53,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (Command::CommandType::Position): {
-            rawTarget = ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3];
+            movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
             break;
         }
@@ -69,8 +69,8 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         }
         case (Command::CommandType::Offset): {
             movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
-            int16_t offset = movementController.getOffset();
-            data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
+            uint16_t offset = movementController.getOffset();
+            data::edit(&data::options.zeroOffset, offset);
             data::write();
             break;
         }
@@ -110,15 +110,14 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
                 case (Command::Variable::Offset): {
                     movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
-                    int16_t offset = movementController.getOffset();
-                    data::edit(reinterpret_cast<const uint8_t&>(data::options.zeroOffset), reinterpret_cast<uint8_t&>(offset), sizeof(offset));
+                    uint16_t offset = movementController.getOffset();
+                    data::edit(&data::options.zeroOffset, offset);
                     data::write();
                     break;
                 }
                 case (Command::Variable::Range): {
                     movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
-                    int16_t range = movementController.getRange();
-                    data::edit(reinterpret_cast<const uint8_t&>(data::options.range), reinterpret_cast<uint8_t&>(range), sizeof(range));
+                    data::edit(&data::options.range, movementController.getRange());
                     data::write();
                     break;
                 }
@@ -157,7 +156,7 @@ void calibrate() {
             phaseOffset = angle;
             angle = measureAngle();
         } while (phaseOffset != angle);
-        data::edit(reinterpret_cast<const uint8_t&>(data::options.phaseOffset), reinterpret_cast<uint8_t&>(phaseOffset), sizeof(phaseOffset));
+        data::edit(&data::options.phaseOffset, phaseOffset);
     }
     
     uint16_t torqueAngle {0}; 
@@ -191,14 +190,14 @@ void calibrate() {
             direction = -1;
         }
         
-        data::edit(data::options.polePairs, polePairs);
-        data::edit(reinterpret_cast<const uint8_t&>(data::options.direction), reinterpret_cast<uint8_t&>(direction));
+        data::edit(&data::options.polePairs, polePairs);
+        data::edit(&data::options.direction, direction);
     }
     
     if (calibrationMode) {
         data::write();
     }
-    
+
     bldc::applyTorque(0, 0);
 }
 
@@ -253,6 +252,12 @@ struct Data {
 
 int main() {
     util::init();
+    
+    PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_HWSEL(1)
+            | PORT_WRCONFIG_PINMASK((0x1 << 14u) | (0x1 << 15u))
+            | PORT_WRCONFIG_PMUXEN(0)
+            | PORT_WRCONFIG_WRPMUX(1)
+            | PORT_WRCONFIG_WRPINCFG(1);
 
     uart::init();
     dma::init();
@@ -261,9 +266,8 @@ int main() {
     bldc::init();
     
     uart::setCallback(processCommand);
-    movementController.setOffset(data::options.zeroOffset);
-    movementController.setRange(data::options.range);
     
+    // TODO: Filter is too slow
     LowPassFilter targetFilter {1000, 5};
     // TODO: Exiting out of no-load (proportional) mode is jerky and needs improvement
     LowPassFilter loadFilter {1000, 1};
@@ -287,12 +291,12 @@ int main() {
                 #endif
                 
                 // Checking for target wraparound
-                if (rawTarget - targetFilter.getState() > 2048) {
-                    targetFilter.force(targetFilter.getState() + 4096);
-                } else if (rawTarget - targetFilter.getState() < -2048) {
-                    targetFilter.force(targetFilter.getState() - 4096);
-                }
-                movementController.setTarget(targetFilter.process(rawTarget));
+//                if (rawTarget - targetFilter.getState() > 2048) {
+//                    targetFilter.force(targetFilter.getState() + 4096);
+//                } else if (rawTarget - targetFilter.getState() < -2048) {
+//                    targetFilter.force(targetFilter.getState() - 4096);
+//                }
+//                movementController.setTarget(targetFilter.process(rawTarget));
                 
                 // Calculating difference between current and target angle
                 angle = measureAngle();
@@ -328,7 +332,7 @@ int main() {
                         data.x = kx[0][0];
                         data.v = kx[1][0] * 1000;
                         data.a = kx[2][0] * 1000;
-                        data.u = torque;
+                        data.u = loadFilter.getState();
                         uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
                     }
                 #endif

@@ -49,8 +49,14 @@ void MovementController::setTarget(int32_t newTarget) {
 }
 
 void MovementController::setOffset(int32_t newOffset) {
-	deflection += offset - newOffset;
-	desiredDeflection += offset - newOffset;
+    auto diff = offset - newOffset;
+    if (diff < -2048) {
+        diff += 4096;
+    } else if (diff >= 2048) {
+        diff -= 4096;
+    }
+	deflection += diff;
+	desiredDeflection += diff;
 	offset = newOffset;
 }
 
@@ -59,8 +65,6 @@ void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPos
     desiredPosition = mod(desiredPosition, 4096);
     
 	int32_t adjustedOffset = sourcePosition - desiredPosition;
-	while (adjustedOffset < 0) adjustedOffset += 4096;
-	while (adjustedOffset >= 4096) adjustedOffset -= 4096;
 	setOffset(adjustedOffset);
 }
 
