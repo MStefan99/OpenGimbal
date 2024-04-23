@@ -79,7 +79,7 @@ constexpr auto Q = Matrix<float,
                          {0, 1e-4, 0},
                          {0, 0, 1e-4}};
 constexpr auto R = Matrix<float,
-		unsigned, 1, 1> {{20}};
+		unsigned, 1, 1> {{30}};
         
 // Mode switch settings
 
@@ -97,7 +97,8 @@ enum class Mode : uint8_t {
     Sleep = 0x0,
     Calibrate = 0x1,
     Drive = 0x2,
-    Haptic = 0x3
+    Haptic = 0x3,
+    Idle = 0x04
 };
 
 #endif	/* MAIN_HPP */

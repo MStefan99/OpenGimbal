@@ -265,7 +265,8 @@ int main() {
     movementController.setRange(data::options.range);
     
     LowPassFilter targetFilter {1000, 5};
-    LowPassFilter loadFilter {1000, 1e-2};
+    // TODO: Exiting out of no-load (proportional) mode is jerky and needs improvement
+    LowPassFilter loadFilter {1000, 1};
     
     while (1) {
         switch(mode) {
@@ -304,14 +305,13 @@ int main() {
                 
                 // Calculating and applying torque
                 auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
-                float torque = (K * x)[0][0] * gain;
                 
                 if (util::abs(kx[2][0]) > switchAcceleration / 1000) {
                     loadFilter.force(0.0f);
                 } else if (loadFilter.getState() < 1.0f) {
                     loadFilter.process(util::abs(dAngle) / switchSmoothness);
                 }
-                torque = util::interpolate(dAngle * pGain, torque, loadFilter.getState());
+                float torque = util::interpolate(dAngle * pGain, torque = (K * x)[0][0] * gain, loadFilter.getState());
                 
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                     static_cast<uint16_t>(maxTorque)), torque > 0);
@@ -350,6 +350,15 @@ int main() {
                 }
                 
                 util::sleep(1); // Waiting until next tick
+                break;
+            }
+            case (Mode::Idle): {
+                util::runTasks();
+                // Fallthrough intentional
+            }
+            default:
+            {
+                __WFI();
                 break;
             }
         }
