@@ -16,7 +16,7 @@
 
 class Quaternion {
 public:
-    Quaternion();
+    Quaternion() = default;
     Quaternion(float w, float x, float y, float z);
 
     void normalize();

@@ -31,11 +31,11 @@ void lsm6dso::update() {
 }
 
 
-const float* lsm6dso::getAcc() {
-	return acc;
+Vector3<float, uint8_t> lsm6dso::getAcc() {
+	return {{acc[2]}, {-acc[0]}, {-acc[1]}};
 }
 
 
-const float* lsm6dso::getRot() {
-	return rot;
+Vector3<float, uint8_t> lsm6dso::getRot() {
+	return {{rot[2]}, {-rot[0]}, {-rot[1]}};
 }

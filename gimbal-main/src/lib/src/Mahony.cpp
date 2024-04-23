@@ -1,41 +1,66 @@
 #include "lib/inc/Mahony.hpp"
 
-Mahony::Mahony(float pGain, float iGain): 
-_twoKp {pGain}, _twoKi {iGain}, _quat {} {
+Mahony::Mahony(float Kp, float Ki): 
+        _twoKp {Kp * 2.0f}, _twoKi {Ki * 2.0f}, _quat {} {
     // Nothing to do
 }
 
-void Mahony::update(float gx, float gy, float gz, float ax, float ay,
-                             float az, float mx, float my, float mz, float dt) {
+float Mahony::getKp() {
+    return _twoKp / 2.0f;
+}
+        
+float Mahony::getKi() {
+    return _twoKi / 2.0f;
+}
+
+void Mahony::setKp(float Kp) {
+    _twoKp = Kp * 2.0f;
+}
+        
+void Mahony::setKi(float Ki) {
+    _twoKi = Ki * 2.0f;
+}
+
+Quaternion Mahony::getQuat() const {
+    return _quat;
+}
+
+// Thanks to Adafruit for Mahony filter implementation
+// https://github.com/adafruit/Adafruit_AHRS
+void Mahony::update(
+        Vector3<float, uint8_t> rot, 
+        Vector3<float, uint8_t> acc,
+        Vector3<float, uint8_t> mag,
+        float dt) {
     // Use IMU algorithm if magnetometer measurement invalid
     // (avoids NaN in magnetometer normalization)
-    if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
-      updateIMU(gx, gy, gz, ax, ay, az, dt);
+    if ((mag[0][0] == 0.0f) && (mag[1][0] == 0.0f) && (mag[2][0] == 0.0f)) {
+      updateIMU(rot, acc, dt);
       return;
     }
 
     // Convert gyroscope degrees/sec to radians/sec
-    gx *= DEG_TO_RAD;
-    gy *= DEG_TO_RAD;
-    gz *= DEG_TO_RAD;
+    rot[0][0] *= DEG_TO_RAD;
+    rot[1][0] *= DEG_TO_RAD;
+    rot[2][0] *= DEG_TO_RAD;
 
     // Compute feedback only if accelerometer measurement valid
     // (avoids NaN in accelerometer normalization)
-    if (!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+    if (!((acc[0][0] == 0.0f) && (acc[1][0] == 0.0f) && (acc[2][0] == 0.0f))) {
         {
             // Normalize accelerometer measurement
-            float recipNorm = util::invSqrt(ax * ax + ay * ay + az * az);
-            ax *= recipNorm;
-            ay *= recipNorm;
-            az *= recipNorm;
+            float recipNorm = util::invSqrt(acc[0][0] * acc[0][0] + acc[1][0] * acc[1][0] + acc[2][0] * acc[2][0]);
+            acc[0][0] *= recipNorm;
+            acc[1][0] *= recipNorm;
+            acc[2][0] *= recipNorm;
         }
 
         {   
             // Normalize magnetometer measurement
-            float recipNorm = util::invSqrt(mx * mx + my * my + mz * mz);
-            mx *= recipNorm;
-            my *= recipNorm;
-            mz *= recipNorm;
+            float recipNorm = util::invSqrt(mag[0][0] * mag[0][0] + mag[1][0] * mag[1][0] + mag[2][0] * mag[2][0]);
+            mag[0][0] *= recipNorm;
+            mag[1][0] *= recipNorm;
+            mag[2][0] *= recipNorm;
         }
 
         {
@@ -52,13 +77,10 @@ void Mahony::update(float gx, float gy, float gz, float ax, float ay,
             float zz = _quat.getZ() * _quat.getZ();
 
             // Reference direction of Earth's magnetic field
-            float hx = 2.0f *
-               (mx * (0.5f - yy - zz) + my * (xy - wz) + mz * (xz + wy));
-            float hy = 2.0f *
-               (mx * (xy + wz) + my * (0.5f - xx - zz) + mz * (yz - wx));
+            float hx = 2.0f * (mag[0][0] * (0.5f - yy - zz) + mag[1][0] * (xy - wz) + mag[2][0] * (xz + wy));
+            float hy = 2.0f * (mag[0][0] * (xy + wz) + mag[1][0] * (0.5f - xx - zz) + mag[2][0] * (yz - wx));
             float bx = std::sqrt(hx * hx + hy * hy);
-            float bz = 2.0f *
-               (mx * (xz - wy) + my * (yz + wx) + mz * (0.5f - xx - yy));
+            float bz = 2.0f * (mag[0][0] * (xz - wy) + mag[1][0] * (yz + wx) + mag[2][0] * (0.5f - xx - yy));
 
             // Estimated direction of gravity and magnetic field
             float halfvx = xz - wy;
@@ -70,63 +92,62 @@ void Mahony::update(float gx, float gy, float gz, float ax, float ay,
 
             // Error is sum of cross product between estimated direction
             // and measured direction of field vectors
-            float halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy);
-            float halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
-            float halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+            float halfex = (acc[1][0] * halfvz - acc[2][0] * halfvy) + (mag[1][0] * halfwz - mag[2][0] * halfwy);
+            float halfey = (acc[2][0] * halfvx - acc[0][0] * halfvz) + (mag[2][0] * halfwx - mag[0][0] * halfwz);
+            float halfez = (acc[0][0] * halfvy - acc[1][0] * halfvx) + (mag[0][0] * halfwy - mag[1][0] * halfwx);
 
             // Compute and apply integral feedback if enabled
             if (_twoKi > 0.0f) {
-            // integral error scaled by Ki
-            _integralFBx += _twoKi * halfex * dt;
-            _integralFBy += _twoKi * halfey * dt;
-            _integralFBz += _twoKi * halfez * dt;
-            gx += _integralFBx; // apply integral feedback
-            gy += _integralFBy;
-            gz += _integralFBz;
+                // integral error scaled by Ki
+                _integralFBx += _twoKi * halfex * dt;
+                _integralFBy += _twoKi * halfey * dt;
+                _integralFBz += _twoKi * halfez * dt;
+                rot[0][0] += _integralFBx; // apply integral feedback
+                rot[1][0] += _integralFBy;
+                rot[2][0] += _integralFBz;
             } else {
-            _integralFBx = 0.0f; // prevent integral windup
-            _integralFBy = 0.0f;
-            _integralFBz = 0.0f;
+                _integralFBx = 0.0f; // prevent integral windup
+                _integralFBy = 0.0f;
+                _integralFBz = 0.0f;
             }
 
             // Apply proportional feedback
-            gx += _twoKp * halfex;
-            gy += _twoKp * halfey;
-            gz += _twoKp * halfez;
+            rot[0][0] += _twoKp * halfex;
+            rot[1][0] += _twoKp * halfey;
+            rot[2][0] += _twoKp * halfez;
         }
     }
 
     // Integrate rate of change of quaternion
-    gx *= (0.5f * dt); // pre-multiply common factors
-    gy *= (0.5f * dt);
-    gz *= (0.5f * dt);
+    rot[0][0] *= (0.5f * dt); // pre-multiply common factors
+    rot[1][0] *= (0.5f * dt);
+    rot[2][0] *= (0.5f * dt);
     _quat.set(
-        _quat.getW() + (-_quat.getX() * gx - _quat.getY() * gy - _quat.getZ() * gz),
-        _quat.getX() + ( _quat.getW() * gx + _quat.getY() * gz - _quat.getZ() * gy),
-        _quat.getY() + ( _quat.getW() * gy - _quat.getX() * gz + _quat.getZ() * gx),
-        _quat.getZ() + ( _quat.getW() * gz + _quat.getX() * gy - _quat.getY() * gx)
+        _quat.getW() + (-_quat.getX() * rot[0][0] - _quat.getY() * rot[1][0] - _quat.getZ() * rot[2][0]),
+        _quat.getX() + ( _quat.getW() * rot[0][0] + _quat.getY() * rot[2][0] - _quat.getZ() * rot[1][0]),
+        _quat.getY() + ( _quat.getW() * rot[1][0] - _quat.getX() * rot[2][0] + _quat.getZ() * rot[0][0]),
+        _quat.getZ() + ( _quat.getW() * rot[2][0] + _quat.getX() * rot[1][0] - _quat.getY() * rot[0][0])
     );
 }
 
-//-------------------------------------------------------------------------------------------
-// IMU algorithm update
-
-void Mahony::updateIMU(float gx, float gy, float gz, float ax,
-                                float ay, float az, float dt) {
+void Mahony::updateIMU(
+        Vector3<float, uint8_t> rot, 
+        Vector3<float, uint8_t> acc,
+        float dt) {
     // Convert gyroscope degrees/sec to radians/sec
-    gx *= DEG_TO_RAD;
-    gy *= DEG_TO_RAD;
-    gz *= DEG_TO_RAD;
+    rot[0][0] *= DEG_TO_RAD;
+    rot[1][0] *= DEG_TO_RAD;
+    rot[2][0] *= DEG_TO_RAD;
 
     // Compute feedback only if accelerometer measurement valid
     // (avoids NaN in accelerometer normalization)
-    if (!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+    if (!(util::abs(acc[0][0]) < 1e-5 && util::abs(acc[1][0]) < 1e-5 && util::abs(acc[2][0]) < 1e-5)) {
         {
             // Normalize accelerometer measurement
-            float recipNorm = util::invSqrt(ax * ax + ay * ay + az * az);
-            ax *= recipNorm;
-            ay *= recipNorm;
-            az *= recipNorm;
+            float recipNorm = util::invSqrt(acc[0][0] * acc[0][0] + acc[1][0] * acc[1][0] + acc[2][0] * acc[2][0]);
+            acc[0][0] *= recipNorm;
+            acc[1][0] *= recipNorm;
+            acc[2][0] *= recipNorm;
         }
 
         // Estimated direction of gravity
@@ -136,40 +157,40 @@ void Mahony::updateIMU(float gx, float gy, float gz, float ax,
 
         // Error is sum of cross product between estimated
         // and measured direction of gravity
-        float halfex = (ay * halfvz - az * halfvy);
-        float halfey = (az * halfvx - ax * halfvz);
-        float halfez = (ax * halfvy - ay * halfvx);
+        float halfex = (acc[1][0] * halfvz - acc[2][0] * halfvy);
+        float halfey = (acc[2][0] * halfvx - acc[0][0] * halfvz);
+        float halfez = (acc[0][0] * halfvy - acc[1][0] * halfvx);
 
         // Compute and apply integral feedback if enabled
         if (_twoKi > 0.0f) {
-        // integral error scaled by Ki
-        _integralFBx += _twoKi * halfex * dt;
-        _integralFBy += _twoKi * halfey * dt;
-        _integralFBz += _twoKi * halfez * dt;
-        gx += _integralFBx; // apply integral feedback
-        gy += _integralFBy;
-        gz += _integralFBz;
+            // integral error scaled by Ki
+            _integralFBx += _twoKi * halfex * dt;
+            _integralFBy += _twoKi * halfey * dt;
+            _integralFBz += _twoKi * halfez * dt;
+            rot[0][0] += _integralFBx; // apply integral feedback
+            rot[1][0] += _integralFBy;
+            rot[2][0] += _integralFBz;
         } else {
-        _integralFBx = 0.0f; // prevent integral windup
-        _integralFBy = 0.0f;
-        _integralFBz = 0.0f;
+            _integralFBx = 0.0f; // prevent integral windup
+            _integralFBy = 0.0f;
+            _integralFBz = 0.0f;
         }
 
         // Apply proportional feedback
-        gx += _twoKp * halfex;
-        gy += _twoKp * halfey;
-        gz += _twoKp * halfez;
+        rot[0][0] += _twoKp * halfex;
+        rot[1][0] += _twoKp * halfey;
+        rot[2][0] += _twoKp * halfez;
     }
 
     // Integrate rate of change of quaternion
-    gx *= (0.5f * dt); // pre-multiply common factors
-    gy *= (0.5f * dt);
-    gz *= (0.5f * dt);
+    rot[0][0] *= (0.5f * dt); // pre-multiply common factors
+    rot[1][0] *= (0.5f * dt);
+    rot[2][0] *= (0.5f * dt);
     
     _quat.set(
-        (-_quat.getX() * gx - _quat.getY() * gy - _quat.getZ() * gz),
-        ( _quat.getW() * gx + _quat.getY() * gz - _quat.getZ() * gy),
-        ( _quat.getW() * gy - _quat.getX() * gz + _quat.getZ() * gx),
-        ( _quat.getW() * gz + _quat.getX() * gy - _quat.getY() * gx)
+        _quat.getW() + (-_quat.getX() * rot[0][0] - _quat.getY() * rot[1][0] - _quat.getZ() * rot[2][0]),
+        _quat.getX() + ( _quat.getW() * rot[0][0] + _quat.getY() * rot[2][0] - _quat.getZ() * rot[1][0]),
+        _quat.getY() + ( _quat.getW() * rot[1][0] - _quat.getX() * rot[2][0] + _quat.getZ() * rot[0][0]),
+        _quat.getZ() + ( _quat.getW() * rot[2][0] + _quat.getX() * rot[1][0] - _quat.getY() * rot[0][0])
     );
 }

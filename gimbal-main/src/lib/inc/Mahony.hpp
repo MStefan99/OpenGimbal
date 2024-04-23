@@ -13,20 +13,27 @@
 
 class Mahony {
 public:
-    static constexpr float defaultTwoKp {2.0f * 0.5f};
-    static constexpr float defaultTwoKi {2.0f * 0.5f};
+    static constexpr float defaultKp {0.5f};
+    static constexpr float defaultKi {0.5f};
     
-    Mahony(float pGain = defaultTwoKp, float iGain = defaultTwoKi);
+    Mahony(float Kp = defaultKp, float Ki = defaultKi);
 
-    void update(float gx, float gy, float gz, float ax, float ay, float az,
-                float mx, float my, float mz, float dt);
-    void updateIMU(float gx, float gy, float gz, float ax, float ay, float az,
-                   float dt);
+    void update(
+        Vector3<float, uint8_t> rot, 
+        Vector3<float, uint8_t> acc,
+        Vector3<float, uint8_t> mag,
+        float dt);
+    void updateIMU(
+        Vector3<float, uint8_t> rot, 
+        Vector3<float, uint8_t> acc,
+        float dt);
     
-    float getKp() { return _twoKp / 2.0f; }
-    void setKp(float Kp) { _twoKp = 2.0f * Kp; }
-    float getKi() { return _twoKi / 2.0f; }
-    void setKi(float Ki) { _twoKi = 2.0f * Ki; }
+    float getKp();
+    float getKi();
+    void setKp(float Kp);
+    void setKi(float Ki);
+    
+    Quaternion getQuat() const;
   
 protected:
     float _twoKp {}; // 2 * proportional gain (Kp)

@@ -11,6 +11,7 @@
 #include "device.h"
 
 #include "util.hpp"
+#include "Matrix.hpp"
 #include "lib/inc/i2c.hpp"
 
 namespace lsm6dso {
@@ -18,8 +19,8 @@ namespace lsm6dso {
 	void init();
 	void update();
     
-    const float* getAcc();
-	const float* getRot();
+    Vector3<float, uint8_t> getAcc();
+	Vector3<float, uint8_t> getRot();
 }
 
 #endif	/* LSM6DSO_HPP */
