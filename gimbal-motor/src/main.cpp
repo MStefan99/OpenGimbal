@@ -327,7 +327,7 @@ int main() {
                         data.x = kx[0][0];
                         data.v = kx[1][0] * 1000;
                         data.a = kx[2][0] * 1000;
-                        data.u = loadFilter.getState();
+                        data.u = torque;
                         uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
                     }
                 #endif

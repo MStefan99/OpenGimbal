@@ -93,6 +93,16 @@ int32_t MovementController::getDesiredDeflection() const {
 int32_t MovementController::Interpolator::extrapolate(uint32_t dt, int32_t target) {
     int32_t change {target - _actual};
     
+    if (change < -2048) {
+        _actual -= 4096;
+        _extrapolated -= 4096;
+        change = target - _actual;
+    } else if (change > 2048) {
+        _actual += 4096;
+        _extrapolated += 4096;
+        change = target - _actual;
+    }
+    
     _actual = target;
     _prev = _extrapolated;
     _extrapolated = _actual + change;
@@ -113,5 +123,5 @@ void MovementController::extrapolate(uint32_t dt, int32_t target) {
 }
 
 void MovementController::interpolate(uint32_t dt) {
-    _target = _interpolator.interpolate(dt);
+    _target = util::mod(_interpolator.interpolate(dt), static_cast<int32_t>(4096));
 }
