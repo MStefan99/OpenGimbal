@@ -10,6 +10,7 @@
 
 #include "util.hpp"
 #include "data.hpp"
+#include "options.hpp"
 
 class MovementController {
 public:    
@@ -30,8 +31,9 @@ public:
 protected:
     class Interpolator {
     public:
-        int32_t extrapolate(uint32_t dt, int32_t target);
-        int32_t interpolate(uint32_t dt);
+        int32_t extrapolate(int32_t target) const;
+        void applyTarget(uint32_t dt, int32_t target);
+        int32_t interpolate(uint32_t dt) const;
         
     protected:
         int32_t _prev {};
@@ -40,14 +42,7 @@ protected:
         uint32_t _dt {};
     };
     
-    struct CalculationResult {
-        int32_t target {};
-        int32_t deflection {};
-        int32_t desiredDeflection {};
-    };
-    
 	static int32_t wrapValue(int32_t value);
-    CalculationResult calculateTarget(int32_t target);
 
 	uint16_t _target {0};
 	uint16_t _range {data::options.range}; // 0 indicates no limit

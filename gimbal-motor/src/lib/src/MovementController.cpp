@@ -8,7 +8,7 @@ void MovementController::setRange(uint16_t range) {
 	_range = range;
 }
 
-MovementController::CalculationResult MovementController::calculateTarget(int32_t newTarget) {
+void MovementController::setTarget(int32_t newTarget) {
 	newTarget = util::mod(newTarget + _offset, static_cast<int32_t>(4096));
 	int32_t newDeflection = _deflection + newTarget - _target;
 	int32_t newDesiredDeflection = newDeflection;
@@ -39,26 +39,13 @@ MovementController::CalculationResult MovementController::calculateTarget(int32_
 		}
 	}
     
-    return {newTarget, newDeflection, newDesiredDeflection};
-}
-
-void MovementController::setTarget(int32_t newTarget) {
-    CalculationResult result {calculateTarget(newTarget)};
-    
-	_target = result.target;
-    _deflection = result.deflection;
-    _desiredDeflection = result.desiredDeflection;
+	_target = newTarget;
+    _deflection = newDeflection;
+    _desiredDeflection = newDesiredDeflection;
 }
 
 void MovementController::setOffset(int32_t newOffset) {
-    auto diff = _offset - newOffset;
-    if (diff < -2048) {
-        diff += 4096;
-    } else if (diff >= 2048) {
-        diff -= 4096;
-    }
-	_deflection += diff;
-	_desiredDeflection += diff;
+    _interpolator.applyTarget(1, newOffset);
 	_offset = newOffset;
 }
 
@@ -90,7 +77,22 @@ int32_t MovementController::getDesiredDeflection() const {
 	return _desiredDeflection;
 }
 
-int32_t MovementController::Interpolator::extrapolate(uint32_t dt, int32_t target) {
+int32_t MovementController::Interpolator::extrapolate(int32_t target) const {
+    auto actual {_actual};
+    int32_t change {target - _actual};
+    
+    if (change < -2048) {
+        actual -= 4096;
+        change = target - actual;
+    } else if (change > 2048) {
+        actual += 4096;
+        change = target - actual;
+    }
+    
+    return _actual + change;
+}
+
+void MovementController::Interpolator::applyTarget(uint32_t dt, int32_t target) {
     int32_t change {target - _actual};
     
     if (change < -2048) {
@@ -107,19 +109,19 @@ int32_t MovementController::Interpolator::extrapolate(uint32_t dt, int32_t targe
     _prev = _extrapolated;
     _extrapolated = _actual + change;
     _dt = dt;
-    
-    return _extrapolated;
 }
 
-int32_t MovementController::Interpolator::interpolate(uint32_t dt) {
+int32_t MovementController::Interpolator::interpolate(uint32_t dt) const {
     return util::interpolate(_prev, _extrapolated, static_cast<float>(dt) / static_cast<float>(_dt));
 }
 
 void MovementController::extrapolate(uint32_t dt, int32_t target) {
-    CalculationResult result {calculateTarget(_interpolator.extrapolate(dt, target))};
+    setTarget(_interpolator.extrapolate(target));
     
-    _deflection = result.deflection;
-    _desiredDeflection = result.desiredDeflection;
+    if (dt > maxInterpolationTime) {
+        dt = 1;
+    }
+    _interpolator.applyTarget(dt, _target);
 }
 
 void MovementController::interpolate(uint32_t dt) {
