@@ -49,19 +49,19 @@ namespace util {
     void runTasks();
 
     
-	template <class T, class S>
-	void copy(T* dest, const T* src, S len = 1) {
-		for (S i{0}; i < len; ++i) {
-			dest[i] = src[i];
-		}
-	}
-    
     template <class T>
     void swap(T* a, T* b) {
         T t {*a};
         *a = *b;
         *b = t;
     }
+    
+	template <class T, class S>
+	void copy(T* dest, const T* src, S len = 1) {
+		for (S i{0}; i < len; ++i) {
+			dest[i] = src[i];
+		}
+	}
 	
 	template <class T>
 	void copy(T* dest, const T& src) {
@@ -73,6 +73,11 @@ namespace util {
 	void copy(T* dest, T&& src) {
 		*dest = src;
 	}
+    
+    template <class T>
+    T mod(T a, T b) {
+        return ((a % b) + b) % b;
+    }
     
     template <class T>
     T avg(T a, T b) {

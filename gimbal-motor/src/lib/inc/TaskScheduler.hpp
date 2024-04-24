@@ -41,14 +41,14 @@ protected:
 	size_type schedule(timestamp_type currentTime, timestamp_type timeout, task_type cb, timestamp_type interval = 0);
 	void unschedule(size_type id);
 
-	static size_type lastID;
+	static size_type _lastID;
 
 	RingBuffer<Task, size_type, C> _tasks {};
 };
 
 
 template<class size_type, size_type C>
-size_type TaskScheduler<size_type, C>::lastID {0};
+size_type TaskScheduler<size_type, C>::_lastID {0};
 
 template<class size_type, size_type C>
 size_type TaskScheduler<size_type, C>::schedule(timestamp_type currentTime, timestamp_type timeout,
@@ -64,7 +64,7 @@ size_type TaskScheduler<size_type, C>::schedule(timestamp_type currentTime, time
 			cb,
 			timestamp,
 			interval,
-			++lastID != 0 ? lastID : ++lastID
+			++_lastID != 0 ? _lastID : ++_lastID
 	};
 
 	if (!_tasks.empty()) {
@@ -169,7 +169,7 @@ bool TaskScheduler<size_type, C>::empty() const {
 template<class size_type, size_type C>
 void TaskScheduler<size_type, C>::reset() {
 	_tasks.clear();
-	lastID = 0;
+	_lastID = 0;
 }
 
 

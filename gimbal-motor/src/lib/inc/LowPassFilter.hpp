@@ -21,27 +21,27 @@ public:
         // Calculate the filter coefficient
         float RC = 1.0 / (cutoffFrequency * TWO_PI);
         float dt = 1.0 / sampleRate;
-        alpha = dt / (RC + dt);
+        _alpha = dt / (RC + dt);
     }
 
     float process(float inputSample) {
         // Apply the filter: simple low-pass IIR filter equation
-        y = y + alpha * (inputSample - y);
-        return y;
+        _y = _y + _alpha * (inputSample - _y);
+        return _y;
     }
     
     float getState() {
-        return y;
+        return _y;
     }
     
     float force(float state) {
-        y = state;
-        return y;
+        _y = state;
+        return _y;
     }
 
 private:
-    float y = 0; // Filter state
-    float alpha = 0; // Filter coefficient
+    float _y = 0; // Filter state
+    float _alpha = 0; // Filter coefficient
 };
 
 #endif	/* LOWPASSFILTER_HPP */

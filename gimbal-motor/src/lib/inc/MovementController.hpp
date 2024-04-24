@@ -2,17 +2,17 @@
 // Created by Mikhail on 16.11.23.
 //
 
-#ifndef SANDBOX_MOVEMENTCONTROLLER_HPP
-#define SANDBOX_MOVEMENTCONTROLLER_HPP
+#ifndef MOVEMENTCONTROLLER_HPP
+#define MOVEMENTCONTROLLER_HPP
 
 
-#include <cstdint>
-#include <algorithm>
+#include "device.h"
 
+#include "util.hpp"
 #include "data.hpp"
 
 class MovementController {
-public:
+public:    
 	void setRange(uint16_t range);
 	void setTarget(int32_t newTarget);
 	void setOffset(int32_t newOffset);
@@ -24,22 +24,26 @@ public:
 	int32_t getDeflection() const;
 	int32_t getDesiredDeflection() const;
 
-#ifdef DEBUG
-
-	void reset() {
-		offset = target = deflection = desiredDeflection = 0;
-	}
-
-#endif
-
 protected:
+    class Interpolator {
+    public:
+        void extrapolate(uint32_t dt, int32_t target);
+        int32_t interpolate(uint32_t dt);
+        
+    protected:
+        int32_t _prev {};
+        int32_t _current {};
+        int32_t _predicted {};
+        uint32_t _dt {};
+    };
+    
 	static int32_t wrapValue(int32_t value);
 
-	int32_t offset {data::options.zeroOffset};
-	uint16_t target {0};
-	uint16_t allowedRange {data::options.range}; // 0 indicates no limit
-	int32_t deflection {0};
-	int32_t desiredDeflection {0};
+	uint16_t _target {0};
+	uint16_t _range {data::options.range}; // 0 indicates no limit
+	int32_t _offset {data::options.zeroOffset};
+	int32_t _deflection {0};
+	int32_t _desiredDeflection {0};
 };
 
-#endif //SANDBOX_MOVEMENTCONTROLLER_HPP
+#endif //MOVEMENTCONTROLLER_HPP

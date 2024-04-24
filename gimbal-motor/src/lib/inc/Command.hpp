@@ -48,8 +48,8 @@ public:
     size_type getLength();
 
 protected:
-    buffer_type buffer = {0};
-    size_type length {0};
+    buffer_type _buffer = {0};
+    size_type _length {0};
 };
 
 
@@ -67,9 +67,9 @@ public:
 template <class T>
 ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value): 
     Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
-    this->buffer[2] = static_cast<uint8_t>(variableID);
+    this->_buffer[2] = static_cast<uint8_t>(variableID);
     for (size_type i {0}; i < sizeof(T); ++i) {
-        this->buffer[sizeof(T) + 2 - i] = value;
+        this->_buffer[sizeof(T) + 2 - i] = value;
         value >>= 8;
     }
 }
