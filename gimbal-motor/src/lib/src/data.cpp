@@ -2,8 +2,8 @@
 
 const data::Options data::options __attribute__((aligned(FLASH_ROW_SIZE),keep,space(prog)));
 
-uint8_t rowCopy[FLASH_ROW_SIZE] {};
-const uint8_t* modifiedRow {nullptr};
+uint8_t data::_internal::rowCopy[FLASH_ROW_SIZE] {};
+const uint8_t* data::_internal::modifiedRow {nullptr};
 
 static void nvmWaitUntilReady();
 static void nvmRowErase(uint32_t address);
@@ -28,21 +28,21 @@ static void nvmPageWrite(const uint8_t* address) {
 }
 
 void data::write() {
-    if (modifiedRow == nullptr) {
+    if (_internal::modifiedRow == nullptr) {
         return; // No rows modified, nothing to do
     }
     
-    nvmRowErase(modifiedRow); // Erasing modified row
+    nvmRowErase(_internal::modifiedRow); // Erasing modified row
 
     for (uint8_t i {0}; i < 4; ++i) { // Writing all 4 pages
-        auto* page {modifiedRow + i * FLASH_PAGE_SIZE};
+        auto* page {_internal::modifiedRow + i * FLASH_PAGE_SIZE};
         util::copy( // Copying a page 
             (uint32_t*)(page), // Original page
-            reinterpret_cast<const uint32_t*>(rowCopy + i * FLASH_PAGE_SIZE), // Page copy
+            reinterpret_cast<const uint32_t*>(_internal::rowCopy + i * FLASH_PAGE_SIZE), // Page copy
             FLASH_PAGE_SIZE / sizeof(uint32_t) // Copying the entire page in 32-bit operations
         );
         nvmPageWrite(page);
     }
 
-    modifiedRow = nullptr;
+    _internal::modifiedRow = nullptr;
 }

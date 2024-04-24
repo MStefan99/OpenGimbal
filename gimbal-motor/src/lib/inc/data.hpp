@@ -25,11 +25,13 @@
  * the data is copied back and all 4 pages are written.
  */
 
-extern uint8_t rowCopy[FLASH_ROW_SIZE]; // Copy of the row
-extern const uint8_t* modifiedRow; // Original address of the data
-
 
 namespace data {
+    namespace _internal {
+        extern uint8_t rowCopy[FLASH_ROW_SIZE]; // Copy of the row
+        extern const uint8_t* modifiedRow; // Original address of the data
+    }
+    
     typedef struct __attribute__((packed)) {
         union {
             struct {
@@ -56,17 +58,17 @@ namespace data {
             return;
         }
 
-        if (reinterpret_cast<const uint8_t*>(row) != modifiedRow) { // Starting to edit another row
+        if (reinterpret_cast<const uint8_t*>(row) != _internal::modifiedRow) { // Starting to edit another row
             write(); // Writing current row
             util::copy( // Making a copy of the new row
-                    reinterpret_cast<uint32_t*>(rowCopy), // Destination
+                    reinterpret_cast<uint32_t*>(_internal::rowCopy), // Destination
                     reinterpret_cast<const uint32_t*>(row), // New row
                     FLASH_ROW_SIZE / sizeof(uint32_t) // Copying the entire row in 32-bit operations
             );
-            modifiedRow = row;
+            _internal::modifiedRow = row;
         }
 
-        *reinterpret_cast<T*>(rowCopy + (reinterpret_cast<const uint8_t*>(dest) - row)) = src;
+        *reinterpret_cast<T*>(_internal::rowCopy + (reinterpret_cast<const uint8_t*>(dest) - row)) = src;
     }
 }
 
