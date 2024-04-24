@@ -8,7 +8,7 @@ void MovementController::setRange(uint16_t range) {
 	_range = range;
 }
 
-void MovementController::setTarget(int32_t newTarget) {
+MovementController::CalculationResult MovementController::calculateTarget(int32_t newTarget) {
 	newTarget = util::mod(newTarget + _offset, static_cast<int32_t>(4096));
 	int32_t newDeflection = _deflection + newTarget - _target;
 	int32_t newDesiredDeflection = newDeflection;
@@ -38,10 +38,16 @@ void MovementController::setTarget(int32_t newTarget) {
 			newTarget = util::mod(newDeflection, static_cast<int32_t>(4096));
 		}
 	}
+    
+    return {newTarget, newDeflection, newDesiredDeflection};
+}
 
-	_target = newTarget;
-	_deflection = newDeflection;
-	_desiredDeflection = newDesiredDeflection;
+void MovementController::setTarget(int32_t newTarget) {
+    CalculationResult result {calculateTarget(newTarget)};
+    
+	_target = result.target;
+    _deflection = result.deflection;
+    _desiredDeflection = result.desiredDeflection;
 }
 
 void MovementController::setOffset(int32_t newOffset) {
@@ -84,7 +90,28 @@ int32_t MovementController::getDesiredDeflection() const {
 	return _desiredDeflection;
 }
 
-void MovementController::Interpolator::extrapolate(uint32_t dt, int32_t target) {
-    int32_t change {target - _current};
-    _prev = _current;
+int32_t MovementController::Interpolator::extrapolate(uint32_t dt, int32_t target) {
+    int32_t change {target - _actual};
+    
+    _actual = target;
+    _prev = _extrapolated;
+    _extrapolated = _actual + change;
+    _dt = dt;
+    
+    return _extrapolated;
+}
+
+int32_t MovementController::Interpolator::interpolate(uint32_t dt) {
+    return util::interpolate(_prev, _extrapolated, static_cast<float>(dt) / static_cast<float>(_dt));
+}
+
+void MovementController::extrapolate(uint32_t dt, int32_t target) {
+    CalculationResult result {calculateTarget(_interpolator.extrapolate(dt, target))};
+    
+    _deflection = result.deflection;
+    _desiredDeflection = result.desiredDeflection;
+}
+
+void MovementController::interpolate(uint32_t dt) {
+    _target = _interpolator.interpolate(dt);
 }

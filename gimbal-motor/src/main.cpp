@@ -8,7 +8,7 @@ static uint8_t maxTorque {0};
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
 static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
-static uint16_t rawTarget {0};
+static uint32_t lastTargetTime {0};
 
 static uint16_t angle {0};
 static bool dataReady {false};
@@ -53,7 +53,9 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (Command::CommandType::Position): {
-            movementController.setTarget(((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            auto time {util::getTime()};
+            movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            lastTargetTime = time;
             maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
             break;
         }
@@ -267,8 +269,6 @@ int main() {
     
     uart::setCallback(processCommand);
     
-    // TODO: Filter is too slow
-    LowPassFilter targetFilter {1000, 5};
     // TODO: Exiting out of no-load (proportional) mode is jerky and needs improvement
     LowPassFilter loadFilter {1000, 1};
     
@@ -290,13 +290,8 @@ int main() {
                     auto start = SysTick->VAL;
                 #endif
                 
-                // Checking for target wraparound
-//                if (rawTarget - targetFilter.getState() > 2048) {
-//                    targetFilter.force(targetFilter.getState() + 4096);
-//                } else if (rawTarget - targetFilter.getState() < -2048) {
-//                    targetFilter.force(targetFilter.getState() - 4096);
-//                }
-//                movementController.setTarget(targetFilter.process(rawTarget));
+                auto time {util::getTime()};
+                movementController.interpolate(time - lastTargetTime);
                 
                 // Calculating difference between current and target angle
                 angle = measureAngle();
@@ -325,7 +320,7 @@ int main() {
                 
                 util::runTasks();
                 #if DV_OUT
-                    if (util::getTime() % 5 < 1) {
+                    if (time % 5 < 1) {
                         Data data {};
                         
                         data.dt = (start - SysTick->VAL) / 48;

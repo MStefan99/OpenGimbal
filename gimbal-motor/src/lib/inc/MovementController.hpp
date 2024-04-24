@@ -17,6 +17,9 @@ public:
 	void setTarget(int32_t newTarget);
 	void setOffset(int32_t newOffset);
 	void adjustOffset(int32_t sourcePosition, int32_t targetPosition);
+    
+    void extrapolate(uint32_t dt, int32_t target);
+    void interpolate(uint32_t dt);
 
 	uint16_t getRange() const;
 	int32_t getOffset() const;
@@ -27,23 +30,31 @@ public:
 protected:
     class Interpolator {
     public:
-        void extrapolate(uint32_t dt, int32_t target);
+        int32_t extrapolate(uint32_t dt, int32_t target);
         int32_t interpolate(uint32_t dt);
         
     protected:
         int32_t _prev {};
-        int32_t _current {};
-        int32_t _predicted {};
+        int32_t _actual {};
+        int32_t _extrapolated {};
         uint32_t _dt {};
     };
     
+    struct CalculationResult {
+        int32_t target {};
+        int32_t deflection {};
+        int32_t desiredDeflection {};
+    };
+    
 	static int32_t wrapValue(int32_t value);
+    CalculationResult calculateTarget(int32_t target);
 
 	uint16_t _target {0};
 	uint16_t _range {data::options.range}; // 0 indicates no limit
 	int32_t _offset {data::options.zeroOffset};
 	int32_t _deflection {0};
 	int32_t _desiredDeflection {0};
+    Interpolator _interpolator {};
 };
 
 #endif //MOVEMENTCONTROLLER_HPP
