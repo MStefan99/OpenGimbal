@@ -3,9 +3,84 @@ device:
   description: 3-axis gyroscope and accelerometer # Just rendered as a comment
   address: 0x6a
   registers:
+    FUNC_CFG_ACCESS:
+      description: Enable embedded functions register
+      mode: r/w
+      address: 0x01
+      reset: 0x0
+      mask: 0xc0
+      groups:
+        SHUB_REG_ACCESS:
+          description: Enable access to the sensor hub (I²C master) registers
+          offset: 6
+          size: 1
+        FUNC_CFG_ACCESS:
+          description: Enable access to the embedded functions configuration registers
+          offset: 7
+          size: 1
+    PIN_CTRL:
+      description: SDO pin pull-up enable/disable register
+      mode: r/w
+      address: 0x02
+      reset: 0x3f
+      mask: 0x40
+      groups:
+        SDO_PU_EN:
+          description: Enable pull-up on SDO pin
+          offset: 6
+          size: 1
+    FIFO_CTRL1:
+      description: FIFO control register 1
+      mode: r/w
+      address: 0x07
+      mask: 0xff
+      groups:
+        WTM:
+          description: FIFO watermark threshold, in conjunction with WTM8 in FIFO_CTRL2
+          offset: 0
+          size: 8
+    FIFO_CTRL2:
+      description: FIFO control register 2
+      mode: r/w
+      address: 0x08
+      mask: 0xff
+      groups:
+        STOP_ON_WTM:
+          description: Sensing chain FIFO stop values memorization at threshold level
+          offset: 7
+          size: 1
+        FIFO_COMPR_RT_EN:
+          description: Enables/Disables compression algorithm runtime
+          offset: 6
+          size: 1
+        ODRCHG_EN:
+          description: Enables ODR CHANGE virtual sensor to be batched in FIFO
+          offset: 4
+          size: 1
+        UNCOPTR_RATE:
+          description: This field configures the compression algorithm to write non-compressed data at each rate
+          offset: 1
+          size: 2
+          options:
+            - name: NOF
+              description: Non-compressed data writing is not forced
+              value: 0
+            - name: 8BDR
+              description: Non-compressed data every 8 batch data rate
+              value: 1
+            - name: 16BDR
+              description: Non-compressed data every 16 batch data rate
+              value: 2
+            - name: 32BDR
+              description: Non-compressed data every 32 batch data rate
+              value: 3
+        WTM:
+          description: FIFO watermark threshold, in conjunction with WTM_FIFO[7:0] in FIFO_CTRL1
+          offset: 0
+          size: 1
     CTRL1_XL: # Used as a prefix for groups
       description: Acceleration control 1
-      mode: R/W
+      mode: r/w
       address: 0x10
       reset: 0x0
       mask: 0xfe

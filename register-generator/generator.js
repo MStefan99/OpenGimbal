@@ -16,6 +16,9 @@ function generateDefinitions(yamlFile) {
 	const MAX_LENGTH = 60;
 
 	let output = '';
+	output += `/* File generated from device description on ${new Date().toLocaleString('en-GB')}`;
+	data.device.version && (output += `, version ${data.device.version}`);
+	output += ' */\n\n';
 	output += `/* ${data.device.name}`;
 	data.device.description && (output += `: ${data.device.description}`);
 	output += ' */\n\n';
@@ -26,9 +29,6 @@ function generateDefinitions(yamlFile) {
 		if (!Number.isInteger(registerInfo.address)) {
 			throw new Error(`Register ${registerName} has no or invalid address`);
 		}
-		if (!Number.isInteger(registerInfo.reset)) {
-			throw new Error(`Register ${registerName} has no or invalid reset value`);
-		}
 		if (!Number.isInteger(registerInfo.mask)) {
 			throw new Error(`Register ${registerName} has no or invalid mask value`);
 		}
@@ -36,16 +36,23 @@ function generateDefinitions(yamlFile) {
 		const reg = `${data.device.name}_${registerName}`
 
 		output += `/* ${data.device.name}_${registerName}`;
-		registerInfo.mode && (output += `, ${registerInfo.mode}`);
+		registerInfo.mode && (output += `, ${registerInfo.mode.toUpperCase()}`);
 		registerInfo.description && (output += `: ${registerInfo.description}`);
 		output += ' */\n';
 
 		output += `#define ${data.device.name}_${registerName}_ADDRESS`.padEnd(MAX_LENGTH, ' ') + `(0x${registerInfo.address.toString(16)})`
 		registerInfo.description && (output += `  /* (${reg}) ${registerInfo.description} address */`);
 		output += '\n';
-		output += `#define ${data.device.name}_${registerName}_RESETVALUE`.padEnd(MAX_LENGTH, ' ') + `(0x${registerInfo.reset.toString(16)})`;
-		registerInfo.description && (output += `  /* (${reg}) ${registerInfo.description} reset value */`);
-		output += '\n\n';
+		if (registerInfo.reset?.length) {
+			output += `#define ${data.device.name}_${registerName}_RESETVALUE`.padEnd(MAX_LENGTH, ' ') + `(0x${registerInfo.reset.toString(16)})`;
+			registerInfo.description && (output += `  /* (${reg}) ${registerInfo.description} reset value */`);
+			output += '\n';
+		}
+		output += '\n';
+
+		if (!registerInfo.groups || registerInfo.groups.length === 0) {
+			throw new Error(`Register ${registerName} has no bit groups`);
+		}
 
 		for (const [groupName, groupInfo] of Object.entries(registerInfo.groups)) {
 			if (!Number.isInteger(groupInfo.offset)) {
@@ -89,7 +96,7 @@ function generateDefinitions(yamlFile) {
 			}
 		}
 
-		output += `#define ${reg}_Msk`.padEnd(MAX_LENGTH, ' ') + `(0x${registerInfo.mask.toString(16)})  /* (${reg}) Register mask */\n`;
+		output += `#define ${reg}_Msk`.padEnd(MAX_LENGTH, ' ') + `(0x${registerInfo.mask.toString(16)})  /* (${reg}) Register mask */\n\n\n`;
 	}
 
 	console.log('Definitions generated successfully!');
