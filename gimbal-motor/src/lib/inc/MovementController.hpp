@@ -31,6 +31,9 @@ public:
 protected:
     class Interpolator {
     public:
+        Interpolator() = delete;
+        Interpolator(int32_t offset);
+        
         int32_t extrapolate(int32_t target) const;
         void applyTarget(uint32_t dt, int32_t target);
         int32_t interpolate(uint32_t dt) const;
@@ -49,7 +52,7 @@ protected:
 	int32_t _offset {data::options.zeroOffset};
 	int32_t _deflection {0};
 	int32_t _desiredDeflection {0};
-    Interpolator _interpolator {};
+    Interpolator _interpolator {data::options.zeroOffset};
 };
 
 #endif //MOVEMENTCONTROLLER_HPP

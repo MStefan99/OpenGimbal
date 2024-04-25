@@ -22,7 +22,7 @@ void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
     
     buf[0] = 0x4 << 4u | address;
     buf[1] = 0x1;
-    buf[2] = 0x40 | position >> 8u;
+    buf[2] = 0xf0 | position >> 8u;
     buf[3] = position;
 }
 
@@ -91,7 +91,7 @@ int main() {
         
         Quaternion handleOrientation {mahony.getQuat()};
         Quaternion phoneOrientation {};
-        Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
+        Quaternion gimbalRotation {phoneOrientation * handleOrientation.conjugate()};
         
         auto eulerAngles {gimbalRotation.toEuler()};
         

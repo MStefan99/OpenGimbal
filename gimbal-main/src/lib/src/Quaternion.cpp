@@ -2,7 +2,7 @@
 
 
 Quaternion::Quaternion(float w, float x, float y, float z): _w(w), _x(x), _y(y), _z(z) {
-    // Nothing to do
+    normalize();
 }
 
 void Quaternion::normalize() {

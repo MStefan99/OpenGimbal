@@ -169,7 +169,7 @@ void calibrate() {
         int8_t direction {0};
     
         do {
-            torqueAngle += 10;
+            torqueAngle += 2;
 
             if (torqueAngle >= fullRevolution) {
                 torqueAngle = 0;
@@ -304,7 +304,7 @@ int main() {
                 
                 // Calculating and applying torque
                 auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
-                
+
                 if (util::abs(kx[2][0]) > switchAcceleration / 1000) {
                     loadFilter.force(0.0f);
                 } else if (loadFilter.getState() < 1.0f) {

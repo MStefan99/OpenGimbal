@@ -77,6 +77,11 @@ int32_t MovementController::getDesiredDeflection() const {
 	return _desiredDeflection;
 }
 
+MovementController::Interpolator::Interpolator(int32_t offset): 
+        _prev(offset), _actual(offset), _extrapolated(offset) {
+    // Nothing to do
+}
+
 int32_t MovementController::Interpolator::extrapolate(int32_t target) const {
     auto actual {_actual};
     int32_t change {target - _actual};

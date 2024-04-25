@@ -46,7 +46,7 @@ static constexpr uint8_t deviceAddress {1};
 */
 
 // LQG settings
-        
+
 // LQG feedback gain matrix
 constexpr auto K = Matrix<float, uint8_t, 1, 2>{{31.622776601683820,8.015332382588245}};
 /* Controller gain
@@ -73,7 +73,7 @@ constexpr auto Q = Matrix<float,
                          {0, 1e-4, 0},
                          {0, 0, 1e-4}};
 constexpr auto R = Matrix<float,
-		unsigned, 1, 1> {{10}};
+		unsigned, 1, 1> {{30}};
         
 // Mode switch settings
 
