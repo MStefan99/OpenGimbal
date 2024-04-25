@@ -1,0 +1,33 @@
+device:
+  name: LSM6DSO32 # Used as a prefix for all definitions
+  description: 3-axis gyroscope and accelerometer # Just rendered as a comment
+  address: 0x6a
+  registers:
+    CTRL1_XL: # Used as a prefix for groups
+      description: Acceleration control 1
+      mode: R/W
+      address: 0x10
+      reset: 0x0
+      mask: 0xfe
+      groups:
+        LPF2_XL_EN:
+          description: Accelerometer high-resolution selection
+          offset: 1
+          size: 1
+        FS0_XL: # Used as a prefix for values (if any)
+          description: Accelerometer full-scale selection
+          offset: 2
+          size: 3
+          options: # Optional, otherwise just treat as a number
+            - name: POWER_DOWN
+              value: 0x0
+              description: Power down
+            - name: 12.5Hz
+              value: 0x1
+              description: 12.5Hz
+            - name: 26Hz
+              value: 0x2
+              description: 26Hz
+            - name: 52Hz
+              value: 0x3
+              description: 52Hz

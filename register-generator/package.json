@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "yaml": "^2.4.1",
+    "yargs": "^17.7.2"
+  }
+}
