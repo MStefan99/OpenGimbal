@@ -22,37 +22,39 @@ void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
     
     buf[0] = 0x4 << 4u | address;
     buf[1] = 0x1;
-    buf[2] = 0xf0 | position >> 8u;
+    buf[2] = 0x40 | position >> 8u;
     buf[3] = position;
 }
 
+float sqrt2 = std::sqrt(2);
 
-Vector3<float, uint8_t> calculateAngles(float x, float y, float z) {
-    float sinX = std::sin(x);  
-    float sin2x = sinX * sinX;
-    float sinY = std::sin(y);
-    float sin2y = sinY * sinY;
-    float cosY = std::cos(y);
-    float cos2y = cosY * cosY;
-    float sinZ = std::sin(z);
-    float sin2z = sinZ * sinZ;
-    float sqrt2 = std::sqrt(2);
+
+Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
+    float sinA = std::sin(eulerAngles[0][0]);
+    float cosA = std::cos(eulerAngles[0][0]);
+    float sinB = std::sin(eulerAngles[1][0]);
+    float cosB = std::cos(eulerAngles[1][0]);
+    float sinG = std::sin(eulerAngles[2][0]);
+    float cosG = std::cos(eulerAngles[2][0]);
     
-    float cosBeta = std::sqrt(1 - 2 * cos2y * sin2x);
-    float cos2beta = cosBeta * cosBeta;
+    float sin2A = sinA * sinA;
+    float cos2A = cosA * cosA;
+    float sin2B = sinB * sinB;
+    float cos2B = cosB * cosB;
+    float sin2G = sinG * sinG;
+    float cos2G = cosG * cosG;
    
-    float sinBeta = 2 / sqrt2 * cosY * sinX;
-    float sin2beta = sinBeta * sinBeta;
+    float sinM2 = sqrt2 * sinB;
+    float sin2M2 = sinM2 * sinM2;
     
-    float sinGamma = (-4 / sqrt2 * sinY - 2 * cosBeta * std::sqrt(cos2beta - sin2y + 1)) / (2 * (cos2beta + 1));
-    float cos2gamma = 1 - sinGamma * sinGamma;
-    float cosGamma = std::sqrt(cos2gamma);
-
-    float sinAlpha = (sqrt2 * cosY * sinZ * cosBeta - 
-        sinBeta * std::sqrt(2 * cos2gamma * cos2beta - 4 * cos2y * sin2z + cos2gamma * sin2beta)) /
-        (cosGamma * (cos2beta + 1));
+    float cos2M2 = 1 - sin2M2;
+    float cosM2 = std::sqrt(cos2M2);
     
-    return {{std::asin(sinAlpha)}, {std::asin(sinBeta)}, {std::asin(sinGamma) + QUARTER_PI}};
+    return {
+        {-2 * std::atan2((sqrt2 * (sinM2 + std::sqrt(cos2M2 - 2 * cos2A * cos2B + 1))), (2 * (cosM2 + cosA * cosB)))},
+        {std::asin(sinM2)},
+        {2 * std::atan2((sqrt2 * std::sqrt(cos2M2 - 2 * cos2B * cos2G + 1) - cosM2 + 1), (cosM2 + 2 * cosB * cosG + 1))}
+    };
 }
 
 #if DV_OUT
@@ -87,36 +89,40 @@ int main() {
         #endif        
         mahony.updateIMU(lsm6dso::getRot(), lsm6dso::getAcc(), 0.01f);
         
-        auto orientation {mahony.getQuat().toEuler()};
+        Quaternion handleOrientation {mahony.getQuat()};
+        Quaternion phoneOrientation {};
+        Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
         
-        auto angles {calculateAngles(orientation[0][0], orientation[1][0], orientation[2][0])};
+        auto eulerAngles {gimbalRotation.toEuler()};
+        
+        auto motorAngles {calculateAngles(eulerAngles)};
         
         #if DV_OUT
             //if (util::getTime() % 5 < 1) {
                 Data data {};
 
                 data.dt = (start - SysTick->VAL) / 48;
-                data.x = orientation[0][0];
-                data.y = orientation[1][0];
-                data.z = orientation[2][0];
-                data.m1 = angles[0][0];
-                data.m2 = angles[1][0];
-                data.m3 = angles[2][0];
+                data.x = eulerAngles[0][0];
+                data.y = eulerAngles[1][0];
+                data.z = eulerAngles[2][0];
+                data.m1 = motorAngles[0][0];
+                data.m2 = motorAngles[1][0];
+                data.m3 = motorAngles[2][0];
                 uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
             //}
         #endif
         
         uint8_t buf[12] {};
-//        for (uint8_t i {0}; i < 3; ++i) {
-//            int16_t position = angles[i][0] * FACTOR;
-//            if (position < 0) {
-//                position += 4096;
-//            }
-//            setPosition(buf + 4 * i, i + 1, position);
-//        }
-        setPosition(buf, 3, orientation[2][0] * FACTOR);
-        
-        uart::sendToMotors(buf, 4);
+        for (uint8_t i {0}; i < 3; ++i) {
+            int16_t position = motorAngles[i][0] * FACTOR;
+            if (position < 0) {
+                position += 4096;
+            }
+            setPosition(buf + 4 * i, i + 1, position);
+        }
+//        setPosition(buf, 3, orientation[2][0] * FACTOR);        
+        uart::sendToMotors(buf, 12);
+                
         util::sleep(10);
     }
 

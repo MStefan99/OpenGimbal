@@ -20,6 +20,10 @@ public:
     Quaternion(float w, float x, float y, float z);
 
     void normalize();
+    Quaternion conjugate() const;
+    
+    // This represents rotation q followed by this quaternion
+    Quaternion operator*(const Quaternion& q) const;
 
     // Conversion to Tait-Bryan angles (yaw, pitch, roll)
     Vector3<float, uint8_t> toEuler() const;

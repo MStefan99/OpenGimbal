@@ -13,6 +13,24 @@ void Quaternion::normalize() {
     _z *= norm;
 }
 
+Quaternion Quaternion::conjugate() const {
+    return {
+        _w,
+        -_x,
+        -_y,
+        -_z
+    };
+}
+
+Quaternion Quaternion::operator *(const Quaternion& q) const {
+    return {
+        _w * q._w - _x * q._x - _y * q._y - _z * q._z,
+        _w * q._x + _x * q._w + _y * q._z - _z * q._y,
+        _w * q._y - _x * q._z + _y * q._w + _z * q._x,
+        _w * q._z + _x * q._y - _y * q._x + _z * q._w
+    };
+}
+
 Vector3<float, uint8_t> Quaternion::toEuler() const {
     float yaw, pitch, roll;
 
