@@ -13,6 +13,7 @@ function generateDefinitions(yamlFile) {
 	}
 
 	const MAX_LENGTH = 70;
+	const addressMap = new Map();
 
 	let output = '';
 	output += `/* File generated from device description on ${new Date().toLocaleString('en-GB')}`;
@@ -28,6 +29,10 @@ function generateDefinitions(yamlFile) {
 		if (!Number.isInteger(registerInfo?.address)) {
 			throw new Error(`Register ${registerName} has no or invalid address`);
 		}
+		if (addressMap.has(registerInfo.address)) {
+			throw new Error(`Register ${registerName} has the same address as ${addressMap.get(registerInfo.address).name}`);
+		}
+		addressMap.set(registerInfo.address, {name: registerName, info: registerInfo});
 
 		const regStr = `${data.device.name}_${registerName}`
 		let regMask = 0;
@@ -83,6 +88,7 @@ function generateDefinitions(yamlFile) {
 			if (groupInfo.options) {
 				let valuesStr = '';
 				let optionsStr = '';
+				let optionMap = new Map();
 
 				for (const option of groupInfo.options.sort((option1, option2) => option1?.value - option2?.value)) {
 					if (!option?.name?.length) {
@@ -91,6 +97,10 @@ function generateDefinitions(yamlFile) {
 					if (!Number.isInteger(option?.value)) {
 						throw new Error(`Option ${option.name} for group ${groupName} in ${registerName} has no or invalid value`);
 					}
+					if (optionMap.has(option.value)) {
+						throw new Error(`Option ${option.name} for group ${groupName} in ${registerName} has the same value as ${optionMap.get(option.value).name}`);
+					}
+					optionMap.set(option.value, option);
 
 					valuesStr += `#define   ${groupStr}_${option.name}_Val`.padEnd(MAX_LENGTH, ' ') + `(${option.value})`
 					option.description && (valuesStr += `  /* (${regStr}) ${option.description} value */`);
@@ -108,7 +118,7 @@ function generateDefinitions(yamlFile) {
 	}
 
 	console.log('Definitions generated successfully!');
-	fs.writeFileSync('generated_definitions.h', output);
+	fs.writeFileSync(`${data.device.name}_regs.h`, output);
 }
 
 // Replace 'input.yaml' with the path to file from yargs
