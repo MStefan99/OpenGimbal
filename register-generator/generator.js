@@ -28,6 +28,10 @@ function generateDefinitions(yamlFile) {
 	data.device.description && (output += `: ${data.device.description}`);
 	output += ' */\n\n';
 
+	const includeGuard = `${data.device.name}_REGS`;
+	output += `#ifndef ${includeGuard}\n`;
+	output += `#define ${includeGuard}\n\n`;
+
 	output += `#define ${data.device.name}_ADDR`.padEnd(MAX_LENGTH, ' ') + `(0x${data.device.address.toString(16)})  /* ${data.device.name} address */\n\n`;
 
 	for (const [registerName, registerInfo] of Object.entries(data.device.registers)) {
@@ -121,6 +125,8 @@ function generateDefinitions(yamlFile) {
 
 		output += `#define ${regStr}_Msk`.padEnd(MAX_LENGTH, ' ') + `(0x${regMask.toString(16)})  /* (${regStr}) Register mask */\n\n\n`;
 	}
+
+	output += `#endif  // ${includeGuard}\n`;
 
 	console.log('\nDefinitions generated successfully!');
 	fs.writeFileSync(`${data.device.name}_regs.h`, output);
