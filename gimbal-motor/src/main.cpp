@@ -135,7 +135,7 @@ uint16_t measureAngle() {
     dataReady = false;
     auto startTime {util::getTime()};
     
-    as5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
+    AS5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
         rawAngle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
         dataReady = true;
     });
@@ -264,7 +264,7 @@ int main() {
     uart::init();
     dma::init();
     i2c::init();
-    as5600::init();
+    AS5600::init();
     bldc::init();
     
     uart::setCallback(processCommand);

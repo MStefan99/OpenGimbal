@@ -41,7 +41,7 @@
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/bldc.hpp</itemPath>
-        <itemPath>../src/lib/inc/as5600.hpp</itemPath>
+        <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/MovementController.hpp</itemPath>
@@ -222,10 +222,10 @@
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/bldc.cpp</itemPath>
-        <itemPath>../src/lib/src/as5600.cpp</itemPath>
         <itemPath>../src/lib/src/MovementController.cpp</itemPath>
         <itemPath>../src/lib/src/Command.cpp</itemPath>
         <itemPath>../src/lib/src/interop.cpp</itemPath>
+        <itemPath>../src/lib/src/AS5600.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>

@@ -12,7 +12,7 @@
 
 #include "i2c.hpp"
 
-namespace as5600 {
+namespace AS5600 {
     // I2C needs to be initialized before using any methods below
     void init();
     

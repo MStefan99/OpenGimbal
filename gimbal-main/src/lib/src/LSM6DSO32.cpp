@@ -1,4 +1,4 @@
-#include "lib/inc/lsm6dso.hpp"
+#include "lib/inc/LSM6DSO32.hpp"
 
 static constexpr uint8_t LSM6DSO_ADDR {0x6a};
 
@@ -9,7 +9,7 @@ static float acc[3] {0};
 static float rot[3] {0};
 
 
-void lsm6dso::init() {
+void LSM6DSO32::init() {
     uint8_t ctrl1_xl {0x40};
     uint8_t ctrl2_g {0x40};
     i2c::writeRegister(LSM6DSO_ADDR, 0x10, &ctrl1_xl);
@@ -17,7 +17,7 @@ void lsm6dso::init() {
 }
 
 
-void lsm6dso::update() {
+void LSM6DSO32::update() {
 	i2c::readRegister(LSM6DSO_ADDR, 0x28, 6, [](bool success, const dma::I2CTransfer& transfer) {
         for (uint8_t i {0}; i < 3; ++i) {
             acc[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ACC_LSB;
@@ -31,11 +31,11 @@ void lsm6dso::update() {
 }
 
 
-Vector3<float, uint8_t> lsm6dso::getAcc() {
+Vector3<float, uint8_t> LSM6DSO32::getAcc() {
 	return {{acc[2]}, {-acc[0]}, {-acc[1]}};
 }
 
 
-Vector3<float, uint8_t> lsm6dso::getRot() {
+Vector3<float, uint8_t> LSM6DSO32::getRot() {
 	return {{rot[2]}, {-rot[0]}, {-rot[1]}};
 }

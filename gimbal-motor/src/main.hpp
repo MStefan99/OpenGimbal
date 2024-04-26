@@ -21,7 +21,7 @@
 #include "lib/inc/i2c.hpp"
 #include "lib/inc/uart.hpp"
 #include "lib/inc/PID.hpp"
-#include "lib/inc/as5600.hpp"
+#include "lib/inc/AS5600.hpp"
 #include "lib/inc/MovementController.hpp"
 #include "lib/inc/Command.hpp"
 #include "lib/inc/LowPassFilter.hpp"

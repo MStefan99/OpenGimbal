@@ -5,8 +5,8 @@
  * Created on June 29, 2023, 6:04 PM
  */
 
-#ifndef LSM6DSO_HPP
-#define	LSM6DSO_HPP
+#ifndef LSM6DSO32_HPP
+#define	LSM6DSO32_HPP
 
 #include "device.h"
 
@@ -14,7 +14,7 @@
 #include "Matrix.hpp"
 #include "lib/inc/i2c.hpp"
 
-namespace lsm6dso {
+namespace LSM6DSO32 {
 	// I2C needs to be initialized first
 	void init();
 	void update();
@@ -23,5 +23,5 @@ namespace lsm6dso {
 	Vector3<float, uint8_t> getRot();
 }
 
-#endif	/* LSM6DSO_HPP */
+#endif	/* LSM6DSO32_HPP */
 

@@ -6,7 +6,7 @@
 #include "lib/inc/util.hpp"
 #include "lib/inc/dma.hpp"
 #include "lib/inc/i2c.hpp"
-#include "lib/inc/lsm6dso.hpp"
+#include "lib/inc/LSM6DSO32.hpp"
 #include "lib/inc/uart.hpp"
 #include "lib/inc/Mahony.hpp"
 
@@ -75,7 +75,7 @@ int main() {
     util::init();
     dma::init();
     i2c::init();
-    lsm6dso::init();
+    LSM6DSO32::init();
     uart::init();
     
     PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
@@ -83,11 +83,11 @@ int main() {
     Mahony mahony {};
     
     while (1) {
-        lsm6dso::update();
+        LSM6DSO32::update();
         #if DV_OUT
             auto start = SysTick->VAL;
         #endif        
-        mahony.updateIMU(lsm6dso::getRot(), lsm6dso::getAcc(), 0.01f);
+        mahony.updateIMU(LSM6DSO32::getRot(), LSM6DSO32::getAcc(), 0.01f);
         
         Quaternion handleOrientation {mahony.getQuat()};
         Quaternion phoneOrientation {};
