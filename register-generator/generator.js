@@ -10,6 +10,9 @@ function generateDefinitions(yamlFile) {
 	if (typeof data?.device !== 'object') {
 		throw new Error(`Supplied file contains no device data`);
 	}
+	if (!data.device.name?.length) {
+		throw new Error('Invalid device name');
+	}
 	if (!Number.isInteger(data?.device?.address)) {
 		throw new Error(`Device ${data.device.name} has no or invalid address`);
 	}
