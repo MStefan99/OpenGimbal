@@ -1,5 +1,7 @@
 import fs from 'fs';
 import YAML from 'yaml';
+import yargs from 'yargs';
+import {hideBin} from 'yargs/helpers'
 
 function generateDefinitions(yamlFile) {
 	const content = fs.readFileSync(yamlFile, 'utf8');
@@ -117,9 +119,22 @@ function generateDefinitions(yamlFile) {
 		output += `#define ${regStr}_Msk`.padEnd(MAX_LENGTH, ' ') + `(0x${regMask.toString(16)})  /* (${regStr}) Register mask */\n\n\n`;
 	}
 
-	console.log('Definitions generated successfully!');
+	console.log('\nDefinitions generated successfully!');
 	fs.writeFileSync(`${data.device.name}_regs.h`, output);
 }
 
-// Replace 'input.yaml' with the path to file from yargs
-generateDefinitions('input.yaml');
+(() => {
+	const args = yargs(hideBin(process.argv))
+		.usage('Usage: $0 <file>.yaml')
+		.demandOption(['y'])
+		.describe('y', 'YAML file with device description')
+		.nargs('y', 1)
+		.alias('y', 'yaml')
+		.parse();
+
+	if (!args.y?.length) {
+		return;
+	}
+
+	generateDefinitions(args.y);
+})();
