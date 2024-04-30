@@ -1,7 +1,5 @@
 #include "lib/inc/LSM6DSO32.hpp"
 
-static constexpr uint8_t LSM6DSO_ADDR {0x6a};
-
 static constexpr float ACC_LSB {0.122f / 1000.0f}; //mg
 static constexpr float ROT_LSB {8.75f / 1000.0f}; // dps
 
@@ -10,19 +8,19 @@ static float rot[3] {0};
 
 
 void LSM6DSO32::init() {
-    uint8_t ctrl1_xl {0x40};
-    uint8_t ctrl2_g {0x40};
-    i2c::writeRegister(LSM6DSO_ADDR, 0x10, &ctrl1_xl);
-    i2c::writeRegister(LSM6DSO_ADDR, 0x11, &ctrl2_g);
+    uint8_t ctrl1_xl {LSM6DSO32_CTRL1_XL_ODR_XL_104Hz};
+    uint8_t ctrl2_g {LSM6DSO32_CTRL2_G_ODR_G_104Hz};
+    i2c::writeRegister(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL1_XL_ADDR, &ctrl1_xl);
+    i2c::writeRegister(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g);
 }
 
 
 void LSM6DSO32::update() {
-	i2c::readRegister(LSM6DSO_ADDR, 0x28, 6, [](bool success, const dma::I2CTransfer& transfer) {
+	i2c::readRegister(LSM6DSO32_ADDR_0, LSM6DSO32_OUTX_L_A_ADDR, 6, [](bool success, const dma::I2CTransfer& transfer) {
         for (uint8_t i {0}; i < 3; ++i) {
             acc[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ACC_LSB;
         }
-        i2c::readRegister(LSM6DSO_ADDR, 0x22, 6, [](bool success, const dma::I2CTransfer& transfer) {
+        i2c::readRegister(LSM6DSO32_ADDR_0, LSM6DSO32_OUTX_L_G_ADDR, 6, [](bool success, const dma::I2CTransfer& transfer) {
            for (uint8_t i {0}; i < 3; ++i) {
                 rot[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i] * ROT_LSB;
             } 

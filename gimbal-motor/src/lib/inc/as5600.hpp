@@ -10,6 +10,7 @@
 
 #include "device.h"
 
+#include "AS5600_regs.h"
 #include "i2c.hpp"
 
 namespace AS5600 {

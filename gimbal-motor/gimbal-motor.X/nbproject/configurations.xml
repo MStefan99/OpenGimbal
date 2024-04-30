@@ -41,7 +41,6 @@
         <itemPath>../src/lib/inc/util.hpp</itemPath>
         <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/bldc.hpp</itemPath>
-        <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/MovementController.hpp</itemPath>
@@ -52,6 +51,8 @@
         <itemPath>../src/lib/inc/interop.h</itemPath>
         <itemPath>../src/lib/inc/PID.hpp</itemPath>
         <itemPath>../src/lib/inc/options.hpp</itemPath>
+        <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
+        <itemPath>../src/lib/inc/AS5600_regs.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">

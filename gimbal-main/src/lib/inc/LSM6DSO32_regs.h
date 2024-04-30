@@ -1,4 +1,4 @@
-/* File generated from device description on 30/04/2024, 20:52:37 */
+/* File generated from device description on 30/04/2024, 21:08:55 */
 
 /* LSM6DSO32: 3-axis gyroscope and accelerometer */
 
@@ -532,10 +532,10 @@
 #define LSM6DSO32_CTRL6_C_USR_OFF_W_Msk                               ((0x1) << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* (LSM6DSO32_CTRL6_C) Weight of XL user offset bits of registers X_OFS_USR (73h), Y_OFS_USR (74h), Z_OFS_USR (75h) mask */
 #define LSM6DSO32_CTRL6_C_USR_OFF_W(value)                            (LSM6DSO32_CTRL6_C_USR_OFF_W_Msk & ((value) << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos))  /* Assignment of USR_OFF_W value in LSM6DSO32_CTRL6_C register */
 #define LSM6DSO32_CTRL6_C_USR_OFF_W_Get(reg)                          (((reg) & LSM6DSO32_CTRL6_C_USR_OFF_W_Msk) >> LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* Assignment of USR_OFF_W value in LSM6DSO32_CTRL6_C register */
-#define   LSM6DSO32_CTRL6_C_USR_OFF_W_-10G_Val                        (0)  /* (LSM6DSO32_CTRL6_C) 2^-10 g/LSB value */
-#define   LSM6DSO32_CTRL6_C_USR_OFF_W_-6G_Val                         (1)  /* (LSM6DSO32_CTRL6_C) 2^-6 g/LSB value */
-#define LSM6DSO32_CTRL6_C_USR_OFF_W_-10G                              (LSM6DSO32_CTRL6_C_USR_OFF_W_-10G_Val << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* (LSM6DSO32_CTRL6_C) 2^-10 g/LSB */
-#define LSM6DSO32_CTRL6_C_USR_OFF_W_-6G                               (LSM6DSO32_CTRL6_C_USR_OFF_W_-6G_Val << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* (LSM6DSO32_CTRL6_C) 2^-6 g/LSB */
+#define   LSM6DSO32_CTRL6_C_USR_OFF_W_10G_Val                         (0)  /* (LSM6DSO32_CTRL6_C) 2^-10 g/LSB value */
+#define   LSM6DSO32_CTRL6_C_USR_OFF_W_6G_Val                          (1)  /* (LSM6DSO32_CTRL6_C) 2^-6 g/LSB value */
+#define LSM6DSO32_CTRL6_C_USR_OFF_W_10G                               (LSM6DSO32_CTRL6_C_USR_OFF_W_10G_Val << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* (LSM6DSO32_CTRL6_C) 2^-10 g/LSB */
+#define LSM6DSO32_CTRL6_C_USR_OFF_W_6G                                (LSM6DSO32_CTRL6_C_USR_OFF_W_6G_Val << LSM6DSO32_CTRL6_C_USR_OFF_W_Pos)  /* (LSM6DSO32_CTRL6_C) 2^-6 g/LSB */
 #define LSM6DSO32_CTRL6_C_XL_HM_MODE_Pos                              (4)  /* (LSM6DSO32_CTRL6_C) High-performance operating mode disable for acceleromete position */
 #define LSM6DSO32_CTRL6_C_XL_HM_MODE_Msk                              ((0x1) << LSM6DSO32_CTRL6_C_XL_HM_MODE_Pos)  /* (LSM6DSO32_CTRL6_C) High-performance operating mode disable for acceleromete mask */
 #define LSM6DSO32_CTRL6_C_XL_HM_MODE(value)                           (LSM6DSO32_CTRL6_C_XL_HM_MODE_Msk & ((value) << LSM6DSO32_CTRL6_C_XL_HM_MODE_Pos))  /* Assignment of XL_HM_MODE value in LSM6DSO32_CTRL6_C register */
@@ -1166,18 +1166,14 @@
 #define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YXZ_Val                     (1)  /* (LSM6DSO32_TAP_CFG1) YXZ value */
 #define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XZY_Val                     (2)  /* (LSM6DSO32_TAP_CFG1) XZY value */
 #define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX_Val                     (3)  /* (LSM6DSO32_TAP_CFG1) ZYX value */
-#define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XYZ_Val                     (4)  /* (LSM6DSO32_TAP_CFG1) XYZ value */
 #define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YZX_Val                     (5)  /* (LSM6DSO32_TAP_CFG1) YZX value */
 #define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZXY_Val                     (6)  /* (LSM6DSO32_TAP_CFG1) ZXY value */
-#define   LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX_Val                     (7)  /* (LSM6DSO32_TAP_CFG1) ZYX value */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XYZ                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XYZ_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) XYZ */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YXZ                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YXZ_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) YXZ */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XZY                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XZY_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) XZY */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) ZYX */
-#define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XYZ                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_XYZ_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) XYZ */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YZX                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_YZX_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) YZX */
 #define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZXY                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZXY_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) ZXY */
-#define LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX                           (LSM6DSO32_TAP_CFG1_TAP_PRIORITY_ZYX_Val << LSM6DSO32_TAP_CFG1_TAP_PRIORITY_Pos)  /* (LSM6DSO32_TAP_CFG1) ZYX */
 #define LSM6DSO32_TAP_CFG1_Msk                                        (0xff)  /* (LSM6DSO32_TAP_CFG1) Register mask */
 
 

@@ -559,10 +559,10 @@ device:
           description: Weight of XL user offset bits of registers X_OFS_USR (73h), Y_OFS_USR (74h), Z_OFS_USR (75h)
           offset: 3
           options:
-            - name: -10G
+            - name: 10G
               description: 2^-10 g/LSB
               value: 0
-            - name: -6G
+            - name: 6G
               description: 2^-6 g/LSB
               value: 1
         XL_HM_MODE:
@@ -1083,6 +1083,7 @@ device:
           offset: 5
           size: 3
           options:
+            # Duplicate options are removed to avoid redefinitions
             - name: XYZ
               value: 0
             - name: YXZ
@@ -1091,14 +1092,14 @@ device:
               value: 2
             - name: ZYX
               value: 3
-            - name: XYZ
-              value: 4
+#            - name: XYZ
+#              value: 4
             - name: YZX
               value: 5
             - name: ZXY
               value: 6
-            - name: ZYX
-              value: 7
+#            - name: ZYX
+#              value: 7
     TAP_CFG2:
       description: Enables interrupt and inactivity functions, and tap recognition functions
       mode: rw
