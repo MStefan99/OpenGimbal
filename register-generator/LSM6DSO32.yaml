@@ -1,7 +1,7 @@
 device:
   name: LSM6DSO32
   description: 3-axis gyroscope and accelerometer
-  address: 0x6a
+  addresses: [0x6a, 0x6b]
   registers:
     FUNC_CFG_ACCESS:
       description: Enable embedded functions register
@@ -85,31 +85,22 @@ device:
               description: 12.5Hz
               value: 1
             - name: 26Hz
-              description: 26Hz
               value: 2
             - name: 52Hz
-              description: 52Hz
               value: 3
             - name: 104Hz
-              description: 104Hz
               value: 4
             - name: 208Hz
-              description: 208Hz
               value: 5
             - name: 417Hz
-              description: 417Hz
               value: 6
             - name: 833Hz
-              description: 833Hz
               value: 7
             - name: 1667Hz
-              description: 1667Hz
               value: 8
             - name: 3333Hz
-              description: 3333Hz
               value: 9
             - name: 6667Hz
-              description: 6667Hz
               value: 10
             - name: 1_6Hz
               description: 1.6Hz
@@ -126,31 +117,22 @@ device:
               description: 12.5Hz
               value: 1
             - name: 26Hz
-              description: 26Hz
               value: 2
             - name: 52Hz
-              description: 52Hz
               value: 3
             - name: 104Hz
-              description: 104Hz
               value: 4
             - name: 208Hz
-              description: 208Hz
               value: 5
             - name: 417Hz
-              description: 417Hz
               value: 6
             - name: 833Hz
-              description: 833Hz
               value: 7
             - name: 1667Hz
-              description: 1667Hz
               value: 8
             - name: 3333Hz
-              description: 3333Hz
               value: 9
             - name: 6667Hz
-              description: 6667Hz
               value: 10
             - name: 6_5Hz
               description: 6.5Hz
@@ -198,7 +180,6 @@ device:
               description: 12.5Hz
               value: 2
             - name: 52Hz
-              description: 52Hz
               value: 3
         DEC_TS_BATCH:
           description: Selects decimation for timestamp batching in FIFO. Writing rate will be the maximum rate between XL and GYRO BDR divided by decimation decoder
@@ -242,8 +223,8 @@ device:
               value: 1
         RST_COUNTER_BDR:
           description: >-
-            Resets the internal counter of batching events for a single sensor.
-            This bit is automatically reset to zero if it was set to ‘1’.
+            Resets the internal counter of batching events for a single sensor
+            This bit is automatically reset to zero if it was set to ‘1’
           offset: 6
         DATAREADY_PULSED:
           description: Enables pulsed data-ready mode
@@ -274,10 +255,10 @@ device:
       address: 0xd
       groups:
         INT1_DRDY_XL:
-          description: Enables accelerometer data-ready interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables accelerometer data-ready interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 0
         INT1_DRDY_G:
-          description: Enables gyroscope data-ready interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables gyroscope data-ready interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 1
         INT1_BOOT:
           description: Enables boot status on INT1 pin
@@ -286,10 +267,10 @@ device:
           description: Enables FIFO threshold interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 3
         INT1_FIFO_OVR:
-          description: Enables FIFO overrun interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables FIFO overrun interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 4
         INT1_FIFO_FULL:
-          description: Enables FIFO full flag interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables FIFO full flag interrupt on INT1 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 5
         INT1_CNT_BDR:
           description: Enables COUNTER_BDR_IA interrupt on INT1
@@ -303,10 +284,10 @@ device:
       address: 0xe
       groups:
         INT2_DRDY_XL:
-          description: Enables accelerometer data-ready interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables accelerometer data-ready interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 0
         INT2_DRDY_G:
-          description: Enables gyroscope data-ready interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables gyroscope data-ready interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 1
         INT2_BOOT:
           description: Enables boot status on INT2 pin
@@ -315,16 +296,16 @@ device:
           description: Enables FIFO threshold interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 3
         INT2_FIFO_OVR:
-          description: Enables FIFO overrun interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables FIFO overrun interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 4
         INT2_FIFO_FULL:
-          description: Enables FIFO full flag interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used.
+          description: Enables FIFO full flag interrupt on INT2 pin. It can be also used to trigger an IBI when the MIPI I3CSM interface is used
           offset: 5
         INT2_CNT_BDR:
           description: Enables COUNTER_BDR_IA interrupt on INT2
           offset: 6
     WHO_AM_I:
-      description: WHO_AM_I register. This is a read-only register. Its value is fixed at 6Ch.
+      description: WHO_AM_I register. This is a read-only register. Its value is fixed at 6Ch
       mode: r
       address: 0xf
       reset: 0x6c
@@ -368,31 +349,22 @@ device:
               description: 12.5Hz
               value: 1
             - name: 26Hz
-              description: 26Hz
               value: 2
             - name: 52Hz
-              description: 52Hz
               value: 3
             - name: 104Hz
-              description: 104Hz
               value: 4
             - name: 208Hz
-              description: 208Hz
               value: 5
             - name: 417Hz
-              description: 417Hz
               value: 6
             - name: 833Hz
-              description: 833Hz
               value: 7
             - name: 1667Hz
-              description: 1667Hz
               value: 8
             - name: 3333Hz
-              description: 3333Hz
               value: 9
             - name: 6667Hz
-              description: 6667Hz
               value: 10
     CTRL2_G:
       description: Gyroscope control register 2
@@ -429,31 +401,22 @@ device:
               description: 12.5Hz
               value: 1
             - name: 26Hz
-              description: 26Hz
               value: 2
             - name: 52Hz
-              description: 52Hz
               value: 3
             - name: 104Hz
-              description: 104Hz
               value: 4
             - name: 208Hz
-              description: 208Hz
               value: 5
             - name: 417Hz
-              description: 417Hz
               value: 6
             - name: 833Hz
-              description: 833Hz
               value: 7
             - name: 1667Hz
-              description: 1667Hz
               value: 8
             - name: 3333Hz
-              description: 3333Hz
               value: 9
             - name: 6667Hz
-              description: 6667Hz
               value: 10
     CTRL3_C:
       description: Control register 3
@@ -478,7 +441,7 @@ device:
               description: 3-wire interface
               value: 1
         PP_OD:
-          description: Push-pull/open-drain selection on INT1 and INT2 pins.
+          description: Push-pull/open-drain selection on INT1 and INT2 pins
           offset: 4
           options:
             - name: PP
@@ -516,7 +479,7 @@ device:
       address: 0x13
       groups:
         LPF1_SEL_G:
-          description: Enables gyroscope digital LPF1; the bandwidth can be selected through FTYPE[2:0] in CTRL6_C (15h).
+          description: Enables gyroscope digital LPF1; the bandwidth can be selected through FTYPE[2:0] in CTRL6_C (15h)
           offset: 1
         I2C_DISABLE:
           description: Disables I²C interface
@@ -525,7 +488,7 @@ device:
           description: Enables data available
           offset: 3
         INT2_ON_INT1:
-          description: All interrupt signals available on INT1 pin enable.
+          description: All interrupt signals available on INT1 pin enable
           offset: 5
         SLEEP_G:
           description: Enables gyroscope sleep mode
@@ -597,10 +560,10 @@ device:
           offset: 3
           options:
             - name: -10G
-              description: 2-10 g/LSB
+              description: 2^-10 g/LSB
               value: 0
             - name: -6G
-              description: 2-6 g/LSB
+              description: 2^-6 g/LSB
               value: 1
         XL_HM_MODE:
           description: High-performance operating mode disable for acceleromete
@@ -667,13 +630,10 @@ device:
           size: 2
           options:
             - name: 16mHz
-              description: 16mHz
               value: 0
             - name: 65mHz
-              description: 65mHz
               value: 1
             - name: 260mHz
-              description: 260mHz
               value: 2
             - name: 1Hz
               description: 1.04Hz
@@ -699,7 +659,7 @@ device:
           description: >-
             Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the
             second samples after writing this bit. Active only during device exit from power-
-            down mode.
+            down mode
           offset: 3
         HP_REF_MODE_XL:
           description: Enables accelerometer high-pass filter reference mode (valid for high-pass path - HP_SLOPE_XL_EN bit must be ‘1’)
@@ -861,7 +821,7 @@ device:
           description: Interrupt active for change position portrait, landscape, face-up, face-down
           offset: 6
         DEN_DRDY:
-          description: DEN data-ready signal. It is set high when data output is related to the data coming from a DEN active condition.
+          description: DEN data-ready signal. It is set high when data output is related to the data coming from a DEN active condition
           offset: 7
     STATUS_REG:
       description: Status register
@@ -878,59 +838,59 @@ device:
           description: Temperature new data available
           offset: 2
     OUT_TEMP_L:
-      description: Temperature data output register. L and H registers together express a 16-bit word in two’s complement.
+      description: Temperature data output register. L and H registers together express a 16-bit word in two’s complement
       mode: r
       address: 0x20
     OUT_TEMP_H:
-      description: Temperature data output register. L and H registers together express a 16-bit word in two’s complement.
+      description: Temperature data output register. L and H registers together express a 16-bit word in two’s complement
       mode: r
       address: 0x21
     OUTX_L_G:
-      description: Angular rate sensor pitch axis (X) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (X) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x22
     OUTX_H_G:
-      description: Angular rate sensor pitch axis (X) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (X) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x23
     OUTY_L_G:
-      description: Angular rate sensor pitch axis (Y) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (Y) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x24
     OUTY_H_G:
-      description: Angular rate sensor pitch axis (Y) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (Y) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x25
     OUTZ_L_G:
-      description: Angular rate sensor pitch axis (Z) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (Z) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x26
     OUTZ_H_G:
-      description: Angular rate sensor pitch axis (Z) angular rate output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Angular rate sensor pitch axis (Z) angular rate output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x27
     OUTX_L_A:
-      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x28
     OUTX_H_A:
-      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x29
     OUTY_L_A:
-      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x2a
     OUTY_H_A:
-      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x2b
     OUTZ_L_A:
-      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x2c
     OUTZ_H_A:
-      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement.
+      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement
       mode: r
       address: 0x2d
     EMB_FUNC_STATUS_MAINPAGE:
@@ -948,7 +908,7 @@ device:
           description: Interrupt status bit for significant motion detection
           offset: 5
         IS_FSM_LC:
-          decription: nterrupt status bit for FSM long counter timeout interrupt event.
+          decription: nterrupt status bit for FSM long counter timeout interrupt event
           offset: 7
     FSM_STATUS_A_MAINPAGE:
       description: Finite state machine status register
@@ -1062,19 +1022,19 @@ device:
           description: FIFO watermark status
           offset: 7
     TIMESTAMP0:
-      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs.
+      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs
       mode: r
       address: 0x40
     TIMESTAMP1:
-      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs.
+      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs
       mode: r
       address: 0x41
     TIMESTAMP2:
-      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs.
+      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs
       mode: r
       address: 0x42
     TIMESTAMP3:
-      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs.
+      description: Timestamp first data output register. The value is expressed as a 32-bit word and the bit resolution is 25 μs
       mode: r
       address: 0x43
     TAP_CFG0:
@@ -1099,7 +1059,7 @@ device:
           offset: 4
         SLEEP_STATUS_ON_INT:
           description: >-
-            Activity/inactivity interrupt mode configuration.
+            Activity/inactivity interrupt mode configuration
             If INT1_SLEEP_CHANGE or INT2_SLEEP_CHANGE bits are enabled, drives
             the sleep status or sleep change on the INT pins
           offset: 5
@@ -1124,28 +1084,20 @@ device:
           size: 3
           options:
             - name: XYZ
-              description: XYZ
               value: 0
             - name: YXZ
-              description: YXZ
               value: 1
             - name: XZY
-              description: XZY
               value: 2
             - name: ZYX
-              description: ZYX
               value: 3
             - name: XYZ
-              description: XYZ
               value: 4
             - name: YZX
-              description: YZX
               value: 5
             - name: ZXY
-              description: ZXY
               value: 6
             - name: ZYX
-              description: ZYX
               value: 7
     TAP_CFG2:
       description: Enables interrupt and inactivity functions, and tap recognition functions
@@ -1191,13 +1143,11 @@ device:
           size: 2
           options:
             - name: 68deg
-              description: 68deg
               value: 0
             - name: 47deg
-              description: 47deg
               value: 1
         D4D_EN:
-          description: 4D orientation detection enable. Z-axis position detection is disabled.
+          description: 4D orientation detection enable. Z-axis position detection is disabled
           offset: 7
     INT_DUR2:
       description: Tap recognition function setting register
@@ -1226,7 +1176,7 @@ device:
           offset: 0
           size: 6
         USR_OFF_ON_WU:
-          description: Drives the low-pass filtered data with user offset correction (instead of high-pass filtered data) to the wakeup function.
+          description: Drives the low-pass filtered data with user offset correction (instead of high-pass filtered data) to the wakeup function
           offset: 6
         SINGLE_DOUBLE_TAP:
           description: Single/double tap event enable
@@ -1256,9 +1206,9 @@ device:
           size: 2
         FF_DUR5:
           description: >-
-            Free fall duration event.
+            Free fall duration event
             For the complete configuration of the free-fall duration, refer to FF_DUR[4:0] in
-            FREE_FALL (5Dh) configuration.
+            FREE_FALL (5Dh) configuration
             1 LSB = 1 ODR_time
           offset: 7
     FREE_FALL:
@@ -1272,13 +1222,10 @@ device:
           size: 3
           options:
             - name: 312mg
-              description: 312mg
               value: 0
             - name: 438mg
-              description: 438mg
               value: 1
             - name: 500mg
-              description: 500mg
               value: 2
         FF_DUR:
           description: Free fall duration event
@@ -1293,7 +1240,7 @@ device:
           description: Routing of sensor hub communication concluded event on INT1
           offset: 0
         INT1_EMB_FUNC:
-          description: Routing of embedded functions event on INT1.
+          description: Routing of embedded functions event on INT1
           offset: 1
         INT1_6D:
           description: Routing of 6D event on INT1
@@ -1322,7 +1269,7 @@ device:
           description: Routing of sensor hub communication concluded event on INT2
           offset: 0
         INT2_EMB_FUNC:
-          description: Routing of embedded functions event on INT2.
+          description: Routing of embedded functions event on INT2
           offset: 1
         INT2_6D:
           description: Routing of 6D event on INT2
@@ -1379,7 +1326,7 @@ device:
     X_OFS_USR:
       description: >-
         Accelerometer X-axis user offset correction. The offset value set in the X_OFS_USR
-        offset register is internally subtracted from the acceleration value measured on the X-axis.
+        offset register is internally subtracted from the acceleration value measured on the X-axis
       mode: rw
       address: 0x73
       groups:
@@ -1387,13 +1334,13 @@ device:
           description: >-
             Accelerometer X-axis user offset correction expressed in two’s complement,
             weight depends on USR_OFF_W in CTRL6_C (15h). The value must be in the
-            range [-127, +127].
+            range [-127, +127]
           offset: 0
           size: 8
     Y_OFS_USR:
       description: >-
         Accelerometer Y-axis user offset correction. The offset value set in the Y_OFS_USR
-        offset register is internally subtracted from the acceleration value measured on the Y-axis.
+        offset register is internally subtracted from the acceleration value measured on the Y-axis
       mode: rw
       address: 0x74
       groups:
@@ -1401,13 +1348,13 @@ device:
           description: >-
             Accelerometer Y-axis user offset correction expressed in two’s complement,
             weight depends on USR_OFF_W in CTRL6_C (15h). The value must be in the
-            range [-127, +127].
+            range [-127, +127]
           offset: 0
           size: 8
     Z_OFS_USR:
       description: >-
         Accelerometer Z-axis user offset correction. The offset value set in the Z_OFS_USR
-        offset register is internally subtracted from the acceleration value measured on the Z-axis.
+        offset register is internally subtracted from the acceleration value measured on the Z-axis
       mode: rw
       address: 0x75
       groups:
@@ -1415,7 +1362,7 @@ device:
           description: >-
             Accelerometer Z-axis user offset correction expressed in two’s complement,
             weight depends on USR_OFF_W in CTRL6_C (15h). The value must be in the
-            range [-127, +127].
+            range [-127, +127]
           offset: 0
           size: 8
     FIFO_DATA_OUT_TAG:

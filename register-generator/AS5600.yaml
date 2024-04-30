@@ -1,0 +1,234 @@
+device:
+  name: AS5600
+  description: 12-bit programmable magnetic rotary position sensor
+  address: 0x36
+  registers:
+    ZMCO:
+      description: ZMCO shows how many times ZPOS and MPOS have been permanently written
+      mode: r
+      address: 0x0
+      groups:
+        ZMCO:
+          description: Number of times ZPOS and MPOS have been permanently written
+          offset: 0
+          size: 2
+    ZPOS:
+      description: Start position for a narrower angular range
+      mode: rw
+      addresses: [ 0x01, 0x02 ]
+      groups:
+        ZPOS:
+          description: Start position for a narrower angular range
+          offset: 0
+          size: 12
+    MPOS:
+      description: Stop position for a narrower angular range
+      mode: rw
+      addresses: [ 0x03, 0x04 ]
+      groups:
+        MPOS:
+          description: Stop position for a narrower angular range
+          offset: 0
+          size: 12
+    MANG:
+      description: Maximum angle for a narrower angular range
+      mode: rw
+      addresses: [ 0x05, 0x06 ]
+      groups:
+        MANG:
+          description: Maximum angle for a narrower angular range
+          offset: 0
+          size: 12
+    CONF:
+      description: CONF register supports customizing the AS5600
+      mode: rw
+      addresses: [ 0x07, 0x08 ]
+      groups:
+        PM:
+          description: Power mode
+          offset: 0
+          size: 2
+          options:
+            - name: NOM
+              description: Nominal
+              value: 0
+            - name: LPM1
+              description: Low power mode 1
+              value: 1
+            - name: LPM2
+              description: Low power mode 2
+              value: 2
+            - name: LPM3
+              description: Low power mode 3
+              value: 3
+        HYST:
+          description: Hysteresis
+          offset: 2
+          size: 2
+          options:
+            - name: 'OFF'
+              description: 'Off'
+              value: 0
+            - name: 1LSB
+              description: 1 LSB
+              value: 1
+            - name: 2LSB
+              description: 2 LSB
+              value: 2
+            - name: 3LSB
+              description: 3 LSB
+              value: 3
+        OUTS:
+          description: Output stage
+          offset: 4
+          size: 2
+          options:
+            - name: A_FULL
+              description: Analog, full range from 0% to 100% between GND and VDD
+              value: 0
+            - name: A_RED
+              description: Analog, reduced range from 10% to 90% between GND and VDD
+              value: 1
+            - name: PWM
+              description: Digital PWM
+              value: 2
+        PWMF:
+          description: PWM frequency
+          offset: 6
+          size: 2
+          options:
+            - name: 115Hz
+              value: 0
+            - name: 230Hz
+              value: 1
+            - name: 460Hz
+              value: 2
+            - name: 920Hz
+              value: 3
+        SF:
+          description: Slow filter
+          offset: 8
+          size: 2
+          options:
+            - name: 16x
+              description: 16x, forced in Low Power Mode (LPM)
+              value: 0
+            - name: 8x
+              value: 1
+            - name: 4x
+              value: 2
+            - name: 2x
+              value: 3
+        FTH:
+          description: Fast filter threshold
+          offset: 10
+          size: 3
+          options:
+            - name: SFO
+              description: Slow filter only
+              value: 0
+            - name: 6LSBs
+              description: 6 LSBs
+              value: 1
+            - name: 7LSBs
+              description: 7 LSBs
+              value: 2
+            - name: 9LSBs
+              description: 9 LSBs
+              value: 3
+            - name: 18LSBs
+              description: 18 LSBs
+              value: 4
+            - name: 21LSBs
+              description: 21 LSBs
+              value: 5
+            - name: 24LSBs
+              description: 24 LSBs
+              value: 6
+            - name: 10LSBs
+              description: 10 LSBs
+              value: 7
+        WD:
+          description: Watchdog
+          offset: 13
+    RAW_ANGLE:
+      description: The RAW ANGLE register contains the unscaled and unmodified angle
+      mode: r
+      addresses: [ 0x0c, 0x0d ]
+      groups:
+        RAW_ANGLE:
+          description: Unscaled and unmodified angle
+          offset: 0
+          size: 12
+    ANGLE:
+      description: The ANGLE register contains the scaled output value
+      mode: r
+      addresses: [ 0x0e, 0x0f ]
+      groups:
+        ANGLE:
+          description: Scaled output value
+          offset: 0
+          size: 12
+    STATUS:
+      description: The STATUS register provides bits that indicate the current state of the AS5600
+      mode: r
+      address: 0x0b
+      groups:
+        MD:
+          description: Magnet was detected
+          offset: 3
+        ML:
+          description: AGC maximum gain overflow, magnet too weak
+          offset: 4
+        MH:
+          description: AGC minimum gain overflow, magnet too strong
+          offset: 5
+    AGC:
+      description: >-
+        The AS5600 uses Automatic Gain Control in a closed loop to 
+        compensate for variations of the magnetic field strength due 
+        to changes of temperature, airgap between IC and magnet, and 
+        magnet degradation. The AGC register indicates the gain
+      mode: r
+      address: 0x1a
+      groups:
+        AGC:
+          description: AGC gain
+          offset: 0
+          size: 8
+    MAGNITUDE:
+      description: The MAGNITUDE register indicates the magnitude value of the internal CORDIC
+      mode: r
+      addresses: [ 0x1b, 0x1c ]
+      groups:
+        MAGNITUDE:
+          description: CORDIC magnitude
+          offset: 0
+          size: 12
+    BURN:
+      description: >-
+        The non-volatile memory is used to permanently program the 
+        configuration. 
+      mode: w
+      address: 0xff
+      groups:
+        CMD:
+          description: Burn command
+          offset: 0
+          size: 8
+          options:
+            - name: ANGLE
+              description: >-
+                Burn ang
+                The BURN_ANGLE command can 
+                be executed up to 3 times. ZMCO shows how many times ZPOS 
+                and MPOS have been permanently written.le command
+              value: 0x80
+            - name: SETTING
+              description: >-
+                Burn setting command
+                MANG can be written only if ZPOS and MPOS have never been
+                permanently written (ZMCO = 00). The BURN_ SETTING
+                command can be performed only one time
+              value: 0x40
+                
