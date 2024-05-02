@@ -78,6 +78,11 @@ namespace util {
     }
     
     template <class T>
+    int8_t sign(T a) {
+        return a > 0? 1 : a < 0? -1 : 0;
+    }
+    
+    template <class T>
     T min(T a, T b) {
         return (a < b)? a : b;
     }

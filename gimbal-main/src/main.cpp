@@ -30,19 +30,19 @@ float sqrt2 = std::sqrt(2);
 
 
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
-    float sinA = std::sin(eulerAngles[0][0]);
-    float cosA = std::cos(eulerAngles[0][0]);
-    float sinB = std::sin(eulerAngles[1][0]);
-    float cosB = std::cos(eulerAngles[1][0]);
-    float sinG = std::sin(eulerAngles[2][0]);
-    float cosG = std::cos(eulerAngles[2][0]);
+    float a = eulerAngles[0][0];
+    float b = util::clamp(eulerAngles[1][0], -QUARTER_PI + 1e-3f, QUARTER_PI - 1e-3f);
+    float g = eulerAngles[2][0];
     
-    float sin2A = sinA * sinA;
+    float cosA = std::cos(a);
+    float sinB = std::sin(b);
+    float cosB = std::cos(b);
+    float sinG = std::sin(g);
+    
     float cos2A = cosA * cosA;
     float sin2B = sinB * sinB;
     float cos2B = cosB * cosB;
     float sin2G = sinG * sinG;
-    float cos2G = cosG * cosG;
    
     float sinM2 = sqrt2 * sinB;
     float sin2M2 = sinM2 * sinM2;
@@ -50,10 +50,12 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
     float cos2M2 = 1 - sin2M2;
     float cosM2 = std::sqrt(cos2M2);
     
+    auto signG {util::sign(util::abs(g) - HALF_PI)};
+
     return {
-        {-2 * std::atan2((sqrt2 * (sinM2 + std::sqrt(cos2M2 - 2 * cos2A * cos2B + 1))), (2 * (cosM2 + cosA * cosB)))},
+        {-2 * std::atan2((sqrt2 * (sqrt2 * sinB - util::sign(a) * std::sqrt(2 - 2 * cos2A * cos2B - 2 * sin2B))), (2 * (std::sqrt(1 - 2 * sin2B) + cosA * cosB)))},
         {std::asin(sinM2)},
-        {2 * std::atan2((sqrt2 * std::sqrt(cos2M2 - 2 * cos2B * cos2G + 1) - cosM2 + 1), (cosM2 + 2 * cosB * cosG + 1))}
+        {QUARTER_PI + signG * 2 * std::atan2((std::sqrt(2 - 2 * cos2B * sin2G - 2 * sin2B) + signG * 1), (std::sqrt(1 - 2 * sin2B) - sqrt2 * cosB * sinG))}
     };
 }
 
