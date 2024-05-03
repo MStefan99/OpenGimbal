@@ -41,9 +41,11 @@ void util::init() { // TODO: move away
     SUPC_REGS->SUPC_VREG = SUPC_VREG_SEL_BUCK | SUPC_VREG_ENABLE(1);
     while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
-    // PM config
+    // NVM setup
     NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1) // Use NVM in manual write mode
             | NVMCTRL_CTRLB_RWS(4); // Use 4 wait states for NVM
+    
+    // PM config
     PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2; // Enter PL2
     while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk)); // Wait for the transition to complete
 
