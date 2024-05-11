@@ -29,6 +29,10 @@ public:
         GetVariable = 0x6,
         SetVariable = 0x7
     };
+    
+    enum class ResponseType : uint8_t {
+        ReturnVariable = 0x0
+    };
 
     enum class Variable : uint8_t {
         Calibration = 0x0,
@@ -66,7 +70,7 @@ public:
 
 template <class T>
 ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value): 
-    Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
+    Command {srcAddr, destAddr, static_cast<uint8_t>(ResponseType::ReturnVariable), 1 + sizeof(T), nullptr} {
     this->_buffer[2] = static_cast<uint8_t>(variableID);
     for (size_type i {0}; i < sizeof(T); ++i) {
         this->_buffer[sizeof(T) + 2 - i] = value;
