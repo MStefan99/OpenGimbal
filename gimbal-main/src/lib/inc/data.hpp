@@ -11,7 +11,6 @@
 #include "device.h"
 #include <cstdlib>
 
-#include "options.hpp"
 #include "lib/inc/util.hpp"
 
 
@@ -35,11 +34,6 @@ namespace data {
     typedef struct __attribute__((packed)) {
         union {
             struct {
-                uint8_t polePairs {0};
-                int8_t direction {0};
-                uint16_t phaseOffset {0};
-                uint16_t zeroOffset {0};
-                uint16_t range {defaultRange};
             };
             uint8_t pad[FLASH_ROW_SIZE];
         };

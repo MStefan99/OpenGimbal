@@ -310,7 +310,7 @@ int main() {
                 } else if (loadFilter.getState() < 1.0f) {
                     loadFilter.process(util::abs(dAngle) / switchSmoothness);
                 }
-                float torque = util::interpolate(dAngle * pGain, torque = (K * x)[0][0] * gain, loadFilter.getState());
+                float torque = util::interpolate(dAngle * pGain, torque = (K * x)[0][0], loadFilter.getState());
                 
                 applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                     static_cast<uint16_t>(maxTorque)), torque > 0);
