@@ -13,9 +13,13 @@ function generateDefinitions(yamlFile) {
 	if (!data.device.name?.length) {
 		throw new Error('Invalid device name');
 	}
-	if (Number.isInteger(data?.device.address)) {
-		data.device.addresses = [data.device.address];
-	} else if (!Array.isArray(data?.device?.addresses) || data?.device?.addresses?.some(a => !Number.isInteger(a))) {
+	if (Number.isInteger(data.device.address)) {
+		data.device.addresses = [{address: data.device.address}];
+	} else if (typeof data.device.addresses === 'object' && data.device?.addresses?.every(d => typeof d.name === 'string' && Number.isInteger(d.address))) {
+		// Nothing to do
+	} else if (Array.isArray(data.device?.addresses) && data.device?.addresses?.every(a => Number.isInteger(a))) {
+		data.device.addresses = data.device.addresses.map(a => ({address: a}));
+	} else {
 		throw new Error(`Device ${data.device.name} has no or invalid addresses`);
 	}
 
@@ -38,9 +42,15 @@ function generateDefinitions(yamlFile) {
 		output += `#define ${data.device.name}_ADDR`.padEnd(MAX_LENGTH, ' ') + `(0x${data.device.address.toString(16)})  /* ${data.device.name} address */\n\n`;
 	} else {
 		for (let i = 0; i < data.device.addresses.length; i++) {
-			output += `#define ${data.device.name}_ADDR_${i}`.padEnd(MAX_LENGTH, ' ') + `(0x${data.device.addresses[i].toString(16)})  /* ${data.device.name} address */\n`;
+			const address = data.device.addresses[i];
+			console.log('address', address);
+			output += `#define ${data.device.name}_ADDR_${address.name ?? i}`.padEnd(MAX_LENGTH, ' ') + `(0x${address.address.toString(16)})  /* ${data.device.name} address */\n`;
 		}
 		output += '\n';
+	}
+
+	if (!data.device.registers) {
+		throw new Error('Device has no register definitions');
 	}
 
 	for (const [registerName, registerInfo] of Object.entries(data.device.registers)) {
@@ -102,7 +112,7 @@ function generateDefinitions(yamlFile) {
 
 			regMask |= (Math.pow(2, groupInfo.size) - 1) << groupInfo.offset;
 
-			output += `#define ${posStr}`.padEnd(MAX_LENGTH, ' ') + `(${groupInfo.offset})`
+			output += `#define ${posStr}`.padEnd(MAX_LENGTH, ' ') + `(${groupInfo.offset}u)`
 			groupInfo.description && (output += `  /* (${regStr}) ${groupInfo.description} position */`);
 			output += `\n`;
 			output += `#define ${mskStr}`.padEnd(MAX_LENGTH, ' ') + `((0x${(Math.pow(2, groupInfo.size) - 1).toString(16)}) << ${posStr})`;

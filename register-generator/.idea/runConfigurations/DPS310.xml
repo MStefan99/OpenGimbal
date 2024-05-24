@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DPS310" type="NodeJSConfigurationType" activateToolWindowBeforeRun="false" application-parameters="-y DPS310.yaml" path-to-js-file="generator.js" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

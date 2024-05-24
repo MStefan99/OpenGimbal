@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="AS5600" type="NodeJSConfigurationType" activateToolWindowBeforeRun="false" application-parameters="-y AS5600.yaml" path-to-js-file="generator.js" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

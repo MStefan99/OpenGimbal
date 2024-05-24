@@ -1,0 +1,862 @@
+#TODO: Replace XXh with 0xXX, remove full stops
+device:
+  name: LSM303AGR
+  description: 3-axis accelerometer and magnetometer
+  addresses:
+    - name: ACC
+      address: 0x19
+    - name: MAG
+      address: 0x1e
+  registers:
+    STATUS_REG_AUX_A:
+      address: 0x07
+      reset: 0
+      groups:
+        TDA:
+          description: Temperature new data available
+          offset: 2
+        TOR:
+          description: Temperature data overrun
+          offset: 6
+    OUT_TEMP_L_A:
+      address: 0x0c
+      description: Temperature sensor data
+    OUT_TEMP_H_A:
+      address: 0x0d
+      description: Temperature sensor data
+    INT_COUNTER_REG_A:
+      address: 0x0e
+      groups:
+        IC0:
+          offset: 0
+        IC1:
+          offset: 1
+        IC2:
+          offset: 2
+        IC3:
+          offset: 3
+        IC4:
+          offset: 4
+        IC5:
+          offset: 5
+        IC6:
+          offset: 6
+        IC7:
+          offset: 7
+    WHO_AM_I_A:
+      description: Device identification register
+      address: 0x0f
+      reset: 0x33
+    TEMP_CFG_REG_A:
+      address: 0x1f
+      groups:
+        TEMP_EN:
+          offset: 6
+          size: 2
+          options:
+            - name: DIS
+              description: Disabled
+              value: 0x0
+            - name: EN
+              description: Enabled
+              value: 0x11
+    CTRL_REG1_A:
+      address: 0x20
+      reset: 0x07
+      groups:
+        XEN:
+          description: X-axis enable
+          offset: 0
+        YEN:
+          description: Y-axis enable
+          offset: 1
+        ZEN:
+          description: Z-axis enable
+          offset: 2
+        LPEN:
+          description: Low-power mode enable
+          offset: 3
+        ODR:
+          description: Data rate selection
+          offset: 4
+          size: 4
+          options:
+            - name: POWER_DOWN
+              description: Power down
+              value: 0
+            - name: 1Hz
+              value: 1
+            - name: 10Hz
+              value: 2
+            - name: 25Hz
+              value: 3
+            - name: 50Hz
+              value: 4
+            - name: 100Hz
+              value: 5
+            - name: 200Hz
+              value: 6
+            - name: 400Hz
+              value: 7
+            - name: 1620Hz
+              value: 8
+            - name: 5376Hz
+              value: 9
+    CTRL_REG2_A:
+      address: 0x21
+      groups:
+        HPIS1:
+          description: High-pass filter enable for AOI function on Interrupt 1
+          offset: 0
+        HPIS2:
+          description: High-pass filter enable for AOI function on Interrupt 2
+          offset: 1
+        HPCLICK:
+          description: High-pass filter enable for CLICK function
+          offset: 2
+        FDS:
+          description: Filtered data selection
+          offset: 3
+        HPCF:
+          description: High-pass filter cutoff frequency selection
+          offset: 4
+          size: 2
+        HPM:
+          description: High-pass filter mode selection
+          offset: 6
+          size: 2
+          options:
+            - name: NOR_R
+              description: Normal mode reset by reading the REFERENCE/DATACAPTURE_A (0x26) register
+              value: 0
+            - name: REF
+              description: Reference signal for filtering
+              value: 1
+            - name: NOR
+              description: Normal mode
+              value: 2
+            - name: AUTORESET
+              description: Auto-reset on interrupt event
+              value: 3
+    CTRL_REG3_A:
+      address: 0x22
+      default: 0
+      groups:
+        I1_OVERRUN:
+          description: FIFO overrun interrupt on INT1 pin
+          offset: 1
+        I1_WTM:
+          description: FIFO watermark interrupt on INT1 pin
+          offset: 2
+        I1_DRDY2:
+          description: DRDY2 interrupt on INT1 pin
+          offset: 3
+        I1_DRDY1:
+          description: DRDY1 interrupt on INT1 pin
+          offset: 4
+        I1_AOI2:
+          description: AOI2 interrupt on INT1 pin
+          offset: 5
+        I1_AOI1:
+          description: AOI1 interrupt on INT1 pin
+          offset: 6
+        I1_CLICK:
+          description: CLICK interrupt on INT1 pin
+          offset: 7
+    CTRL_REG4_A:
+      address: 0x23
+      default: 0
+      groups:
+        SPI_ENABLE:
+          description: 3-wire SPI interface enable
+          offset: 0
+        ST:
+          description: Self-test enable
+          offset: 1
+          size: 2
+          options:
+            - name: NOR
+              description: Normal mode
+              value: 0
+            - name: ST0
+              description: Self-test 0
+              value: 1
+            - name: ST1
+              description: Self-test 1
+              value: 2
+        HR:
+          description: Operating mode selection
+          offset: 3
+        FS:
+          description: Full-scale selection
+          offset: 4
+          size: 2
+          options:
+            - name: 2G
+              description: +/- 2g
+              value: 0
+            - name: 4G
+              description: +/- 4g
+              value: 1
+            - name: 8G
+              description: +/- 8g
+              value: 2
+            - name: 16G
+              description: +/- 16g
+              value: 3
+        BLE:
+          description: Big/Little Endian data selection
+          offset: 6
+          options:
+            - name: LE
+              description: Data LSB at lower address
+              value: 0
+            - name: BE
+              description: Data MSB at lower address
+              value: 1
+        BDU:
+          description: Block data update
+          offset: 6
+          options:
+            - name: CONT
+              description: Continuous update
+              value: 0
+            - name: READ
+              description: Output registers are not updated until MSB and LSB have been read
+              value: 1
+    CTRL_REG5_A:
+      address: 0x24
+      groups:
+        D4D_INT2:
+          description: '4D enable: 4D detection is enabled on INT2 pin when 6D bit on INT2_CFG_A (0x34) is set to 1'
+          offset: 0
+        LIR_INT2:
+          description: >- 
+            Latch interrupt request on INT2_SRC_A (35h) register, with INT2_SRC_A (35h) register
+            cleared by reading INT2_SRC_A (35h) itself.
+          offset: 1
+        D4D_INT1:
+          description: '4D enable: 4D detection is enabled on INT1 pin when 6D bit on INT1_CFG_A (0x34) is set to 1'
+          offset: 2
+        LIR_INT1:
+          description: >-
+            Latch interrupt request on INT1_SRC_A (31h), with INT1_SRC_A (31h) register 
+            cleared by reading INT1_SRC_A (31h) itself
+          offset: 3
+        FIFO_EN:
+          description: FIFO enable
+          offset: 6
+        BOOT:
+          description: Reboot accelerometer memory content
+          offset: 7
+    CTRL_REG6_A:
+      address: 0x25
+      groups:
+        H_LACTIVE:
+          description: Interrupt activation level
+          offset: 1
+          options:
+            - name: H
+              description: Interrupt output pins active high
+              value: 0
+            - name: L
+              description: Interrupt output pins active low
+              value: 1
+        P2_ACT:
+          description: Activity interrupt enable on INT2 pin
+          offset: 3
+        BOOT_I2:
+          description: Boot on INT2 pin enable
+          offset: 4
+        I2_INT2:
+          description: Interrupt 2 function enable on INT2 pin
+          offset: 5
+        I2_INT1:
+          description: Interrupt 1 function enable on INT2 pin
+          offset: 6
+        I2_CLICKEN:
+          description: Click interrupt on INT2 pin
+          offset: 7
+    DATACAPTURE_A:
+      address: 0x26
+      groups:
+        REF:
+          description: Reference value for interrupt generation
+          offset: 0
+          size: 8
+    STATUS_REG_A:
+      address: 0x27
+      reset: 0
+      groups:
+        XDA:
+          description: X-axis new data available
+          offset: 0
+        YDA:
+          description: Y-axis new data available
+          offset: 1
+        ZDA:
+          description: Z-axis new data available
+          offset: 2
+        ZYXDA:
+          Description: X-, Y- and Z-axis new data available
+          offset: 3
+        XOR:
+          description: X-axis data overrun
+          offset: 4
+        YOR:
+          description: Y-axis data overrun
+          offset: 5
+        ZOR:
+          description: Z-axis data overrun
+          offset: 6
+        ZYXOR:
+          description: X-, Y- and Z-axis data overrun
+          offset: 7
+    OUTX_L_A:
+      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x28
+    OUTX_H_A:
+      description: Linear acceleration sensor X-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x29
+    OUTY_L_A:
+      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x2a
+    OUTY_H_A:
+      description: Linear acceleration sensor Y-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x2b
+    OUTZ_L_A:
+      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x2c
+    OUTZ_H_A:
+      description: Linear acceleration sensor Z-axis output register. The value is expressed as a 16-bit word in two’s complement left-justified
+      mode: r
+      address: 0x2d
+    FIFO_CTRL_REG_A:
+      address: 0x2e
+      reset: 0
+      groups:
+        FTH:
+          offset: 0
+          size: 5
+        TR:
+          description: Trigger selection
+          offset: 5
+          options:
+            - name: INT1
+              description: Trigger event allows triggering signal on INT1
+              value: 0
+            - name: INT2
+              description: Trigger event allows triggering signal on INT2
+              value: 1
+        FM:
+          description: FIFO mode selection
+          offset: 6
+          size: 2
+          options:
+            - name: BYPASS
+              description: Bypass mode
+              value: 0
+            - name: FIFO
+              description: FIFO mode
+              value: 1
+            - name: STREAM
+              description: Stream mode
+              value: 2
+            - name: STREAM_TO_FIFO
+              description: Stream-to-FIFO mode
+              value: 3
+    FIFO_SRC_REG_A:
+      address: 0x2f
+      groups:
+        FSS:
+          description: >-
+            FSS [4:0] field always contains the current number of unread samples stored in the 
+            FIFO buffer. When FIFO is enabled, this value increases at ODR frequency until 
+            the buffer is full, whereas, it decreases every time one sample set is retrieved from 
+            FIFO.
+          offset: 0
+          size: 5
+        EMPTY:
+          description: EMPTY flag is set high when all FIFO samples have been read and FIFO is empty
+          offset: 5
+        OVRN_FIFO:
+          description: >-
+            OVRN bit is set high when FIFO buffer is full; this means that the FIFO buffer 
+            contains 32 unread samples. At the following ODR a new sample set replaces the 
+            oldest FIFO value. The OVRN bit is set to 0 when the first sample set has been 
+            read
+          offset: 6
+        WTM:
+          description: WTM bit is set high when FIFO content exceeds watermark level
+          offset: 7
+    INT1_CFG_A:
+      address: 0x30
+      reset: 0
+      groups:
+        XLIE_XDOWNE:
+          description: Enable interrupt generation on X low event or on direction recognition
+          offset: 0
+        XHIE_XUPE:
+          description: Enable interrupt generation on X high event or on direction recognition
+          offset: 1
+        YLIE_YDOWNE:
+          description: Enable interrupt generation on Y low event or on direction recognition
+          offset: 2
+        YHIE_YUPE:
+          description: Enable interrupt generation on Y high event or on direction recognition
+          offset: 3
+        ZLIE_ZDOWNE:
+          description: Enable interrupt generation on Z low event or on direction recognition
+          offset: 4
+        ZHIE_ZUPE:
+          description: Enable interrupt generation on Z high event or on direction recognition
+          offset: 5
+        6D:
+          description: 6-direction detection function enabled
+          offset: 6
+        AOI:
+          description: And/Or combination of interrupt events
+          offset: 7
+    INT1_SRC_A:
+      address: 0x31
+      reset: 0
+      groups:
+        XL:
+          description: X low
+          offset: 0
+        XH:
+          description: X high
+          offset: 1
+        YL:
+          description: Y low
+          offset: 2
+        YH:
+          description: Y high
+          offset: 3
+        ZL:
+          description: Z low
+          offset: 4
+        ZH:
+          description: Z high
+          offset: 5
+        IA:
+          description: Interrupt active (one or more interrupts have been generated)
+          offset: 6
+    INT1_THS_A:
+      address: 0x32
+      reset: 0
+      groups:
+        THS:
+          description: Interrupt 1 threshold
+          offset: 0
+          size: 7
+    INT1_DURATION_A:
+      address: 0x33
+      reset: 0
+      groups:
+        D:
+          description: Duration value
+          offset: 0
+          size: 7
+    INT2_CFG_A:
+      address: 0x34
+      reset: 0
+      groups:
+        XLIE_XDOWNE:
+          description: Enable interrupt generation on X low event or on direction recognition
+          offset: 0
+        XHIE_XUPE:
+          description: Enable interrupt generation on X high event or on direction recognition
+          offset: 1
+        YLIE_YDOWNE:
+          description: Enable interrupt generation on Y low event or on direction recognition
+          offset: 2
+        YHIE_YUPE:
+          description: Enable interrupt generation on Y high event or on direction recognition
+          offset: 3
+        ZLIE_ZDOWNE:
+          description: Enable interrupt generation on Z low event or on direction recognition
+          offset: 4
+        ZHIE_ZUPE:
+          description: Enable interrupt generation on Z high event or on direction recognition
+          offset: 5
+        6D:
+          description: 6-direction detection function enabled
+          offset: 6
+        AOI:
+          description: And/Or combination of interrupt events
+          offset: 7
+    INT2_SRC_A:
+      address: 0x35
+      reset: 0
+      groups:
+        XL:
+          description: X low
+          offset: 0
+        XH:
+          description: X high
+          offset: 1
+        YL:
+          description: Y low
+          offset: 2
+        YH:
+          description: Y high
+          offset: 3
+        ZL:
+          description: Z low
+          offset: 4
+        ZH:
+          description: Z high
+          offset: 5
+        IA:
+          description: Interrupt active (one or more interrupts have been generated)
+          offset: 6
+    INT2_THS_A:
+      address: 0x36
+      reset: 0
+      groups:
+        THS:
+          description: Interrupt 2 threshold
+          offset: 0
+          size: 7
+    INT2_DURATION_A:
+      address: 0x37
+      reset: 0
+      groups:
+        D:
+          description: Duration value
+          offset: 0
+          size: 7
+    CLICK_CFG_A:
+      address: 0x38
+      groups:
+        XS:
+          description: Enable interrupt single-click on X-axis
+          offset: 0
+        XD:
+          description: Enable interrupt double-click on X-axis
+          offset: 1
+        YS:
+          description: Enable interrupt single-click on Y-axis
+          offset: 2
+        YD:
+          description: Enable interrupt double-click on Y-axis
+          offset: 3
+        ZS:
+          description: Enable interrupt single-click on Z-axis
+          offset: 4
+        ZD:
+          description: Enable interrupt double-click on Z-axis
+          offset: 5
+    CLICK_SRC_A:
+      address: 0x39
+      groups:
+        X:
+          description: X click detection
+          offset: 0
+        Y:
+          description: Y click detection
+          offset: 1
+        Z:
+          description: Z click detection
+          offset: 2
+        SIGN:
+          description: Click sign
+          offset: 3
+        S_CLICK:
+          description: Single-click enable
+          offset: 4
+        D_CLICK:
+          description: Double-click enable
+          offset: 5
+        IA:
+          description: Interrupt active (one or more interrupts have been generated)
+          offset: 6
+    CLICK_THS_A:
+      address: 0x3a
+      reset: 0
+      groups:
+        THS:
+          description: Click threshold
+          offset: 0
+          size: 7
+    TIME_LIMIT_A:
+      address: 0x3b
+      groups:
+        TLI:
+          description: Click time limit
+          offset: 0
+          size: 7
+    TIME_LATENCY_A:
+      address: 0x3c
+      groups:
+        TLA:
+          description: Click time latency
+          offset: 0
+          size: 7
+    TIME_WINDOW_A:
+      address: 0x3d
+      groups:
+        TW:
+          description: Click time window
+          offset: 0
+          size: 7
+    ACT_THS_A:
+      address: 0x3e
+      groups:
+        ACTH:
+          description: Sleep-to-wake, return-to-sleep activation threshold in low-power mode
+          offset: 0
+          size: 7
+    ACT_DUR_A:
+      address: 0x3f
+      groups:
+        ACTD:
+          description: Sleep-to-wake, return-to-sleep duration
+          offset: 0
+          size: 8
+    OFFSET_X_REG_L_M:
+      address: 0x45
+      description: >-
+        These registers comprise a 16-bit register and represent X hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+    OFFSET_X_REG_H_M:
+      address: 0x46
+      description: >-
+        These registers comprise a 16-bit register and represent X hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+    OFFSET_Y_REG_L_M:
+      address: 0x47
+      description: >-
+        These registers comprise a 16-bit register and represent Y hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+    OFFSET_Y_REG_H_M:
+      address: 0x48
+      description: >-
+        These registers comprise a 16-bit register and represent Y hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+    OFFSET_Z_REG_L_M:
+      address: 0x49
+      description: >-
+        These registers comprise a 16-bit register and represent Z hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+    OFFSET_Z_REG_H_M:
+      address: 0x4a
+      description: >-
+        These registers comprise a 16-bit register and represent Z hard-iron offset in order to 
+        compensate environmental effects (data in two’s complement). These values act on the 
+        magnetic output data value in order to delete the environmental offset.
+
+    WHO_AM_I_M:
+      description: The identification register is used to identify the device
+      reset: 0x40
+      address: 0x4f
+    CFG_REG_A_M:
+      address: 0x60
+      groups:
+        MD:
+          description: Mode select bits. These bits select the mode of operation of the device
+          offset: 0
+          size: 2
+          options:
+            - name: CONT
+              description: >-
+                Continuous mode. In continuous mode the device continuously 
+                performs measurements and places the result in the data register. 
+                The data-ready signal is generated when a new data set is ready to 
+                be read. This signal can be available on the external pin by setting 
+                the INT_MAG bit in CFG_REG_C_M (62h)
+              value: 0
+            - name: SINGLE
+              description: >-
+                Single mode. When single mode is selected, the device performs a
+                single measurement, sets DRDY high and returns to idle mode.
+                Mode register return to idle mode bit values
+              value: 1
+            - name: IDLE
+              description: Idle mode. Device is placed in idle mode. I2C and SPI active.
+              value: 2
+    CFG_REG_B_M:
+      address: 0x61
+      groups:
+        LPF:
+          description: Low-pass filter enable
+          offset: 0
+        OFF_CANC:
+          description: Enables offset cancellation
+          offset: 1
+        SET_FREQ:
+          description: Selects the frequency of the set pulse
+          offset: 2
+          options:
+            - name: CONT
+              description: Set pulse is released every 63 ODR
+              value: 0
+            - name: POWER_ON
+              description: Set pulse is released only at power on after PD condition
+              value: 1
+        INT_ON_DATAOFF:
+          description: >-
+            If ‘1’, the interrupt block recognition checks data after the hard-iron correction to
+            discover the interrrupt
+          offset: 3
+        OFF_CANC_ONE_SHOT:
+          description: >-
+            Enables offset cancellation in single measurement mode. The OFF_CANC bit 
+            must be set to 1 when enabling offset cancellation in single measurement mode.
+          offset: 4
+    CFG_REG_C_M:
+      address: 0x62
+      groups:
+        INT_MAG:
+          description: If ‘1’, the DRDY pin is configured as a digital output
+          offset: 0
+        SELF_TEST:
+          description: If ‘1’, the self-test is enabled
+          offset: 1
+        BLE:
+          description: If ‘1’, an inversion of the low and high parts of the data occurs
+          offset: 3
+        BDU:
+          description: >-
+            If enabled, reading of incorrect data is avoided when the user reads asynchronously.
+            In fact if the read request arrives during an update of the output data, a 
+            latch is possible, reading incoherent high and low parts of the same register. Only 
+            one part is updated and the other one remains old
+          offset: 4
+        I2C_DIS:
+          description: If ‘1’, the I2C interface is inhibited. Only the SPI interface can be used.
+          offset: 5
+        INT_MAG_PIN:
+          description: >-
+            If '1', the INTERRUPT signal (INT bit inside INT_SOURCE_REG_M (64h)) is
+            driven on INT_MAG_PIN
+          offset: 6
+    INT_CTRL_REG_M:
+      address: 0x63
+      groups:
+        IEN:
+          description: >-
+            Interrupt enable. When set, enables the interrupt generation. The INT bit
+            is in INT_SOURCE_REG_M (64h)
+          offset: 0
+        IEL:
+          description: Controls whether the INT bit (INT_SOURCE_REG_M (64h)) is latched or pulsed
+          offset: 1
+        IEA:
+          description: >-
+            Controls the polarity of the INT bit (INT_SOURCE_REG_M (64h)) when an interrupt 
+            occurs
+          offset: 2
+        ZIEN:
+          description: Enables the interrupt recognition for the Z-axis
+          offset: 5
+        YIEN:
+          description: Enables the interrupt recognition for the Y-axis
+          offset: 6
+        XIEN:
+          description: Enables the interrupt recognition for the X-axis
+          offset: 7
+    INT_SOURCE_REG_M:
+      address: 0x64
+      groups:
+        INT:
+          description: This bit signals when the interrupt event occurs.
+          offset: 0
+        MROI:
+          description: >- 
+            MROI flag generation is alway enabled.This flag is reset by reading
+            INT_SOURCE_REG_M (64h)
+          offset: 1
+        N_TH_S_Z:
+          description: Z-axis value exceeds the threshold negative side
+          offset: 2
+        N_TH_S_Y:
+          description: Y-axis value exceeds the threshold negative side
+          offset: 3
+        N_TH_S_X:
+          description: X-axis value exceeds the threshold negative side
+          offset: 4
+        P_TH_S_Z:
+          description: Z-axis value exceeds the threshold positive side
+          offset: 5
+        P_TH_S_Y:
+          description: Y-axis value exceeds the threshold positive side
+          offset: 6
+        P_TH_S_X:
+          description: X-axis value exceeds the threshold positive side
+          offset: 7
+    INT_THS_L_REG_M:
+      description: This register contains the least significant bits of the threshold value chosen for the interrupt
+      address: 0x65
+    INT_THS_H_REG_M:
+      description: This register contains the most significant bits of the threshold value chosen for the interrupt
+      address: 0x66
+    STATUS_REG_M:
+      description: This register is used to indicate device status.
+      address: 0x67
+      groups:
+        XDA:
+          description: X-axis new data available
+          offset: 0
+        YDA:
+          description: Y-axis new data available
+          offset: 1
+        ZDA:
+          description: Z-axis new data available
+          offset: 2
+        ZYXDA:
+          description: X-, Y- and Z-axis new data available
+          offset: 3
+        XOR:
+          description: X-axis data overrun
+          offset: 4
+        YOR:
+          description: Y-axis data overrun
+          offset: 5
+        ZOR:
+          description: Z-axis data overrun
+          offset: 6
+        ZYXOR:
+          description: X-, Y- and Z-axis data overrun
+          offset: 7
+    OUTX_L_REG_M:
+      description: >-
+        The data output X registers are two 8-bit registers, data output X MSB register (69h) and 
+        output X LSB register (68h).
+      address: 0x68
+    OUTX_H_REG_M:
+      description: >-
+        The data output X registers are two 8-bit registers, data output X MSB register (69h) and 
+        output X LSB register (68h).
+      address: 0x69
+    OUTY_L_REG_M:
+      description: >-
+        The data output Y registers are two 8-bit registers, data output Y MSB register (6bh) and 
+        output Y LSB register (6ah).
+      address: 0x6a
+    OUTY_H_REG_M:
+      description: >-
+        The data output Y registers are two 8-bit registers, data output Y MSB register (6bh) and 
+        output Y LSB register (6ah).
+      address: 0x6b
+    OUTZ_L_REG_M:
+      description: >-
+        The data output Z registers are two 8-bit registers, data output Z MSB register (6dh) and 
+        output Z LSB register (6ch).
+      address: 0x6c
+    OUTZ_H_REG_M:
+      description: >-
+        The data output Z registers are two 8-bit registers, data output Z MSB register (6dh) and 
+        output Z LSB register (6ch).
+      address: 0x6d
