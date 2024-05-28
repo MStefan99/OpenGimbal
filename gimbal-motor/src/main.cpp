@@ -164,12 +164,12 @@ void calibrate() {
     uint16_t torqueAngle {0}; 
     
     if (calibrationMode & (1 << static_cast<uint8_t>(Command::CalibrationMode::Pole))) {
-        uint8_t polePairs {0};
+        uint8_t polePairs {1};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};
     
         do {
-            torqueAngle += 2;
+            torqueAngle += 10;
 
             if (torqueAngle >= fullRevolution) {
                 torqueAngle = 0;
@@ -181,10 +181,11 @@ void calibrate() {
                 lastPoleAngle = angle;
                 ++polePairs;
             }
-            bldc::applyTorque(torqueAngle, 255);
 
+            bldc::applyTorque(torqueAngle, 255);
             angle = measureAngle();
-        } while (util::abs(angle - phaseOffset) > 10 || polePairs == 0);
+            util::sleep(1);
+        } while (util::abs(angle - phaseOffset) > 10 || polePairs <= 1);
         
         if (direction > 0) {
             direction = 1;
