@@ -3,7 +3,9 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
-static uint8_t maxTorque {255};
+static uint8_t maxTorque {0};
+static constexpr uint16_t halfRevolution {fullRevolution / 2};
+static constexpr uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
@@ -142,10 +144,10 @@ uint16_t measureAngle() {
 int16_t getDifference(uint16_t angleA, uint16_t angleB = 0) {
     int16_t diff = static_cast<int16_t>(angleA) - static_cast<int16_t>(angleB);
     
-    if (diff > 2048) {
-        return diff - 4096;
-    } else if (diff < -2048) {
-        return diff + 4096;
+    if (diff > halfRevolution) {
+        return diff - fullRevolution;
+    } else if (diff < -halfRevolution) {
+        return diff + fullRevolution;
     } else {
         return diff;
     }
@@ -168,7 +170,7 @@ void calibrate() {
     uint16_t torqueAngle {0}; 
     
     if (calibrationMode & (1 << static_cast<uint8_t>(Command::CalibrationMode::Pole))) {
-        uint8_t polePairs {1};
+        uint8_t polePairs {0};
         uint16_t lastPoleAngle {angle};
         int8_t direction {0};
     
@@ -189,10 +191,15 @@ void calibrate() {
             bldc::applyTorque(torqueAngle, 255);
             angle = measureAngle();
             util::sleep(1);
-        } while (util::abs(angle - phaseOffset) > 10 || polePairs <= 1);
+        } while (util::abs(angle - phaseOffset) > 10 || !polePairs);
         
+        // Adding the last pole if we're close
+        polePairs += torqueAngle / halfRevolution;
+        
+        // Normalizing direction
         direction = util::sign(direction);
         
+        // Saving calibration
         data::edit(&data::options.polePairs, polePairs);
         data::edit(&data::options.direction, direction);
     }
@@ -210,7 +217,7 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     // Flip the angle if the motor polarity is reversed
     uint16_t eAngle = data::options.direction < 0? fullRevolution - eAngleCW : eAngleCW;
     
-    bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + 1024: eAngle + 3072, power);
+    bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + quarterRevolution: eAngle + (fullRevolution - quarterRevolution), power);
 }
 
 void sleep() {
