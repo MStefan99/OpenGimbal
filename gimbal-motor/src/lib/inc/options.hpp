@@ -40,9 +40,7 @@ static constexpr uint8_t deviceAddress {1};
 
 
 // Full state feedback gain matrix
-constexpr auto K = Matrix<float, uint8_t, 1, 2>{{75, 20}};
-
-static PID<float> torquePID {1.0f, 0.0f, 0.0f, 25};
+constexpr auto K = Matrix<float, uint8_t, 1, 2>{{30, 8}} * 8;
 
 #endif	/* OPTIONS_HPP */
 

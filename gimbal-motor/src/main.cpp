@@ -3,7 +3,7 @@
 
 #define NVMTEMP ((uint32_t*)0x00806030)
 
-static uint8_t maxTorque {0};
+static uint8_t maxTorque {255};
 
 static MovementController movementController {};
 static Mode mode {Mode::Calibrate};
@@ -23,7 +23,7 @@ struct TorqueLUT {
 
 	constexpr TorqueLUT() : table() {
         table[0] = 0;
-        auto factor = (255.0 - idleTorque) / 15.0;
+        auto factor = (255.0f - idleTorque) / 15.0f;
 		for (auto i = 1; i < 16; ++i) {
 			table[i] = std::floor(factor * i + idleTorque);
 		}
@@ -139,6 +139,18 @@ uint16_t measureAngle() {
     return util::switchEndianness(rawAngle);
 }
 
+int16_t getDifference(uint16_t angleA, uint16_t angleB = 0) {
+    int16_t diff = static_cast<int16_t>(angleA) - static_cast<int16_t>(angleB);
+    
+    if (diff > 2048) {
+        return diff - 4096;
+    } else if (diff < -2048) {
+        return diff + 4096;
+    } else {
+        return diff;
+    }
+}
+
 void calibrate() {
     uint16_t angle {0};
     uint16_t phaseOffset {data::options.phaseOffset};
@@ -179,11 +191,7 @@ void calibrate() {
             util::sleep(1);
         } while (util::abs(angle - phaseOffset) > 10 || polePairs <= 1);
         
-        if (direction > 0) {
-            direction = 1;
-        } else {
-            direction = -1;
-        }
+        direction = util::sign(direction);
         
         data::edit(&data::options.polePairs, polePairs);
         data::edit(&data::options.direction, direction);
@@ -194,18 +202,6 @@ void calibrate() {
     }
 
     bldc::applyTorque(0, 0);
-}
-
-int16_t getDifference(uint16_t angleA, uint16_t angleB) {
-    int16_t diff = static_cast<int16_t>(angleA) - static_cast<int16_t>(angleB);
-    
-    if (diff > 2048) {
-        return diff - 4096;
-    } else if (diff < -2048) {
-        return diff + 4096;
-    } else {
-        return diff;
-    }
 }
 
 void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
@@ -262,7 +258,7 @@ int main() {
     
     uart::setCallback(processCommand);
     
-    LowPassFilter torqueFilter {1000, 5};
+    LowPassFilter torqueFilter {1000, 2};
     float prevDAngle {0.0f};
     
     while (1) {
@@ -274,7 +270,6 @@ int main() {
             }
             case (Mode::Calibrate): {
                 calibrate();
-                srand(SysTick->VAL);
                 mode = Mode::Drive;
                 break;
             }
@@ -295,15 +290,14 @@ int main() {
                 prevDAngle = countsToRad(getDifference(movementController.getTarget(), angle));
                 
                 // Calculating and applying torque
-                auto x = Matrix<float, uint8_t, 2, 1> {{dAngle}, {velocity}};
-                
-                float torque = torquePID.process(torqueFilter.process((K * x)[0][0]));
+                float torque = torqueFilter.process(dAngle * K[0][0] + velocity * K[0][1]);
                 float absTorque = util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
                     static_cast<uint16_t>(maxTorque));
                 
                 applyTorque(angle, absTorque, torque > 0);
                 
                 util::runTasks();
+                
                 #if DV_OUT
                     if (time % 5 < 1) {
                         Data data {};
@@ -332,12 +326,14 @@ int main() {
                     hapticDuration = 0;
                 }
                 
+                util::runTasks();
                 util::sleep(1); // Waiting until next tick
                 break;
             }
             case (Mode::Idle): {
                 util::runTasks();
-                // Fallthrough intentional
+                __WFI();
+                break;
             }
             default:
             {

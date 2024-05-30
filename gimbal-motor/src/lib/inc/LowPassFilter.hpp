@@ -26,7 +26,7 @@ public:
 
     float process(float inputSample) {
         // Apply the filter: simple low-pass IIR filter equation
-        _y = _y + _alpha * (inputSample - _y);
+        _y += _alpha * (inputSample - _y);
         return _y;
     }
     
@@ -40,8 +40,8 @@ public:
     }
 
 private:
-    float _y = 0; // Filter state
-    float _alpha = 0; // Filter coefficient
+    float _y {0}; // Filter state
+    float _alpha {0}; // Filter coefficient
 };
 
 #endif	/* LOWPASSFILTER_HPP */
