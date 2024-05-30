@@ -10,21 +10,13 @@ static Mode mode {Mode::Calibrate};
 static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
 static uint32_t lastTargetTime {0};
 
-static uint16_t angle {0};
+static LowPassFilter angleFilter {1000, 5};
 static bool dataReady {false};
 
 static uint32_t hapticEnd {0};
 static uint16_t hapticPower {0};
 static uint8_t hapticDuration {0};
 static bool hapticDirection {false};
-
-auto kalman = Kalman<float, unsigned, 3, 1, 1> {x0, P0, Q, R};
-
-constexpr float dt {1}; // In milliseconds, speed and velocity need to be multiplied by 1000
-constexpr auto F = Matrix<float, unsigned, 3, 3> {{1, dt, dt * dt / 2},
-                                        {0, 1, dt},
-                                        {0, 0,  1}};
-constexpr auto H = Matrix<float, unsigned, 1, 3> {{1, 0, 0}};
 
 struct TorqueLUT {
 	uint16_t table[16];
@@ -70,7 +62,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             break;
         }
         case (Command::CommandType::Offset): {
-            movementController.adjustOffset(angle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+            movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             uint16_t offset = movementController.getOffset();
             data::edit(&data::options.zeroOffset, offset);
             data::write();
@@ -238,7 +230,7 @@ void sleep() {
 }
 
 float countsToRad(int16_t counts) {
-    return static_cast<float>(counts) / fullRevolution * TWO_PI; 
+    return static_cast<float>(counts) / fullRevolution * F_2_PI; 
 }
 
 #if DV_OUT
@@ -270,8 +262,8 @@ int main() {
     
     uart::setCallback(processCommand);
     
-    // TODO: Exiting out of no-load (proportional) mode is jerky and needs improvement
-    LowPassFilter loadFilter {1000, 1};
+    LowPassFilter torqueFilter {1000, 5};
+    float prevDAngle {0.0f};
     
     while (1) {
         switch(mode) {
@@ -295,29 +287,21 @@ int main() {
                 movementController.interpolate(time - lastTargetTime);
                 
                 // Calculating difference between current and target angle
-                angle = measureAngle();
-                float dAngle = countsToRad(getDifference(movementController.getTarget(), angle));
+                auto angle {measureAngle()};
+                angleFilter.process(angle);
                 
-                // Estimating state
-                auto z = Matrix<float, unsigned, 1, 1> {{dAngle}};
-                kalman.correct(H, z);
-                auto kx {kalman.x()};
+                float dAngle {countsToRad(getDifference(movementController.getTarget(), angle))};
+                float velocity {(dAngle - prevDAngle) * 1000.0f};
+                prevDAngle = countsToRad(getDifference(movementController.getTarget(), angle));
                 
                 // Calculating and applying torque
-                auto x = Matrix<float, uint8_t, 2, 1> {{kx[0][0]}, {kx[1][0] * 1000}};
-
-                if (util::abs(kx[2][0]) > switchAcceleration / 1000) {
-                    loadFilter.force(0.0f);
-                } else if (loadFilter.getState() < 1.0f) {
-                    loadFilter.process(util::abs(dAngle) / switchSmoothness);
-                }
-                float torque = util::interpolate(dAngle * pGain, torque = (K * x)[0][0], loadFilter.getState());
+                auto x = Matrix<float, uint8_t, 2, 1> {{dAngle}, {velocity}};
                 
-                applyTorque(angle, util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
-                    static_cast<uint16_t>(maxTorque)), torque > 0);
+                float torque = torquePID.process(torqueFilter.process((K * x)[0][0]));
+                float absTorque = util::min(static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
+                    static_cast<uint16_t>(maxTorque));
                 
-                // Predicting next state
-                kalman.predict(F);
+                applyTorque(angle, absTorque, torque > 0);
                 
                 util::runTasks();
                 #if DV_OUT
@@ -325,10 +309,9 @@ int main() {
                         Data data {};
                         
                         data.dt = (start - SysTick->VAL) / 48;
-                        data.x = kx[0][0];
-                        data.v = kx[1][0] * 1000;
-                        data.a = kx[2][0] * 1000;
-                        data.u = torque;
+                        data.x = dAngle;
+                        data.v = velocity;
+                        data.u = util::sign(torque) * absTorque;
                         uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
                     }
                 #endif
