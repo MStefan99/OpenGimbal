@@ -8,7 +8,7 @@ export type MotorEntry = {
 
 export class MotorManager {
 	readonly port: SerialPort;
-	readonly _motorEntries: Array<MotorEntry>;
+	readonly _motorEntries: MotorEntry[];
 
 	constructor(port: SerialPort) {
 		this.port = port;
@@ -49,7 +49,8 @@ export class MotorManager {
 			try {
 				entry.active = !!(await entry.motor.getCalibration()).value;
 			} catch {
-				// Nothing to do
+				// Motor did not respond
+				entry.active = false;
 			}
 		}
 		return this.motors;
