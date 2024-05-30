@@ -9,7 +9,7 @@
 #include "device.h"
 
 #include "util.hpp"
-#include "data.hpp"
+#include "nvm.hpp"
 #include "options.hpp"
 
 class MovementController {

@@ -16,7 +16,7 @@
 
 #include "lib/inc/util.hpp"
 #include "lib/inc/pwm.hpp"
-#include "lib/inc/data.hpp"
+#include "lib/inc/nvm.hpp"
 #include "lib/inc/bldc.hpp"
 #include "lib/inc/i2c.hpp"
 #include "lib/inc/uart.hpp"

@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"target": "ESNext",
+		"moduleResolution": "NodeNext",
+		"isolatedModules": true,
+		"sourceMap": true,
+		"alwaysStrict": true,
+		"noImplicitAny": true,
+		"noImplicitOverride": true,
+		"noImplicitThis": true,
+		"strict": true,
+		"strictNullChecks": false,
+		"skipLibCheck": true,
+		"types": ["vite/client", "@types/w3c-web-serial"],
+		"lib": ["ESNext", "dom"]
+	},
+	"exclude": ["node_modules"],
+	"include": ["src/**/*.ts"]
+}
