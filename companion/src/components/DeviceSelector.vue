@@ -3,8 +3,8 @@
 	.device-selector
 		span.bold.block(v-if="connectedDevices.length") Connected devices
 		span.bold.block(v-else) No devices connected
-		.device(v-for="device of connectedDevices" :key="device.usbDevice.serialNumber")
-			span.cursor-pointer(@click="viewedDevice = device") {{device.usbDevice.productName}}
+		.device(v-for="(device, i) of connectedDevices" :key="i")
+			span.cursor-pointer(@click="viewedDevice = device") Serial device
 			.flex.flex-row.flex-wrap.gap-4.grow
 				button.green-outline.grow(v-if="device === activeDevice" disabled) Active device
 				button.green.grow(v-else @click="activeDevice = device") Set active
@@ -27,7 +27,6 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 import {alert, PopupColor} from '../scripts/popups';
-import {Device} from '../scripts/driver/Device';
 import {
 	connectDevice,
 	disconnectDevice,
@@ -35,9 +34,10 @@ import {
 	activeDevice
 } from '../scripts/driver/driver';
 import DeviceViewer from './DeviceViewer.vue';
+import {MotorManager} from '../scripts/driver/MotorManager';
 
 defineEmits<{(e: 'close'): void}>();
-const viewedDevice = ref<Device | null>(null);
+const viewedDevice = ref<MotorManager | null>(null);
 
 function connect(demo?: true): void {
 	connectDevice(demo).catch(() =>

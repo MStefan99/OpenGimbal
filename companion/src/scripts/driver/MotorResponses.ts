@@ -1,7 +1,7 @@
 import {Command} from './Command';
 import {MotorVariableID} from './MotorCommands';
-import {CalibrationBits} from './BitMask';
 import {BitwiseRegister} from './BitwiseRegister';
+import {CalibrationBits} from './Device';
 
 export enum MotorResponseType {
 	ReturnVariable = 0x0
@@ -67,10 +67,10 @@ export class ReturnCalibrationVariableResponse extends ReturnVariableResponse {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return (
-				super.toString() +
-				`\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
-			);
+			return super.toString();
+			// TODO: print in a nice format
+			// super.toString() +
+			// `\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
 		}
 	}
 }

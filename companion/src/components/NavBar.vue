@@ -4,7 +4,7 @@
 		span#title OpenGimbal Companion
 		nav
 			RouterLink(:to="{name: 'home'}") Home
-			RouterLink(:to="{name: 'settings'}") Settings
+			//RouterLink(:to="{name: 'settings'}") Settings
 		label#device-status.connected(v-if="connectedDevices.length" for="device-toggle") Connected
 		label#device-status(v-else for="device-toggle") Not connected
 		input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")

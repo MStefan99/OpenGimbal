@@ -1,6 +1,4 @@
 import {Motor} from './Motor';
-import {SerialPort} from 'serialport';
-import {MockPort} from './index';
 import {MotorResponse} from './MotorResponses';
 
 export type MotorEntry = {
@@ -9,27 +7,27 @@ export type MotorEntry = {
 };
 
 export class MotorManager {
-	readonly #port: SerialPort | MockPort;
-	readonly #motorEntries: Array<MotorEntry>;
+	readonly port: SerialPort;
+	readonly _motorEntries: Array<MotorEntry>;
 
-	constructor(port: SerialPort | MockPort) {
-		this.#port = port;
-		this.#motorEntries = Array.from({length: 14}, (v, i) => ({
+	constructor(port: SerialPort) {
+		this.port = port;
+		this._motorEntries = Array.from({length: 14}, (v, i) => ({
 			motor: new Motor(port, i + 1),
 			active: false
 		}));
 	}
 
 	get motors(): Motor[] {
-		return this.#motorEntries.map((e) => e.motor);
+		return this._motorEntries.map((e) => e.motor);
 	}
 
 	get active(): Motor[] {
-		return this.#motorEntries.filter((e) => e.active).map((e) => e.motor);
+		return this._motorEntries.filter((e) => e.active).map((e) => e.motor);
 	}
 
 	get all(): Motor {
-		return new Motor(this.#port, 15);
+		return new Motor(this.port, 15);
 	}
 
 	motor(address: Motor['address'] = 1): Motor {
@@ -47,7 +45,7 @@ export class MotorManager {
 	}
 
 	async enumerate(): Promise<Motor[]> {
-		for (const entry of this.#motorEntries) {
+		for (const entry of this._motorEntries) {
 			try {
 				entry.active = !!(await entry.motor.getCalibration()).value;
 			} catch {

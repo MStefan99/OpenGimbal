@@ -2,12 +2,12 @@
 
 import {reactive, ref} from 'vue';
 import {alert, PopupColor} from '../popups';
-import {Device} from './Device';
+import {MotorManager} from './MotorManager';
 
-export const connectedDevices = reactive<Device[]>([]);
-export const activeDevice = ref<Device | null>(null);
+export const connectedDevices = reactive<MotorManager[]>([]);
+export const activeDevice = ref<MotorManager | null>(null);
 
-export async function connectDevice(demo?: true): Promise<Device | null> {
+export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 	if (demo) {
 		throw new Error('Not implemented');
 
@@ -17,12 +17,10 @@ export async function connectDevice(demo?: true): Promise<Device | null> {
 		//
 		// return Promise.resolve(device);
 	} else {
-		const usbDevice = await navigator.serial.requestPort({
-			filters: []
-		});
+		const port = await navigator.serial.requestPort();
 
 		return new Promise((resolve, reject) => {
-			if (connectedDevices.some((d) => (d as Device)?.usbDevice === usbDevice)) {
+			if (connectedDevices.some((d) => (d as MotorManager)?.port === port)) {
 				alert(
 					'This device is already connected',
 					PopupColor.Red,
@@ -32,25 +30,45 @@ export async function connectDevice(demo?: true): Promise<Device | null> {
 				return null;
 			}
 
-			return usbDevice
-				.open()
-				.then(() => usbDevice.selectConfiguration(1))
-				.then(() => usbDevice.claimInterface(0))
+			port
+				.open({
+					baudRate: 115200,
+					dataBits: 8,
+					stopBits: 1,
+					parity: 'odd'
+				})
 				.then(() => {
-					const device = new Device(usbDevice);
-					connectedDevices.push(device);
-					activeDevice.value = device;
-					return device;
+					const manager = new MotorManager(port);
+					connectedDevices.push(manager);
+					activeDevice.value = manager;
+
+					(async (): Promise<void> => {
+						while (port.readable) {
+							const reader = port.readable.getReader();
+							try {
+								// eslint-disable-next-line no-constant-condition
+								while (true) {
+									const {value, done} = await reader.read();
+									if (done) {
+										break;
+									}
+									await manager.parse(value);
+								}
+							} finally {
+								reader.releaseLock();
+							}
+						}
+					})();
+
+					return manager;
 				})
 				.catch((err) => reject(err));
 		});
 	}
 }
 
-export function disconnectDevice(device: Device): void {
-	if (device.usbDevice.opened) {
-		device.usbDevice.close();
-	}
+export function disconnectDevice(device: MotorManager): void {
+	device.port.close();
 
 	const idx = connectedDevices.indexOf(device);
 	connectedDevices.splice(idx, 1);
@@ -64,15 +82,15 @@ export function disconnectDevice(device: Device): void {
 	}
 }
 
-if ('usb' in navigator) {
-	navigator.usb.addEventListener('disconnect', (e: Event) => {
-		const device = (e as USBConnectionEvent).device;
-		const foundDevice = connectedDevices.find((d) => d.usbDevice === device);
-
-		if (foundDevice === undefined) {
-			device.close();
-		} else {
-			disconnectDevice(foundDevice as Device);
-		}
-	});
-}
+// if ('serial' in navigator) {
+// 	navigator.serial.addEventListener('disconnect', (e: Event) => {
+// 		const device = (e as USBConnectionEvent).device;
+// 		const foundDevice = connectedDevices.find((d) => d.usbDevice === device);
+//
+// 		if (foundDevice === undefined) {
+// 			device.close();
+// 		} else {
+// 			disconnectDevice(foundDevice as MotorManager);
+// 		}
+// 	});
+// }

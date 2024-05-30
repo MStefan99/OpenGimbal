@@ -2,32 +2,20 @@
 .popup-wrapper(@click.self="$emit('close')")
 	.device-viewer.popup
 		h2.text-xl Device information
-		p Vendor:
+		p Vendor ID:
 			|
 			|
-			b {{device.usbDevice.manufacturerName}}
-		p Name:
+			b {{device.port.getInfo().usbVendorId}}
+		p Product ID:
 			|
 			|
-			b {{device.usbDevice.productName}}
-		p Serial number:
-			|
-			|
-			b {{device.usbDevice.serialNumber}}
-		p Device version:
-			|
-			|
-			b {{device.deviceVersion}}
-		p Supported USB version:
-			|
-			|
-			b {{device.usbVersion}}
+			b {{device.port.getInfo().usbProductId}}
 </template>
 
 <script setup lang="ts">
-import {Device} from '../scripts/driver/Device';
+import {MotorManager} from '../scripts/driver/MotorManager';
 
-defineProps<{device: Device}>();
+defineProps<{device: MotorManager}>();
 defineEmits<{(e: 'close'): void}>();
 </script>
 

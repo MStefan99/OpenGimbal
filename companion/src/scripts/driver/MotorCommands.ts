@@ -1,7 +1,7 @@
 import {clamp, mod} from '../util';
 import {BitwiseRegister} from './BitwiseRegister';
 import {Command} from './Command';
-import {CalibrationBits} from "./Device";
+import {CalibrationBits} from './Device';
 
 export enum MotorCommandType {
 	Sleep = 0x0,
@@ -183,10 +183,12 @@ export class CalibrationCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return (
-				super.toString() +
-				`\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
-			);
+			return super.toString();
+			// TODO: print in a nice format
+			// return (
+			// 	super.toString() +
+			// 	`\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
+			// );
 		}
 	}
 }

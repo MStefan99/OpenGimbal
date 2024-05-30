@@ -1,5 +1,4 @@
 import {Command} from './Command';
-import {MockPort} from './index';
 import {BitwiseRegister} from './BitwiseRegister';
 import {
 	MotorResponse,
@@ -23,6 +22,11 @@ import {
 	ToneCommand
 } from './MotorCommands';
 
+export enum CalibrationBits {
+	Zero = 0x0,
+	Pole = 0x1
+}
+
 const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
 	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
 };
@@ -36,14 +40,14 @@ const getVariableResponse: Record<MotorVariableID, (buffer: Uint8Array) => Retur
 	};
 
 export class Motor {
-	readonly #debug: boolean;
-	readonly #address: number;
-	#port: SerialPort | MockPort;
-	#incomingBuffer = new Uint8Array(16);
-	#incomingView = new DataView(this.#incomingBuffer.buffer);
-	#bytesReceived = 0;
-	#bytesRemaining = 0;
-	#pendingRequests: Partial<
+	readonly _debug: boolean;
+	readonly _address: number;
+	_port: SerialPort;
+	_incomingBuffer = new Uint8Array(16);
+	_incomingView = new DataView(this._incomingBuffer.buffer);
+	_bytesReceived = 0;
+	_bytesRemaining = 0;
+	_pendingRequests: Partial<
 		Record<
 			MotorVariableID,
 			{
@@ -54,46 +58,44 @@ export class Motor {
 		>
 	> = {};
 
-	constructor(port: SerialPort | MockPort, address: number, debug: boolean = false) {
-		this.#address = address;
-		this.#port = port;
-		this.#debug = debug;
+	constructor(port: SerialPort, address: number, debug: boolean = false) {
+		this._address = address;
+		this._port = port;
+		this._debug = debug;
 	}
 
 	get address(): number {
-		return this.#address;
+		return this._address;
 	}
 
 	toString(): string {
-		return `Motor ${this.#address}`;
+		return `Motor ${this._address}`;
 	}
 
-	async #send(command: Command): Promise<void> {
+	async _send(command: Command): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
-			this.#port.write(buffer, (err: Error) => {
-				if (err) {
-					return reject(err);
-				}
-				this.#debug &&
-					console.log('Command sent:', command.toString(), '\n', command.toString('hex'));
-				resolve();
-			});
+			const writer = this._port.writable.getWriter();
+			writer
+				.write(buffer)
+				.then(() => {
+					writer.releaseLock();
+					resolve();
+				})
+				.catch(reject);
 		});
 	}
 
-	async #request<T extends MotorResponse>(command: GetVariableCommand): Promise<T> {
+	async _request<T extends MotorResponse>(command: GetVariableCommand): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
 
-			this.#port.write(buffer, (err: Error) => {
-				if (err) {
-					return reject(err);
-				}
-				this.#debug &&
-					console.log('Request sent:', command.toString(), '\n', command.toString('hex'));
-				this.#pendingRequests[command.variableID] = {
+			const writer = this._port.writable.getWriter();
+			writer.write(buffer).then(() => {
+				writer.releaseLock();
+
+				this._pendingRequests[command.variableID] = {
 					resolve: resolve as (response: MotorResponse) => void,
 					reject,
 					timeout: setTimeout(() => {
@@ -108,37 +110,37 @@ export class Motor {
 		const responses = new Array<MotorResponse>();
 
 		for (const byte of data) {
-			if (!this.#bytesRemaining) {
-				this.#bytesRemaining = byte >> 4;
-				this.#bytesReceived = 0;
+			if (!this._bytesRemaining) {
+				this._bytesRemaining = byte >> 4;
+				this._bytesReceived = 0;
 			}
 
-			this.#incomingView.setUint8(this.#bytesReceived++, byte);
-			if (--this.#bytesRemaining === 0) {
-				const genericResponse = new MotorResponse(this.#incomingBuffer);
+			this._incomingView.setUint8(this._bytesReceived++, byte);
+			if (--this._bytesRemaining === 0) {
+				const genericResponse = new MotorResponse(this._incomingBuffer);
 				if (
 					genericResponse.destAddr !== 0 || // Command not intended for this device
-					genericResponse.srcAddr !== this.#address
+					genericResponse.srcAddr !== this._address
 				) {
 					// Command coming from a different motor
 					continue;
 				}
 
-				const response = getMotorResponse[genericResponse.type](this.#incomingBuffer);
+				const response = getMotorResponse[genericResponse.type](this._incomingBuffer);
 				responses.push(response);
 
 				if (response instanceof ReturnVariableResponse) {
-					const variableResponse = getVariableResponse[response.variableID](this.#incomingBuffer);
-					this.#debug &&
+					const variableResponse = getVariableResponse[response.variableID](this._incomingBuffer);
+					this._debug &&
 						console.log(
 							'Response received:',
 							variableResponse.toString(),
 							'\n',
 							response.toString('hex')
 						);
-					this.#pendingRequests[variableResponse.variableID].resolve(variableResponse);
-					clearTimeout(this.#pendingRequests[variableResponse.variableID].timeout);
-					delete this.#pendingRequests[variableResponse.variableID];
+					this._pendingRequests[variableResponse.variableID].resolve(variableResponse);
+					clearTimeout(this._pendingRequests[variableResponse.variableID].timeout);
+					delete this._pendingRequests[variableResponse.variableID];
 				}
 			}
 		}
@@ -147,7 +149,7 @@ export class Motor {
 	}
 
 	sleep(): Promise<void> {
-		return this.#send(new SleepCommand(0, this.#address));
+		return this._send(new SleepCommand(0, this._address));
 	}
 
 	// Technically not needed since any command would wake the device up, but it's nice to have an opposite of sleep()
@@ -156,25 +158,25 @@ export class Motor {
 	}
 
 	move(position: number = 0, torque: number = 15): Promise<void> {
-		return this.#send(new PositionCommand(0, this.#address, torque, position));
+		return this._send(new PositionCommand(0, this._address, torque, position));
 	}
 
 	// Disables the motor, same as sending any position with the torque of 0
 	disable(): Promise<void> {
-		return this.#send(new PositionCommand(0, this.#address, 0, 0));
+		return this._send(new PositionCommand(0, this._address, 0, 0));
 	}
 
 	tone(frequency: number): Promise<void> {
-		return this.#send(new ToneCommand(0, this.#address, frequency));
+		return this._send(new ToneCommand(0, this._address, frequency));
 	}
 
 	// Same as sending any frequency above 24kHz
 	silent(): Promise<void> {
-		return this.#send(new ToneCommand(0, this.#address, 25000));
+		return this._send(new ToneCommand(0, this._address, 25000));
 	}
 
 	haptic(intensity: number, duration: number = 50): Promise<void> {
-		return this.#send(new HapticCommand(0, this.#address, intensity, duration));
+		return this._send(new HapticCommand(0, this._address, intensity, duration));
 	}
 
 	/* This is a tricky one
@@ -191,7 +193,7 @@ export class Motor {
 	 * motor.move(2048) // Motor moves from 3072 (old 1024) to 2048 (old 0)
 	 */
 	adjustOffset(offset: number = 0): Promise<void> {
-		return this.#send(new OffsetCommand(0, this.#address, offset));
+		return this._send(new OffsetCommand(0, this._address, offset));
 	}
 
 	calibrate(
@@ -199,13 +201,13 @@ export class Motor {
 			CalibrationBits.Zero
 		)
 	): Promise<void> {
-		return this.#send(new CalibrationCommand(0, this.#address, mode));
+		return this._send(new CalibrationCommand(0, this._address, mode));
 	}
 
 	getCalibration(): Promise<BitwiseRegister<CalibrationBits>> {
 		return new Promise<BitwiseRegister<CalibrationBits>>((resolve, reject) =>
-			this.#request<ReturnCalibrationVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Calibration)
+			this._request<ReturnCalibrationVariableResponse>(
+				new GetVariableCommand(0, this._address, MotorVariableID.Calibration)
 			)
 				.then((res) => resolve(res.calibrationMode))
 				.catch((err) => reject(err))
@@ -214,8 +216,8 @@ export class Motor {
 
 	getOffset(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
-			this.#request<ReturnOffsetVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Offset)
+			this._request<ReturnOffsetVariableResponse>(
+				new GetVariableCommand(0, this._address, MotorVariableID.Offset)
 			)
 				.then((res) => resolve(res.offset))
 				.catch((err) => reject(err))
@@ -224,8 +226,8 @@ export class Motor {
 
 	getRange(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
-			this.#request<ReturnRangeVariableResponse>(
-				new GetVariableCommand(0, this.#address, MotorVariableID.Range)
+			this._request<ReturnRangeVariableResponse>(
+				new GetVariableCommand(0, this._address, MotorVariableID.Range)
 			)
 				.then((res) => resolve(res.range))
 				.catch((err) => reject(err))
@@ -233,10 +235,10 @@ export class Motor {
 	}
 
 	setOffsetVariable(offset: number): Promise<void> {
-		return this.#send(new SetOffsetVariableCommand(0, this.#address, offset));
+		return this._send(new SetOffsetVariableCommand(0, this._address, offset));
 	}
 
 	setRangeVariable(range: number): Promise<void> {
-		return this.#send(new SetRangeVariableCommand(0, this.#address, range));
+		return this._send(new SetRangeVariableCommand(0, this._address, range));
 	}
 }
