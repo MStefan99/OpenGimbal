@@ -9,16 +9,15 @@
 #include "lib/inc/LSM6DSO32.hpp"
 #include "lib/inc/uart.hpp"
 #include "lib/inc/Mahony.hpp"
+#include "lib/inc/LowPassFilter.hpp"
 
-#define DV_OUT true
+#define DV_OUT 0
 
 static constexpr float FACTOR {2048 / PI};
 
 
 void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
-    if (position < 0) {
-        position += 4096;
-    }
+    position = util::mod(position, static_cast<int16_t>(4096));
     
     buf[0] = 0x4 << 4u | address;
     buf[1] = 0x1;
@@ -58,7 +57,7 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
         {QUARTER_PI + signG * 2 * std::atan2((std::sqrt(2 - 2 * cos2B * sin2G - 2 * sin2B) + signG * 1), (std::sqrt(1 - 2 * sin2B) - sqrt2 * cosB * sinG))}
     };
 }
-
+    
 #if DV_OUT
 struct Data {        
     uint8_t header {0x03};
@@ -83,17 +82,21 @@ int main() {
     PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
     
     Mahony mahony {};
+    LowPassFilter zFilter {100, 0.25f};
     
     while (1) {
         LSM6DSO32::update();
         #if DV_OUT
-            auto start = SysTick->VAL;
+            auto startUs = SysTick->VAL;
+            auto startMs = util::getTime();
         #endif        
         mahony.updateIMU(LSM6DSO32::getRot(), LSM6DSO32::getAcc(), 0.01f);
         
         Quaternion handleOrientation {mahony.getQuat()};
-        Quaternion phoneOrientation {};
-        Quaternion gimbalRotation {phoneOrientation * handleOrientation.conjugate()};
+        auto handleAngles {handleOrientation.toEuler()};
+        zFilter.process(handleAngles[0][0]);
+        Quaternion phoneOrientation {Quaternion::fromEuler(zFilter.getState(), 0, 0)};
+        Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
         
         auto eulerAngles {gimbalRotation.toEuler()};
         
@@ -103,7 +106,7 @@ int main() {
             //if (util::getTime() % 5 < 1) {
                 Data data {};
 
-                data.dt = (start - SysTick->VAL) / 48;
+                data.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
                 data.x = eulerAngles[0][0];
                 data.y = eulerAngles[1][0];
                 data.z = eulerAngles[2][0];
@@ -121,8 +124,7 @@ int main() {
                 position += 4096;
             }
             setPosition(buf + 4 * i, i + 1, position);
-        }
-//        setPosition(buf, 3, orientation[2][0] * FACTOR);        
+        }      
         uart::sendToMotors(buf, 12);
                 
         util::sleep(10);

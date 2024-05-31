@@ -49,7 +49,6 @@
         <itemPath>../src/lib/inc/Kalman.hpp</itemPath>
         <itemPath>../src/lib/inc/interop.h</itemPath>
         <itemPath>../src/lib/inc/PID.hpp</itemPath>
-        <itemPath>../src/lib/inc/options.hpp</itemPath>
         <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
         <itemPath>../src/lib/inc/AS5600_regs.h</itemPath>
         <itemPath>../src/lib/inc/nvm.hpp</itemPath>
@@ -154,6 +153,7 @@
         </logicalFolder>
       </logicalFolder>
       <itemPath>../src/main.hpp</itemPath>
+      <itemPath>../src/lib/inc/options.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

@@ -53,6 +53,6 @@ export class MotorManager {
 				entry.active = false;
 			}
 		}
-		return this.motors;
+		return this.active;
 	}
 }
