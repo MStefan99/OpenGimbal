@@ -82,7 +82,9 @@ int main() {
     PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
     
     Mahony mahony {};
-    LowPassFilter zFilter {100, 0.25f};
+    
+    LowPassFilter yawTargetFilter {100, 0.25f};
+    LowPassFilter pitchTargetFilter {100, 0.25f};
     
     while (1) {
         LSM6DSO32::update();
@@ -93,9 +95,13 @@ int main() {
         mahony.updateIMU(LSM6DSO32::getRot(), LSM6DSO32::getAcc(), 0.01f);
         
         Quaternion handleOrientation {mahony.getQuat()};
-        auto handleAngles {handleOrientation.toEuler()};
-        zFilter.process(handleAngles[0][0]);
-        Quaternion phoneOrientation {Quaternion::fromEuler(zFilter.getState(), 0, 0)};
+        auto handleAngles {handleOrientation.toEuler()};        
+        
+        Quaternion phoneOrientation {Quaternion::fromEuler(
+            yawTargetFilter.process(handleAngles[0][0]), 
+            pitchTargetFilter.process(handleAngles[1][0]), 
+            0
+        )};
         Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
         
         auto eulerAngles {gimbalRotation.toEuler()};
