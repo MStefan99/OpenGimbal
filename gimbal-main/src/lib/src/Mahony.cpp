@@ -40,9 +40,9 @@ void Mahony::update(
     }
 
     // Convert gyroscope degrees/sec to radians/sec
-    rot[0][0] *= DEG_TO_RAD;
-    rot[1][0] *= DEG_TO_RAD;
-    rot[2][0] *= DEG_TO_RAD;
+    rot[0][0] *= F_DEG_TO_RAD;
+    rot[1][0] *= F_DEG_TO_RAD;
+    rot[2][0] *= F_DEG_TO_RAD;
 
     // Compute feedback only if accelerometer measurement valid
     // (avoids NaN in accelerometer normalization)
@@ -135,9 +135,9 @@ void Mahony::updateIMU(
         Vector3<float, uint8_t> acc,
         float dt) {
     // Convert gyroscope degrees/sec to radians/sec
-    rot[0][0] *= DEG_TO_RAD;
-    rot[1][0] *= DEG_TO_RAD;
-    rot[2][0] *= DEG_TO_RAD;
+    rot[0][0] *= F_DEG_TO_RAD;
+    rot[1][0] *= F_DEG_TO_RAD;
+    rot[2][0] *= F_DEG_TO_RAD;
 
     // Compute feedback only if accelerometer measurement valid
     // (avoids NaN in accelerometer normalization)

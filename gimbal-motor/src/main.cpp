@@ -41,6 +41,10 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         return; // Command intended for another device
     }
     
+    if (mode == Mode::Sleep) {
+        mode = Mode::Drive; // Exit the sleep mode if we're the target device
+    }
+    
     switch(static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) { // Switch command type
         case (Command::CommandType::Sleep): {
             mode = Mode::Sleep;
@@ -272,7 +276,6 @@ int main() {
         switch(mode) {
             case (Mode::Sleep): {
                 sleep();
-                mode = Mode::Drive;
                 break;
             }
             case (Mode::Calibrate): {

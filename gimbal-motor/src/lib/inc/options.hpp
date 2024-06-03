@@ -36,7 +36,7 @@ static constexpr uint8_t idleTorque {140};
 // Interval in milliseconds at which torque direction will flip in haptic mode
 static constexpr uint8_t hapticCycleDuration {25};
 // Device address
-static constexpr uint8_t deviceAddress {2};
+static constexpr uint8_t deviceAddress {1};
 
 
 // Full state feedback gain matrix

@@ -12,14 +12,14 @@ AttitudeEstimator::AttitudeEstimator(float roll, float pitch): _roll {roll}, _pi
 }
 
 void AttitudeEstimator::update(const float* rot, const float* acc, float dt) {
-	_pitch += rot[0] * dt * DEG_TO_RAD;
-	_roll += rot[2] * dt * DEG_TO_RAD;
+	_pitch += rot[0] * dt * F_DEG_TO_RAD;
+	_roll += rot[2] * dt * F_DEG_TO_RAD;
 
 	float pitchAcc = atan2f(acc[1], -acc[2]);
-	_pitch = std::fmod(_pitch * (1 - ALPHA) - pitchAcc * ALPHA, PI);
+	_pitch = std::fmod(_pitch * (1 - ALPHA) - pitchAcc * ALPHA, F_PI);
 
 	float rollAcc = atan2f(-acc[1], acc[0]);
-	_roll = std::fmod(_roll * (1 - ALPHA) + rollAcc * ALPHA, PI);
+	_roll = std::fmod(_roll * (1 - ALPHA) + rollAcc * ALPHA, F_PI);
 }
 
 

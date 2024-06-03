@@ -19,14 +19,14 @@ public:
 
     void setCoefficients(float sampleRate, float cutoffFrequency) {
         // Calculate the filter coefficient
-        float RC = 1.0 / (cutoffFrequency * TWO_PI);
+        float RC = 1.0 / (cutoffFrequency * F_2_PI);
         float dt = 1.0 / sampleRate;
         _alpha = dt / (RC + dt);
     }
 
     float process(float inputSample) {
         // Apply the filter: simple low-pass IIR filter equation
-        _y = _y + _alpha * (inputSample - _y);
+        _y += _alpha * (inputSample - _y);
         return _y;
     }
     

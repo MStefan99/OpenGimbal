@@ -13,7 +13,8 @@
 
 #define DV_OUT 0
 
-static constexpr float FACTOR {2048 / PI};
+static constexpr float attFactor {2048 / F_PI};
+static constexpr float maxRestoringVelocity {F_2_PI / 100.0f}; // One revolution per second (100 iterations)
 
 
 void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
@@ -30,7 +31,7 @@ float sqrt2 = std::sqrt(2);
 
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
     float a = eulerAngles[0][0];
-    float b = util::clamp(eulerAngles[1][0], -QUARTER_PI + 1e-3f, QUARTER_PI - 1e-3f);
+    float b = util::clamp(eulerAngles[1][0], -F_PI_4 + 1e-3f, F_PI_4 - 1e-3f);
     float g = eulerAngles[2][0];
     
     float cosA = std::cos(a);
@@ -49,15 +50,15 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
     float cos2M2 = 1 - sin2M2;
     float cosM2 = std::sqrt(cos2M2);
     
-    auto signG {util::sign(util::abs(g) - HALF_PI)};
+    auto signG {util::sign(util::abs(g) - F_PI_2)};
 
     return {
         {-2 * std::atan2((sqrt2 * (sqrt2 * sinB - util::sign(a) * std::sqrt(2 - 2 * cos2A * cos2B - 2 * sin2B))), (2 * (std::sqrt(1 - 2 * sin2B) + cosA * cosB)))},
         {std::asin(sinM2)},
-        {QUARTER_PI + signG * 2 * std::atan2((std::sqrt(2 - 2 * cos2B * sin2G - 2 * sin2B) + signG * 1), (std::sqrt(1 - 2 * sin2B) - sqrt2 * cosB * sinG))}
+        {F_PI_4 + signG * 2 * std::atan2((std::sqrt(2 - 2 * cos2B * sin2G - 2 * sin2B) + signG * 1), (std::sqrt(1 - 2 * sin2B) - sqrt2 * cosB * sinG))}
     };
 }
-    
+
 #if DV_OUT
 struct Data {        
     uint8_t header {0x03};
@@ -72,6 +73,18 @@ struct Data {
 } __attribute__((packed));
 #endif
 
+float getDifference(float angleA, float angleB = 0) {
+    float diff {angleA - angleB};
+    
+    if (diff > F_PI_2) {
+        return diff - F_PI;
+    } else if (diff < -F_PI_2) {
+        return diff + F_PI;
+    } else {
+        return diff;
+    }
+}
+
 int main() {
     util::init();
     dma::init();
@@ -83,8 +96,8 @@ int main() {
     
     Mahony mahony {};
     
-    LowPassFilter yawTargetFilter {100, 0.25f};
-    LowPassFilter pitchTargetFilter {100, 0.25f};
+    float yawTarget {0};
+    float pitchTarget {0};
     
     while (1) {
         LSM6DSO32::update();
@@ -95,11 +108,14 @@ int main() {
         mahony.updateIMU(LSM6DSO32::getRot(), LSM6DSO32::getAcc(), 0.01f);
         
         Quaternion handleOrientation {mahony.getQuat()};
-        auto handleAngles {handleOrientation.toEuler()};        
+        auto handleAngles {handleOrientation.toEuler()};     
+        
+        yawTarget += util::clamp(getDifference(handleAngles[0][0], yawTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
+        pitchTarget += util::clamp(getDifference(handleAngles[1][0], pitchTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
         
         Quaternion phoneOrientation {Quaternion::fromEuler(
-            yawTargetFilter.process(handleAngles[0][0]), 
-            pitchTargetFilter.process(handleAngles[1][0]), 
+            yawTarget,
+            pitchTarget,
             0
         )};
         Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
@@ -125,7 +141,7 @@ int main() {
         
         uint8_t buf[12] {};
         for (uint8_t i {0}; i < 3; ++i) {
-            int16_t position = motorAngles[i][0] * FACTOR;
+            int16_t position = motorAngles[i][0] * attFactor;
             if (position < 0) {
                 position += 4096;
             }

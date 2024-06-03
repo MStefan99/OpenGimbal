@@ -7,55 +7,75 @@
 		option(value="4096")
 	h2.mb-4.text-xl.font-bold Motors
 	button.mb-4(@click="enumerate()" :disabled="enumerating") Enumerate motors
-	.flex.gap-2
-		.motor.card(v-for="motor in motors" :key="motor.address")
+	.flex.flex-wrap.gap-2
+		.motor.min-w-48.card(v-for="motor in motors" :key="motor.address")
 			.border-b.border-accent.pt-2
-				p(v-if="motor.address < 15") Motor {{motor.address}}
-				p(v-else) All motors
+				p.text-accent.text-lg(v-if="motor.address < 15") Motor {{motor.address}}
+				p.text-accent.text-lg(v-else) All motors
 			.border-b.border-accent.pt-2
+				p.text-accent.font-bold Movement
 				p Position
 				RangeSlider.mb-2(
 					:min="-4096"
 					:max="4096"
 					:scale="4096"
-					@update:model-value="(p) => motor.move(p, motorPowers[motor.address - 1])")
+					v-model="positions[motor.address - 1]"
+					@update:model-value="motor.move(positions[motor.address - 1], torques[motor.address - 1])")
 				p Torque
 				RangeSlider.mb-2(
 					:min="0"
 					:max="15"
 					:scale="15"
-					v-model="motorPowers[motor.address - 1]"
-					@update:model-value="(p) => motor.move(p, motorPowers[motor.address - 1])")
+					v-model="torques[motor.address - 1]"
+					@update:model-value="motor.move(positions[motor.address - 1], torques[motor.address - 1])")
 			.border-b.border-accent.pt-2
+				p.text-accent.font-bold Haptic
+				p Haptic intensity
+				RangeSlider.mb-2(
+					:min="0"
+					:max="255"
+					:scale="255"
+					v-model="hapticIntensities[motor.address - 1]")
+				p Haptic duration
+				RangeSlider.mb-2(:min="0" :max="255" :scale="255" v-model="hapticDurations[motor.address - 1]")
+				button.mb-2(
+					@click="motor.haptic(hapticIntensities[motor.address - 1], hapticDurations[motor.address - 1])") Start
+			.border-b.border-accent.pt-2
+				p.text-accent.font-bold Sound
+				p Tone frequency
+				RangeSlider.mb-2(
+					:min="50"
+					:max="25000"
+					:scale="1000"
+					v-model="toneFrequencies[motor.address - 1]"
+					@update:model-value="motor.tone(toneFrequencies[motor.address - 1])")
+				button.block.mb-2(@click="toneFrequencies[motor.address - 1] = 25000; motor.silent()") Silent
+			.border-b.border-accent.pt-2
+				p.text-accent.font-bold Setup
 				p Range
 				RangeSlider.mb-2(
 					:min="0"
 					:max="65535"
 					:scale="2048"
 					listID="ranges"
-					v-model="motorRanges[motor.address - 1]"
+					v-model="ranges[motor.address - 1]"
 					@update:model-value="(p) => motor.setRangeVariable(p)")
 				p Offset
 				RangeSlider.mb-2(
 					:min="0"
 					:max="4096"
 					:scale="4096"
-					v-model="motorOffsets[motor.address - 1]"
+					v-model="offsets[motor.address - 1]"
 					@update:model-value="(p) => motor.setOffsetVariable(p)")
 				button.block.mb-2(@click="adjustOffset(motor)") Adjust offset
-			.border-b.border-accent.pt-2
-				p Tone frequency
-				RangeSlider.mb-2(
-					:min="50"
-					:max="25000"
-					:scale="1000"
-					v-model="motorFrequencies[motor.address - 1]"
-					@update:model-value="motor.tone(motorFrequencies[motor.address - 1])")
-				button.block.mb-2(@click="motorFrequencies[motor.address - 1] = 25000; motor.silent()") Silent
 			.pt-2
-				p Options
-				button.block.mb-2(@click="motor.disable()") Disable motor
+				p.text-accent.font-bold Power
+				button.block.mb-2(@click="motor.disable()") Disable
 				button.block.mb-2(@click="motor.sleep()") Sleep
+				button.block.mb-2(
+					@click="motor.move(positions[motor.address - 1], torques[motor.address - 1])") Wake up
+		p.text-zinc-600(v-if="enumerating") Enumerating motors, please wait...
+		p.text-red.bold(v-else-if="!motors.length") No motors found. Please check the connection and try again.
 </template>
 
 <script setup lang="ts">
@@ -64,34 +84,39 @@ import {CalibrationBits, Motor} from '../scripts/driver/Motor';
 import {activeDevice} from '../scripts/driver/driver';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
-import {delay} from "../scripts/util";
+import {delay} from '../scripts/util';
 
 const motors = ref<Motor[]>([]);
 const enumerating = ref<boolean>(false);
 
-const motorPowers = ref<number[]>([]);
-const motorFrequencies = ref<number[]>([]);
-const motorRanges = ref<number[]>([]);
-const motorOffsets = ref<number[]>([]);
-const motorCalibrations = ref<BitwiseRegister<CalibrationBits>[]>([]);
+const positions = ref<number[]>([]);
+const torques = ref<number[]>([]);
+const ranges = ref<number[]>([]);
+const offsets = ref<number[]>([]);
+const toneFrequencies = ref<number[]>([]);
+const hapticIntensities = ref<number[]>([]);
+const hapticDurations = ref<number[]>([]);
+const calibrations = ref<BitwiseRegister<CalibrationBits>[]>([]);
 
 async function enumerate(): Promise<void> {
 	enumerating.value = true;
 	motors.value = [];
 
 	motors.value = await activeDevice.value.enumerate();
-	motors.value.push(activeDevice.value.all);
+	motors.value.length && motors.value.push(activeDevice.value.all);
 
-	motorPowers.value = new Array(15).fill(15);
-	motorFrequencies.value = new Array(15).fill(25000);
-	motorRanges.value = new Array(15);
-	motorOffsets.value = new Array(15);
-	motorCalibrations.value = new Array(15);
+	torques.value = new Array(15).fill(15);
+	ranges.value = new Array(15);
+	offsets.value = new Array(15);
+	toneFrequencies.value = new Array(15).fill(25000);
+	hapticIntensities.value = new Array(15).fill(255);
+	hapticDurations.value = new Array(15).fill(5);
+	calibrations.value = new Array(15);
 
 	for (const motor of activeDevice.value.active) {
-		motorRanges.value[motor.address - 1] = await motor.getRange();
-		motorOffsets.value[motor.address - 1] = await motor.getOffset();
-		motorCalibrations.value[motor.address - 1] = await motor.getCalibration();
+		ranges.value[motor.address - 1] = await motor.getRange();
+		offsets.value[motor.address - 1] = await motor.getOffset();
+		calibrations.value[motor.address - 1] = await motor.getCalibration();
 	}
 
 	enumerating.value = false;
@@ -100,7 +125,7 @@ async function enumerate(): Promise<void> {
 async function adjustOffset(motor: Motor): Promise<void> {
 	await motor.adjustOffset();
 	await delay(10);
-	motorOffsets.value[motor.address - 1] = await motor.getOffset();
+	offsets.value[motor.address - 1] = await motor.getOffset();
 }
 
 onMounted(enumerate);
