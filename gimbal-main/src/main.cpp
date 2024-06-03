@@ -76,10 +76,10 @@ struct Data {
 float getDifference(float angleA, float angleB = 0) {
     float diff {angleA - angleB};
     
-    if (diff > F_PI_2) {
-        return diff - F_PI;
-    } else if (diff < -F_PI_2) {
-        return diff + F_PI;
+    if (diff > F_PI) {
+        return diff - F_2_PI;
+    } else if (diff < -F_PI) {
+        return diff + F_2_PI;
     } else {
         return diff;
     }

@@ -6,7 +6,7 @@
 		option(value="2048")
 		option(value="4096")
 	h2.mb-4.text-xl.font-bold Motors
-	button.mb-4(@click="enumerate()" :disabled="enumerating") Enumerate motors
+	button.mb-4(@click="enumerate()" :disabled="enumerating") Find motors
 	.flex.flex-wrap.gap-2
 		.motor.min-w-48.card(v-for="motor in motors" :key="motor.address")
 			.border-b.border-accent.pt-2
@@ -74,7 +74,7 @@
 				button.block.mb-2(@click="motor.sleep()") Sleep
 				button.block.mb-2(
 					@click="motor.move(positions[motor.address - 1], torques[motor.address - 1])") Wake up
-		p.text-zinc-600(v-if="enumerating") Enumerating motors, please wait...
+		p.text-zinc-600(v-if="enumerating") Looking for motors, please wait...
 		p.text-red.bold(v-else-if="!motors.length") No motors found. Please check the connection and try again.
 </template>
 
