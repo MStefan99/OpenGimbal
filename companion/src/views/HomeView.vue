@@ -67,13 +67,44 @@
 					:scale="4096"
 					v-model="offsets[motor.address - 1]"
 					@update:model-value="(p) => motor.setOffsetVariable(p)")
-				button.block.mb-2(@click="adjustOffset(motor)") Adjust offset
-			.pt-2
+				button.mb-2(@click="adjustOffset(motor)") Adjust offset
+			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Power
 				button.block.mb-2(@click="motor.disable()") Disable
 				button.block.mb-2(@click="motor.sleep()") Sleep
 				button.block.mb-2(
 					@click="motor.move(positions[motor.address - 1], torques[motor.address - 1])") Wake up
+			.border-b.border-accent.pt-2
+				p.text-accent.font-bold Recalibrate
+				.mb-2
+					label Zero calibration
+					input.ml-2(
+						type="checkbox"
+						v-model="calibrationModes[motor.address - 1]"
+						:value="CalibrationBits.Zero")
+				.mb-2
+					label Pole calibration
+					input.ml-2(
+						type="checkbox"
+						v-model="calibrationModes[motor.address - 1]"
+						:value="CalibrationBits.Pole")
+				button.block.mb-2(@click="calibrate(motor)") Start
+			.pt-2
+				p.text-accent.font-bold Calibration
+				template(v-if="motor.address < 15")
+					.mb-2
+						span Zero calibration
+						StatusIndicator.ml-2(
+							:value="calibrations[motor.address - 1]?.has(CalibrationBits.Zero) ?? false"
+							active-text="Yes"
+							inactive-text="No")
+					.mb-2
+						span Pole calibration
+						StatusIndicator.ml-2(
+							:value="calibrations[motor.address - 1]?.has(CalibrationBits.Pole) ?? false"
+							active-text="Yes"
+							inactive-text="No")
+				p.text-zinc-500(v-else) See individual motors
 		p.text-zinc-600(v-if="enumerating") Looking for motors, please wait...
 		p.text-red.bold(v-else-if="!motors.length") No motors found. Please check the connection and try again.
 </template>
@@ -85,9 +116,11 @@ import {activeDevice} from '../scripts/driver/driver';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
 import {delay} from '../scripts/util';
+import StatusIndicator from '../components/StatusIndicator.vue';
 
 const motors = ref<Motor[]>([]);
 const enumerating = ref<boolean>(false);
+const calibrationModes = ref<CalibrationBits[][]>(new Array(15).fill([]).map(() => []));
 
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
@@ -126,6 +159,16 @@ async function adjustOffset(motor: Motor): Promise<void> {
 	await motor.adjustOffset();
 	await delay(10);
 	offsets.value[motor.address - 1] = await motor.getOffset();
+}
+
+async function calibrate(motor: Motor): Promise<void> {
+	const mode = new BitwiseRegister<CalibrationBits>();
+
+	for (const calibrationMode of calibrationModes.value[motor.address - 1]) {
+		mode.set(calibrationMode);
+	}
+
+	await motor.calibrate(mode);
 }
 
 onMounted(enumerate);
