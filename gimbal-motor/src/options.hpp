@@ -8,9 +8,9 @@
 #ifndef OPTIONS_HPP
 #define	OPTIONS_HPP
 
-#include "util.hpp"
-#include "PID.hpp"
-#include "Matrix.hpp"
+#include "lib/inc/util.hpp"
+#include "lib/inc/PID.hpp"
+#include "lib/inc/Matrix.hpp"
 
 
 /* This will enable diagnostic output for Data Visualizer

@@ -11,8 +11,8 @@
 #include "device.h"
 #include <cstdlib>
 
-#include "options.hpp"
-#include "lib/inc/util.hpp"
+#include "../../options.hpp"
+#include "util.hpp"
 
 
 #define FLASH_ROW_SIZE (FLASH_PAGE_SIZE * 4)

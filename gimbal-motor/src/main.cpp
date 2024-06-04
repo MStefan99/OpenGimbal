@@ -10,7 +10,7 @@ static Mode mode {Mode::Calibrate};
 static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
 static uint32_t lastTargetTime {0};
 
-static LowPassFilter angleFilter {1000, 5};
+static LowPassFilter angleFilter {1000, 1};
 static bool dataReady {false};
 
 static uint32_t hapticEnd {0};
