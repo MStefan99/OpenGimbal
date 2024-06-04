@@ -1,8 +1,6 @@
 #include "main.hpp"
 
 
-#define NVMTEMP ((uint32_t*)0x00806030)
-
 static uint8_t maxTorque {0};
 static constexpr uint16_t halfRevolution {fullRevolution / 2};
 static constexpr uint16_t quarterRevolution {fullRevolution / 4};
@@ -276,6 +274,7 @@ int main() {
         switch(mode) {
             case (Mode::Sleep): {
                 sleep();
+                util::sleep(1);
                 break;
             }
             case (Mode::Calibrate): {
