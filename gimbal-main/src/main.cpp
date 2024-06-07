@@ -112,6 +112,7 @@ int main() {
         
         yawTarget += util::clamp(getDifference(handleAngles[0][0], yawTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
         pitchTarget += util::clamp(getDifference(handleAngles[1][0], pitchTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
+        yawTarget = getDifference(yawTarget);
         
         Quaternion phoneOrientation {Quaternion::fromEuler(
             yawTarget,
@@ -125,18 +126,16 @@ int main() {
         auto motorAngles {calculateAngles(eulerAngles)};
         
         #if DV_OUT
-            //if (util::getTime() % 5 < 1) {
-                Data data {};
+            Data data {};
 
-                data.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
-                data.x = eulerAngles[0][0];
-                data.y = eulerAngles[1][0];
-                data.z = eulerAngles[2][0];
-                data.m1 = motorAngles[0][0];
-                data.m2 = motorAngles[1][0];
-                data.m3 = motorAngles[2][0];
-                uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
-            //}
+            data.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
+            data.x = eulerAngles[0][0];
+            data.y = eulerAngles[1][0];
+            data.z = eulerAngles[2][0];
+            data.m1 = motorAngles[0][0];
+            data.m2 = motorAngles[1][0];
+            data.m3 = motorAngles[2][0];
+            uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
         #endif
         
         uint8_t buf[12] {};
