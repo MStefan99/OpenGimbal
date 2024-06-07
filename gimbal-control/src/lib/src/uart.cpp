@@ -100,7 +100,6 @@ void uart::init() {
 
 	// PORT config
 	PORT_REGS->GROUP[0].PORT_PINCFG[8] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 8
-    //PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE_H;
 	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE(MUX_PA08C_SERCOM1_PAD2); // Mux pin 8 to SERCOM3
 
 	// SERCOM config
