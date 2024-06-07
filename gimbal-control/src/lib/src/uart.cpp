@@ -57,33 +57,32 @@ static void SERCOM_Handler(sercom_registers_t* regs,
         uart::DefaultQueue& outQueue, 
         uart::DefaultCallback::buffer_type& inBuffer, 
         uart::DefaultCallback::callback_type callback) {
-    if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)){// Not a framing error
-            if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
-                --outQueue.front().remaining;
-                if (!outQueue.front().remaining) { // Transmitted last byte, turning off transmitter
-                    outQueue.pop_front();
-                    if (outQueue.empty()) {
-                        disableTx(regs);
-                    } else {
-                        startTransfer(regs, outQueue, true);
-                    }
+        if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
+            --outQueue.front().remaining;
+            if (!outQueue.front().remaining) { // Transmitted last byte, turning off transmitter
+                outQueue.pop_front();
+                if (outQueue.empty()) {
+                    disableTx(regs);
                 } else {
-                    regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
+                    startTransfer(regs, outQueue, true);
                 }
-            } else { // Transmitter disabled (incoming transfer)
-                if (!inBuffer.remaining) { // Received first byte, set up new transfer
-                    inBuffer.buffer[0] = regs->USART_INT.SERCOM_DATA;
-                    inBuffer.remaining = (inBuffer.buffer[0] >> 4u) - 1;
-                    inBuffer.transferred = 1;
-                } else { // Continued transfer   
-                    inBuffer.buffer[inBuffer.transferred++] = regs->USART_INT.SERCOM_DATA;
-                    --inBuffer.remaining;
-                    if (!inBuffer.remaining && callback) { // Received last byte, ready to process
-                        callback(inBuffer);
-                    }
+            } else {
+                regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
+            }
+        } else { // Transmitter disabled (incoming transfer)
+            if (!inBuffer.remaining) { // Received first byte, set up new transfer
+                inBuffer.buffer[0] = regs->USART_INT.SERCOM_DATA;
+                inBuffer.remaining = (inBuffer.buffer[0] >> 4u) - 1;
+                inBuffer.transferred = 1;
+            } else { // Continued transfer   
+                inBuffer.buffer[inBuffer.transferred++] = regs->USART_INT.SERCOM_DATA;
+                --inBuffer.remaining;
+                if (!inBuffer.remaining && callback) { // Received last byte, ready to process
+                    callback(inBuffer);
                 }
             }
         }
+        
         (void)regs->USART_INT.SERCOM_DATA; // Clear the RXC interrupt flag
         regs->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
 }
