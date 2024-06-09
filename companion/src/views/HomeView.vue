@@ -162,7 +162,10 @@ async function enumerate(): Promise<void> {
 async function adjustOffset(motor: Motor): Promise<void> {
 	await motor.adjustOffset();
 	await delay(10);
-	offsets.value[motor.address - 1] = await motor.getOffset();
+
+	if (motor.address < 15) {
+		offsets.value[motor.address - 1] = await motor.getOffset();
+	}
 }
 
 async function checkCalibrationMode(motor: Motor): Promise<void> {
@@ -184,6 +187,10 @@ async function calibrate(motor: Motor): Promise<void> {
 
 	await motor.calibrate(mode);
 
+	if (motor.address === 15) {
+		return;
+	}
+
 	// TODO: workaround due to a protocol limitation, needs improvement
 	let interval = setInterval(async () => {
 		const calibration = await motor.getCalibration();
@@ -192,9 +199,9 @@ async function calibrate(motor: Motor): Promise<void> {
 			interval = null;
 		}
 		calibrations.value[motor.address - 1] = calibration;
-	}, 1000);
+	}, 2000);
 
-	setTimeout(() => interval !== null && clearInterval(interval), 10000);
+	setTimeout(() => interval !== null && clearInterval(interval), 20000);
 }
 
 onMounted(enumerate);

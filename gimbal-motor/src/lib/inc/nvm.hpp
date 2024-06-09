@@ -29,7 +29,7 @@
 namespace nvm {
     struct __attribute__((packed)) Options {
         uint8_t polePairs {0};
-        int8_t direction {0};
+        bool counterclockwise {true};
         uint16_t phaseOffset {0};
         uint16_t zeroOffset {0};
         uint16_t range {defaultRange};
