@@ -27,8 +27,8 @@ namespace uart {
         using buffer_type = Buffer<size_type, C>;
         using callback_type = void (*)(const Buffer<size_type, C>&);
     };
-    using DefaultCallback = Callback<uint8_t, 8>;
-    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 32>, uint8_t, 6>;
+    using DefaultCallback = Callback<uint8_t, 18>;
+    using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 18>, uint8_t, 2>;
 
     void init();
     uint8_t print(const char* buf);

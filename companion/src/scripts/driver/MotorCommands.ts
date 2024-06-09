@@ -1,7 +1,7 @@
 import {clamp, mod} from '../util';
 import {BitwiseRegister} from './BitwiseRegister';
 import {Command} from './Command';
-import {CalibrationBits} from './Device';
+import {CalibrationBits} from './Motor';
 
 export enum MotorCommandType {
 	Sleep = 0x0,
@@ -114,22 +114,22 @@ export class ToneCommand extends MotorCommand {
 
 export class HapticCommand extends MotorCommand {
 	constructor(srcAddr: number, destAddr: number, intensity: number, duration: number) {
-		intensity = Math.floor(clamp(intensity, 0, 255));
-		duration = Math.floor(clamp(duration, 0, 255));
+		intensity = Math.floor(clamp(intensity, 0, 15));
+		duration = Math.floor(clamp(duration, 0, 4095));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
-		view.setUint8(0, intensity);
-		view.setUint8(1, duration);
+		view.setUint8(0, (intensity << 4) | ((duration & 0xf00) >> 8));
+		view.setUint8(1, duration & 0xff);
 		super(srcAddr, destAddr, MotorCommandType.Haptic, buffer);
 	}
 
 	get intensity(): number {
-		return this.view.getUint8(2);
+		return this.view.getUint8(2) >> 4;
 	}
 
 	get duration(): number {
-		return this.view.getUint8(3);
+		return ((this.view.getUint8(2) & 0xf) << 8) | this.view.getUint8(3);
 	}
 
 	override toString(type?: 'hex'): string {
@@ -183,12 +183,16 @@ export class CalibrationCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString();
-			// TODO: print in a nice format
-			// return (
-			// 	super.toString() +
-			// 	`\n  Mode: ${this.calibrationMode.map((v) => CalibrationBits[v]).join(', ')}`
-			// );
+			return (
+				super.toString() +
+				`\n  Mode: ${
+					Object.entries(CalibrationBits)
+						.map((e) => ({bit: +e[0], name: e[1]}))
+						.filter((e) => Number.isInteger(e.bit) && this.calibrationMode.has(e.bit))
+						.map((e) => e.name)
+						.join(', ') || 'Not calibrated'
+				}`
+			);
 		}
 	}
 }

@@ -43,7 +43,7 @@ export class Motor {
 	readonly _debug: boolean;
 	readonly _address: number;
 	_port: SerialPort;
-	_incomingBuffer = new Uint8Array(16);
+	_incomingBuffer = new Uint8Array(20);
 	_incomingView = new DataView(this._incomingBuffer.buffer);
 	_bytesReceived = 0;
 	_bytesRemaining = 0;
@@ -75,6 +75,7 @@ export class Motor {
 	async _send(command: Command): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
+			this._debug && console.log('Sending', command.toString(), '\n', command);
 
 			const writer = this._port.writable.getWriter();
 			writer
@@ -90,6 +91,7 @@ export class Motor {
 	async _request<T extends MotorResponse>(command: GetVariableCommand): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
+			this._debug && console.log('Sending', command.toString(), '\n', command);
 
 			const writer = this._port.writable.getWriter();
 			writer.write(buffer).then(() => {
@@ -111,7 +113,7 @@ export class Motor {
 
 		for (const byte of data) {
 			if (!this._bytesRemaining) {
-				this._bytesRemaining = byte >> 4;
+				this._bytesRemaining = (byte >> 4) + 1;
 				this._bytesReceived = 0;
 			}
 
@@ -132,12 +134,7 @@ export class Motor {
 				if (response instanceof ReturnVariableResponse) {
 					const variableResponse = getVariableResponse[response.variableID](this._incomingBuffer);
 					this._debug &&
-						console.log(
-							'Response received:',
-							variableResponse.toString(),
-							'\n',
-							response.toString('hex')
-						);
+						console.log('Response received:', variableResponse.toString(), '\n', response);
 					this._pendingRequests[variableResponse.variableID].resolve(variableResponse);
 					clearTimeout(this._pendingRequests[variableResponse.variableID].timeout);
 					delete this._pendingRequests[variableResponse.variableID];

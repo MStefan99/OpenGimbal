@@ -6,9 +6,6 @@ import {createApp} from 'vue';
 import App from './App.vue';
 import router from './scripts/routes';
 import {crashCourse} from './scripts/analytics';
-import {addUSBCompatibilityClasses} from './scripts/driver/compatibility';
-
-addUSBCompatibilityClasses();
 
 const app = createApp(App);
 app.config.globalProperties.window = window;

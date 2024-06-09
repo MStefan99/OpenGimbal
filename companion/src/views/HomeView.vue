@@ -31,13 +31,13 @@
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Haptic
 				p Haptic intensity
+				RangeSlider.mb-2(:min="0" :max="15" :scale="15" v-model="hapticIntensities[motor.address - 1]")
+				p Haptic duration
 				RangeSlider.mb-2(
 					:min="0"
-					:max="255"
-					:scale="255"
-					v-model="hapticIntensities[motor.address - 1]")
-				p Haptic duration
-				RangeSlider.mb-2(:min="0" :max="255" :scale="255" v-model="hapticDurations[motor.address - 1]")
+					:max="4095"
+					:scale="4095"
+					v-model="hapticDurations[motor.address - 1]")
 				button.mb-2(
 					@click="motor.haptic(hapticIntensities[motor.address - 1], hapticDurations[motor.address - 1])") Start
 			.border-b.border-accent.pt-2
@@ -81,13 +81,15 @@
 					input.ml-2(
 						type="checkbox"
 						v-model="calibrationModes[motor.address - 1]"
-						:value="CalibrationBits.Zero")
+						:value="CalibrationBits.Zero"
+						@change="checkCalibrationMode(motor)")
 				.mb-2
 					label Pole calibration
 					input.ml-2(
 						type="checkbox"
 						v-model="calibrationModes[motor.address - 1]"
-						:value="CalibrationBits.Pole")
+						:value="CalibrationBits.Pole"
+						@change="checkCalibrationMode(motor)")
 				button.block.mb-2(@click="calibrate(motor)") Start
 			.pt-2
 				p.text-accent.font-bold Calibration
@@ -124,8 +126,8 @@ const calibrationModes = ref<CalibrationBits[][]>(new Array(15).fill([]).map(() 
 
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
-const ranges = ref<number[]>([]);
 const offsets = ref<number[]>([]);
+const ranges = ref<number[]>([]);
 const toneFrequencies = ref<number[]>([]);
 const hapticIntensities = ref<number[]>([]);
 const hapticDurations = ref<number[]>([]);
@@ -139,17 +141,19 @@ async function enumerate(): Promise<void> {
 	motors.value.length && motors.value.push(activeDevice.value.all);
 
 	torques.value = new Array(15).fill(15);
-	ranges.value = new Array(15);
 	offsets.value = new Array(15);
+	ranges.value = new Array(15);
 	toneFrequencies.value = new Array(15).fill(25000);
 	hapticIntensities.value = new Array(15).fill(255);
 	hapticDurations.value = new Array(15).fill(5);
 	calibrations.value = new Array(15);
 
 	for (const motor of activeDevice.value.active) {
-		ranges.value[motor.address - 1] = await motor.getRange();
+		calibrations.value[motor.address - 1] = await activeDevice.value.getInitialCalibration(
+			motor.address
+		);
 		offsets.value[motor.address - 1] = await motor.getOffset();
-		calibrations.value[motor.address - 1] = await motor.getCalibration();
+		ranges.value[motor.address - 1] = await motor.getRange();
 	}
 
 	enumerating.value = false;
@@ -161,6 +165,16 @@ async function adjustOffset(motor: Motor): Promise<void> {
 	offsets.value[motor.address - 1] = await motor.getOffset();
 }
 
+async function checkCalibrationMode(motor: Motor): Promise<void> {
+	const modes = calibrationModes.value[motor.address - 1];
+	if (
+		modes.some((v) => v === CalibrationBits.Pole) &&
+		!modes.some((v) => v === CalibrationBits.Zero)
+	) {
+		modes.push(CalibrationBits.Zero);
+	}
+}
+
 async function calibrate(motor: Motor): Promise<void> {
 	const mode = new BitwiseRegister<CalibrationBits>();
 
@@ -169,6 +183,18 @@ async function calibrate(motor: Motor): Promise<void> {
 	}
 
 	await motor.calibrate(mode);
+
+	// TODO: workaround due to a protocol limitation, needs improvement
+	let interval = setInterval(async () => {
+		const calibration = await motor.getCalibration();
+		if (calibration.value !== calibrations.value[motor.address - 1].value) {
+			clearInterval(interval);
+			interval = null;
+		}
+		calibrations.value[motor.address - 1] = calibration;
+	}, 1000);
+
+	setTimeout(() => interval !== null && clearInterval(interval), 10000);
 }
 
 onMounted(enumerate);

@@ -17,7 +17,9 @@ export class Command {
 	) {
 		if (srcAddr instanceof Uint8Array) {
 			const view = new DataView(srcAddr.buffer);
-			this.buffer = Uint8Array.from({length: view.getUint8(0) >> 4}, (v, i) => view.getUint8(i));
+			this.buffer = Uint8Array.from({length: (view.getUint8(0) >> 4) + 1}, (v, i) =>
+				view.getUint8(i)
+			);
 			this.view = new DataView(this.buffer.buffer);
 		} else {
 			srcAddr = Math.floor(clamp(srcAddr, 0, 14));
@@ -25,7 +27,7 @@ export class Command {
 
 			this.buffer = new Uint8Array(2 + cmdData.length);
 			this.view = new DataView(this.buffer.buffer);
-			this.view.setUint8(0, (this.buffer.byteLength << 4) | destAddr);
+			this.view.setUint8(0, ((this.buffer.byteLength - 1) << 4) | destAddr);
 			this.view.setUint8(1, (srcAddr << 4) | cmdType);
 			this.buffer.set(cmdData, 2);
 		}

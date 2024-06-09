@@ -80,6 +80,6 @@ int main() {
 
         buttons::update();
         
-        util::sleep(10);
+        util::sleep(5);
     }
 }

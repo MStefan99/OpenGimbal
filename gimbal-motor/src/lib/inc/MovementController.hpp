@@ -48,11 +48,11 @@ protected:
 	static int32_t wrapValue(int32_t value);
 
 	uint16_t _target {0};
-	uint16_t _range {data::options.range}; // 0 indicates no limit
-	int32_t _offset {data::options.zeroOffset};
+	uint16_t _range {nvm::options->range}; // 0 indicates no limit
+	int32_t _offset {nvm::options->zeroOffset};
 	int32_t _deflection {0};
 	int32_t _desiredDeflection {0};
-    Interpolator _interpolator {data::options.zeroOffset};
+    Interpolator _interpolator {nvm::options->zeroOffset};
 };
 
 #endif //MOVEMENTCONTROLLER_HPP

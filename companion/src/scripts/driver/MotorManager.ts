@@ -1,19 +1,22 @@
-import {Motor} from './Motor';
+import {CalibrationBits, Motor} from './Motor';
 import {MotorResponse} from './MotorResponses';
+import {BitwiseRegister} from './BitwiseRegister';
 
 export type MotorEntry = {
 	motor: Motor;
 	active: boolean;
+	initialCalibration?: BitwiseRegister<CalibrationBits>;
 };
 
 export class MotorManager {
 	readonly port: SerialPort;
 	readonly _motorEntries: MotorEntry[];
+	_reader: ReadableStreamDefaultReader;
 
-	constructor(port: SerialPort) {
+	constructor(port: SerialPort, debug?: boolean) {
 		this.port = port;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
-			motor: new Motor(port, i + 1),
+			motor: new Motor(port, i + 1, debug),
 			active: false
 		}));
 	}
@@ -47,12 +50,20 @@ export class MotorManager {
 	async enumerate(): Promise<Motor[]> {
 		for (const entry of this._motorEntries) {
 			try {
-				entry.active = !!(await entry.motor.getCalibration()).value;
-			} catch {
+				entry.initialCalibration = await entry.motor.getCalibration();
+				// Motor responded
+				entry.active = true;
+			} catch (e) {
 				// Motor did not respond
 				entry.active = false;
 			}
 		}
 		return this.active;
+	}
+
+	getInitialCalibration(address: Motor['address']): BitwiseRegister<CalibrationBits> {
+		return (
+			this._motorEntries[address - 1].initialCalibration ?? new BitwiseRegister<CalibrationBits>()
+		);
 	}
 }

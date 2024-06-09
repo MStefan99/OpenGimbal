@@ -3,7 +3,7 @@
 
 Command::Command(data_type srcAddr, data_type destAddr, data_type cmdType, data_type cmdLength, buffer_type cmdData) {
     this->_length = 2 + cmdLength;
-    this->_buffer[0] = (this->_length << 4u) | destAddr;
+    this->_buffer[0] = (this->_length - 1 << 4u) | destAddr;
     this->_buffer[1] = (srcAddr << 4u) | cmdType;
     
     if (cmdData) {

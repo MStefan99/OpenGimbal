@@ -20,7 +20,7 @@ static constexpr float maxRestoringVelocity {F_2_PI / 100.0f}; // One revolution
 void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
     position = util::mod(position, static_cast<int16_t>(4096));
     
-    buf[0] = 0x4 << 4u | address;
+    buf[0] = 0x3 << 4u | address;
     buf[1] = 0x1;
     buf[2] = 0xf0 | position >> 8u;
     buf[3] = position;

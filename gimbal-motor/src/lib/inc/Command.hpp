@@ -16,7 +16,7 @@
 class Command {
 public:
     using data_type = uint8_t;
-    using buffer_type = data_type[16];
+    using buffer_type = data_type[18];
     using size_type = uint8_t;
     
     enum class CommandType : uint8_t {

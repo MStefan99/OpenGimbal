@@ -44,21 +44,21 @@ export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 
 					(async (): Promise<void> => {
 						while (port.readable) {
-							const reader = port.readable.getReader();
+							manager._reader = port.readable.getReader();
 							try {
 								// eslint-disable-next-line no-constant-condition
 								while (true) {
-									const {value, done} = await reader.read();
+									const {value, done} = await manager._reader.read();
 									if (done) {
-										break;
+										return;
 									}
 									await manager.parse(value);
 								}
 							} finally {
-								reader.releaseLock();
+								manager._reader.releaseLock();
 							}
 						}
-					})();
+					})().catch(() => disconnectDevice(manager));
 
 					return manager;
 				})
@@ -68,7 +68,11 @@ export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 }
 
 export function disconnectDevice(device: MotorManager): void {
-	device.port.close();
+	if (device.port.readable?.locked) {
+		device._reader.cancel().then(() => device.port.close());
+	} else {
+		device.port.close();
+	}
 
 	const idx = connectedDevices.indexOf(device);
 	connectedDevices.splice(idx, 1);
@@ -81,16 +85,3 @@ export function disconnectDevice(device: MotorManager): void {
 		}
 	}
 }
-
-// if ('serial' in navigator) {
-// 	navigator.serial.addEventListener('disconnect', (e: Event) => {
-// 		const device = (e as USBConnectionEvent).device;
-// 		const foundDevice = connectedDevices.find((d) => d.usbDevice === device);
-//
-// 		if (foundDevice === undefined) {
-// 			device.close();
-// 		} else {
-// 			disconnectDevice(foundDevice as MotorManager);
-// 		}
-// 	});
-// }

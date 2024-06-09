@@ -6,8 +6,8 @@ static constexpr uint16_t halfRevolution {fullRevolution / 2};
 static constexpr uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
-static Mode mode {Mode::Calibrate};
-static uint8_t calibrationMode = data::options.polePairs? 0 : 3;
+static Mode mode {Mode::Drive};
+static uint8_t calibrationMode = nvm::options->polePairs? 0 : 3;
 static uint32_t lastTargetTime {0};
 
 static LowPassFilter angleFilter {1000, 1};
@@ -61,15 +61,15 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
         }
         case (Command::CommandType::Haptic): {
             mode = Mode::Haptic;
-            hapticPower = buffer.buffer[2];
-            hapticEnd = util::getTime() + buffer.buffer[3];
+            hapticPower = torqueLUT.table[buffer.buffer[2] >> 4u];
+            hapticEnd = util::getTime() + ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3];
             break;
         }
         case (Command::CommandType::Offset): {
             movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             uint16_t offset = movementController.getOffset();
-            data::edit(&data::options.zeroOffset, offset);
-            data::write();
+            nvm::edit(&nvm::options->zeroOffset, offset);
+            nvm::write();
             break;
         }
         case (Command::CommandType::Calibrate): {
@@ -85,7 +85,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
                 case (Command::Variable::Calibration): {
                     auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Calibration, 
-                            static_cast<uint8_t>((!!data::options.polePairs << 1u) | (!!data::options.phaseOffset)));
+                            static_cast<uint8_t>((!!nvm::options->polePairs << 1u) | (!!nvm::options->phaseOffset)));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
                 } case (Command::Variable::Offset): {
@@ -109,14 +109,14 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
                 case (Command::Variable::Offset): {
                     movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
                     uint16_t offset = movementController.getOffset();
-                    data::edit(&data::options.zeroOffset, offset);
-                    data::write();
+                    nvm::edit(&nvm::options->zeroOffset, offset);
+                    nvm::write();
                     break;
                 }
                 case (Command::Variable::Range): {
                     movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
-                    data::edit(&data::options.range, movementController.getRange());
-                    data::write();
+                    nvm::edit(&nvm::options->range, movementController.getRange());
+                    nvm::write();
                     break;
                 }
             }
@@ -157,7 +157,7 @@ int16_t getDifference(uint16_t angleA, uint16_t angleB = 0) {
 
 void calibrate() {
     uint16_t angle {0};
-    uint16_t phaseOffset {data::options.phaseOffset};
+    uint16_t phaseOffset {nvm::options->phaseOffset};
     bldc::applyTorque(0, 255);
     
     if (calibrationMode) {
@@ -166,7 +166,7 @@ void calibrate() {
             phaseOffset = angle;
             angle = measureAngle();
         } while (phaseOffset != angle);
-        data::edit(&data::options.phaseOffset, phaseOffset);
+        nvm::edit(&nvm::options->phaseOffset, phaseOffset);
     }
     
     uint16_t torqueAngle {0}; 
@@ -202,12 +202,12 @@ void calibrate() {
         direction = util::sign(direction);
         
         // Saving calibration
-        data::edit(&data::options.polePairs, polePairs);
-        data::edit(&data::options.direction, direction);
+        nvm::edit(&nvm::options->polePairs, polePairs);
+        nvm::edit(&nvm::options->direction, direction);
     }
     
     if (calibrationMode) {
-        data::write();
+        nvm::write();
     }
 
     bldc::applyTorque(0, 0);
@@ -215,11 +215,11 @@ void calibrate() {
 
 void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
     // Calculate electrical angle from encoder reading
-    uint16_t eAngleCW = (data::options.polePairs * (fullRevolution + angle - data::options.phaseOffset)) % fullRevolution;
+    uint16_t eAngleCW = (nvm::options->polePairs * (fullRevolution + angle - nvm::options->phaseOffset)) % fullRevolution;
     // Flip the angle if the motor polarity is reversed
-    uint16_t eAngle = data::options.direction < 0? fullRevolution - eAngleCW : eAngleCW;
+    uint16_t eAngle = nvm::options->direction < 0? fullRevolution - eAngleCW : eAngleCW;
     
-    bldc::applyTorque(counterclockwise == (data::options.direction > 0)? eAngle + quarterRevolution: eAngle + (fullRevolution - quarterRevolution), power);
+    bldc::applyTorque(counterclockwise == (nvm::options->direction > 0)? eAngle + quarterRevolution: eAngle + (fullRevolution - quarterRevolution), power);
 }
 
 void sleep() {
@@ -286,6 +286,12 @@ int main() {
                 #if DV_OUT
                     auto start = SysTick->VAL;
                 #endif
+
+                if (!nvm::options->polePairs) {
+                    bldc::applyTorque(0, 0);
+                    mode = Mode::Idle;
+                    continue;
+                }
                 
                 auto time {util::getTime()};
                 movementController.interpolate(time - lastTargetTime);
@@ -309,13 +315,13 @@ int main() {
                 
                 #if DV_OUT
                     if (time % 5 < 1) {
-                        Data data {};
+                        Data nvm {};
                         
-                        data.dt = (start - SysTick->VAL) / 48;
-                        data.x = dAngle;
-                        data.v = velocity;
-                        data.u = util::sign(torque) * absTorque;
-                        uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+                        nvm.dt = (start - SysTick->VAL) / 48;
+                        nvm.x = dAngle;
+                        nvm.v = velocity;
+                        nvm.u = util::sign(torque) * absTorque;
+                        uart::send(reinterpret_cast<uint8_t*>(&nvm), sizeof(nvm));
                     }
                 #endif
                 
