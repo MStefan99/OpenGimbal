@@ -40,7 +40,6 @@
         <itemPath>../src/lib/inc/i2c.hpp</itemPath>
         <itemPath>../src/lib/inc/uart.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/data.hpp</itemPath>
         <itemPath>../src/lib/inc/LSM6DSO32.hpp</itemPath>
         <itemPath>../src/lib/inc/LSM6DSO32_regs.h</itemPath>
         <itemPath>../src/lib/inc/adc.hpp</itemPath>
@@ -49,6 +48,7 @@
         <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
         <itemPath>../src/lib/inc/Mahony.hpp</itemPath>
         <itemPath>../src/lib/inc/LowPassFilter.hpp</itemPath>
+        <itemPath>../src/lib/inc/nvm.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -217,12 +217,12 @@
         <itemPath>../src/lib/src/servo.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/util.cpp</itemPath>
-        <itemPath>../src/lib/src/data.cpp</itemPath>
         <itemPath>../src/lib/src/LSM6DSO32.cpp</itemPath>
         <itemPath>../src/lib/src/adc.cpp</itemPath>
         <itemPath>../src/lib/src/AttitudeEstimator.cpp</itemPath>
         <itemPath>../src/lib/src/Quaternion.cpp</itemPath>
         <itemPath>../src/lib/src/Mahony.cpp</itemPath>
+        <itemPath>../src/lib/src/nvm.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>
