@@ -79,7 +79,7 @@ void Mahony::update(
             // Reference direction of Earth's magnetic field
             float hx = 2.0f * (mag[0][0] * (0.5f - yy - zz) + mag[1][0] * (xy - wz) + mag[2][0] * (xz + wy));
             float hy = 2.0f * (mag[0][0] * (xy + wz) + mag[1][0] * (0.5f - xx - zz) + mag[2][0] * (yz - wx));
-            float bx = std::sqrt(hx * hx + hy * hy);
+            float bx = sqrtf(hx * hx + hy * hy);
             float bz = 2.0f * (mag[0][0] * (xz - wy) + mag[1][0] * (yz + wx) + mag[2][0] * (0.5f - xx - yy));
 
             // Estimated direction of gravity and magnetic field
@@ -141,7 +141,7 @@ void Mahony::updateIMU(
 
     // Compute feedback only if accelerometer measurement valid
     // (avoids NaN in accelerometer normalization)
-    if (!(util::abs(acc[0][0]) < 1e-5 && util::abs(acc[1][0]) < 1e-5 && util::abs(acc[2][0]) < 1e-5)) {
+    if (!(util::abs(acc[0][0]) < 1e-5f && util::abs(acc[1][0]) < 1e-5f && util::abs(acc[2][0]) < 1e-5)) {
         {
             // Normalize accelerometer measurement
             float recipNorm = util::invSqrt(acc[0][0] * acc[0][0] + acc[1][0] * acc[1][0] + acc[2][0] * acc[2][0]);

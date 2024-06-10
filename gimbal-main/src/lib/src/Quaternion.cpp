@@ -34,20 +34,20 @@ Quaternion Quaternion::operator *(const Quaternion& q) const {
 Vector3<float, uint8_t> Quaternion::toEuler() const {
     float yaw, pitch, roll;
 
-    roll = std::atan2(2 * (_w * _x + _y * _z), 1 - 2 * (_x * _x + _y * _y));
-    pitch = asin(2 * (_w * _y - _z * _x));
-    yaw = std::atan2(2 * (_w * _z + _x * _y), 1 - 2 * (_y * _y + _z * _z));
+    roll = atan2f(2.0f * (_w * _x + _y * _z), 1.0f - 2.0f * (_x * _x + _y * _y));
+    pitch = asinf(2.0f * (_w * _y - _z * _x));
+    yaw = atan2f(2.0f * (_w * _z + _x * _y), 1.0f - 2.0f * (_y * _y + _z * _z));
 
     return {{yaw}, {pitch}, {roll}};
 }
 
 Quaternion Quaternion::fromEuler(float yaw, float pitch, float roll) {
-    float sy = std::sin(yaw * 0.5);
-    float cy = std::cos(yaw * 0.5);
-    float sp = std::sin(pitch * 0.5);
-    float cp = std::cos(pitch * 0.5);
-    float sr = std::sin(roll * 0.5);
-    float cr = std::cos(roll * 0.5);
+    float sy = sinf(yaw * 0.5f);
+    float cy = cosf(yaw * 0.5f);
+    float sp = sinf(pitch * 0.5f);
+    float cp = cosf(pitch * 0.5f);
+    float sr = sinf(roll * 0.5f);
+    float cr = cosf(roll * 0.5f);
 
     return Quaternion(
         sy * sp * sr + cy * cp * cr,
@@ -68,9 +68,9 @@ Matrix<float, uint8_t, 3, 3> Quaternion::toRotationMatrix() const {
     float xz = _x * _z;
     float yz = _y * _z;
 
-    return {{1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy)},
-            {2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx)},
-            {2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy)}};
+    return {{1.0f - 2.0f * (yy + zz), 2.0f * (xy - wz), 2.0f * (xz + wy)},
+            {2.0f * (xy + wz), 1.0f - 2.0f * (xx + zz), 2.0f * (yz - wx)},
+            {2.0f * (xz - wy), 2.0f * (yz + wx), 1.0f - 2.0f * (xx + yy)}};
 }
 
 float Quaternion::getW() const {
