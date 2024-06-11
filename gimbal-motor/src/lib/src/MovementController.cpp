@@ -45,7 +45,6 @@ void MovementController::setTarget(int32_t newTarget) {
 }
 
 void MovementController::setOffset(int32_t newOffset) {
-    _interpolator.applyTarget(1, newOffset);
 	_offset = newOffset;
 }
 

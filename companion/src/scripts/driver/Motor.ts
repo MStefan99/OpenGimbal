@@ -14,7 +14,7 @@ import {
 	GetVariableCommand,
 	HapticCommand,
 	MotorVariableID,
-	OffsetCommand,
+	AdjustOffsetCommand,
 	PositionCommand,
 	SetOffsetVariableCommand,
 	SetRangeVariableCommand,
@@ -172,7 +172,7 @@ export class Motor {
 		return this._send(new ToneCommand(0, this._address, 25000));
 	}
 
-	haptic(intensity: number, duration: number = 50): Promise<void> {
+	haptic(intensity: number, duration: number = 5): Promise<void> {
 		return this._send(new HapticCommand(0, this._address, intensity, duration));
 	}
 
@@ -189,8 +189,8 @@ export class Motor {
 	 * motor.move(3072) // Position is now 3072, which is the same as 1024 used to be, the motor still doesn't move
 	 * motor.move(2048) // Motor moves from 3072 (old 1024) to 2048 (old 0)
 	 */
-	adjustOffset(offset: number = 0): Promise<void> {
-		return this._send(new OffsetCommand(0, this._address, offset));
+	adjustOffset(targetPosition: number = 0): Promise<void> {
+		return this._send(new AdjustOffsetCommand(0, this._address, targetPosition));
 	}
 
 	calibrate(

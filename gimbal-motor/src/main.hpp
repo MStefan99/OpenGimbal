@@ -23,7 +23,7 @@
 #include "lib/inc/PID.hpp"
 #include "lib/inc/AS5600.hpp"
 #include "lib/inc/MovementController.hpp"
-#include "lib/inc/Command.hpp"
+#include "lib/inc/Response.hpp"
 #include "lib/inc/LowPassFilter.hpp"
 #include "lib/inc/Matrix.hpp"
 #include "lib/inc/Kalman.hpp"

@@ -143,18 +143,18 @@ export class HapticCommand extends MotorCommand {
 	}
 }
 
-export class OffsetCommand extends MotorCommand {
-	constructor(srcAddr: number, destAddr: number, offset: number) {
-		offset = Math.floor(mod(offset, 4096));
+export class AdjustOffsetCommand extends MotorCommand {
+	constructor(srcAddr: number, destAddr: number, targetPosition: number) {
+		targetPosition = Math.floor(mod(targetPosition, 4096));
 
 		const buffer = new Uint8Array(2);
 		const view = new DataView(buffer.buffer);
-		view.setUint8(0, (offset & 0xff00) >> 8);
-		view.setUint8(1, offset & 0xff);
+		view.setUint8(0, (targetPosition & 0xff00) >> 8);
+		view.setUint8(1, targetPosition & 0xff);
 		super(srcAddr, destAddr, MotorCommandType.Offset, buffer);
 	}
 
-	get offset(): number {
+	get targetPosition(): number {
 		return (this.view.getUint8(2) << 8) | this.view.getUint8(3);
 	}
 
@@ -162,7 +162,7 @@ export class OffsetCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Offset: ${this.offset}`;
+			return super.toString() + `\n  Offset: ${this.targetPosition}`;
 		}
 	}
 }

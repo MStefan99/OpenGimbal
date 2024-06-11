@@ -43,7 +43,6 @@
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/MovementController.hpp</itemPath>
-        <itemPath>../src/lib/inc/Command.hpp</itemPath>
         <itemPath>../src/lib/inc/LowPassFilter.hpp</itemPath>
         <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
         <itemPath>../src/lib/inc/Kalman.hpp</itemPath>
@@ -52,6 +51,7 @@
         <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
         <itemPath>../src/lib/inc/AS5600_regs.h</itemPath>
         <itemPath>../src/lib/inc/nvm.hpp</itemPath>
+        <itemPath>../src/lib/inc/Response.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -224,10 +224,10 @@
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/bldc.cpp</itemPath>
         <itemPath>../src/lib/src/MovementController.cpp</itemPath>
-        <itemPath>../src/lib/src/Command.cpp</itemPath>
         <itemPath>../src/lib/src/interop.cpp</itemPath>
         <itemPath>../src/lib/src/AS5600.cpp</itemPath>
         <itemPath>../src/lib/src/nvm.cpp</itemPath>
+        <itemPath>../src/lib/src/Response.cpp</itemPath>
       </logicalFolder>
       <itemPath>../src/main.cpp</itemPath>
     </logicalFolder>

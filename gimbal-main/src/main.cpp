@@ -1,32 +1,19 @@
-#include <cstdio>
-#include <cmath>
+#include "main.hpp"
 
-#include "device.h"
-
-#include "lib/inc/util.hpp"
-#include "lib/inc/dma.hpp"
-#include "lib/inc/i2c.hpp"
-#include "lib/inc/LSM6DSO32.hpp"
-#include "lib/inc/uart.hpp"
-#include "lib/inc/Mahony.hpp"
-#include "lib/inc/LowPassFilter.hpp"
-
-#define DV_OUT 0
+static PowerMode powerMode {PowerMode::Sleep};
+static GimbalMode gimbalMode {GimbalMode::Follow};
 
 static constexpr float attFactor {2048 / F_PI};
 static constexpr float maxRestoringVelocity {F_2_PI / 100.0f}; // One revolution per second (100 iterations)
 
+static float yawTarget {0};
+static float pitchTarget {0};
+static float rollTarget {0};
 
-void setPosition(uint8_t* buf, uint8_t address, int16_t position) {
-    position = util::mod(position, static_cast<int16_t>(4096));
-    
-    buf[0] = 0x3 << 4u | address;
-    buf[1] = 0x1;
-    buf[2] = 0xf0 | position >> 8u;
-    buf[3] = position;
-}
+static float yawOffset {0};
+static float pitchOffset {0};
 
-float sqrt2 = std::sqrt(2);
+constexpr float sqrt2 = std::sqrt(2);
 
 
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
@@ -73,15 +60,13 @@ struct Data {
 } __attribute__((packed));
 #endif
 
-float getDifference(float angleA, float angleB = 0) {
-    float diff {angleA - angleB};
-    
-    if (diff > F_PI) {
-        return diff - F_2_PI;
-    } else if (diff < -F_PI) {
-        return diff + F_2_PI;
+float normalize(float difference) {
+    if (difference > F_PI) {
+        return difference - F_2_PI;
+    } else if (difference < -F_PI) {
+        return difference + F_2_PI;
     } else {
-        return diff;
+        return difference;
     }
 }
 
@@ -99,6 +84,20 @@ int main() {
     float yawTarget {0};
     float pitchTarget {0};
     
+    motor::move();
+    motor::tone(motor::all, 247);
+    util::sleep(205);
+    
+    for (uint8_t i {15}; i > 4; i -= 5) {
+        motor::tone(motor::all, 294);
+        motor::move(motor::all, 0, i);
+        util::sleep(205);
+        motor::tone(motor::all, 392);
+        motor::move(motor::all, 0, i);
+        util::sleep(205);
+    }
+    motor::tone();
+    
     while (1) {
         LSM6DSO32::update();
         #if DV_OUT
@@ -110,9 +109,9 @@ int main() {
         Quaternion handleOrientation {mahony.getQuat()};
         auto handleAngles {handleOrientation.toEuler()};     
         
-        yawTarget += util::clamp(getDifference(handleAngles[0][0], yawTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
-        pitchTarget += util::clamp(getDifference(handleAngles[1][0], pitchTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
-        yawTarget = getDifference(yawTarget);
+        yawTarget += util::clamp(normalize(handleAngles[0][0] - yawTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
+        pitchTarget += util::clamp(normalize(handleAngles[1][0] - pitchTarget) / 100.0f, -maxRestoringVelocity, maxRestoringVelocity);
+        yawTarget = normalize(yawTarget);
         
         Quaternion phoneOrientation {Quaternion::fromEuler(
             yawTarget,
@@ -138,15 +137,14 @@ int main() {
             uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
         #endif
         
-        uint8_t buf[12] {};
         for (uint8_t i {0}; i < 3; ++i) {
             int16_t position = motorAngles[i][0] * attFactor;
             if (position < 0) {
                 position += 4096;
             }
-            setPosition(buf + 4 * i, i + 1, position);
-        }      
-        uart::sendToMotors(buf, 12);
+            
+            motor::move(i + 1, position);
+        }
                 
         util::sleep(10);
     }

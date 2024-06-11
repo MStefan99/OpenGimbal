@@ -149,9 +149,7 @@ async function enumerate(): Promise<void> {
 	calibrations.value = new Array(15);
 
 	for (const motor of activeDevice.value.active) {
-		calibrations.value[motor.address - 1] = await activeDevice.value.getInitialCalibration(
-			motor.address
-		);
+		calibrations.value[motor.address - 1] = activeDevice.value.getInitialCalibration(motor.address);
 		offsets.value[motor.address - 1] = await motor.getOffset();
 		ranges.value[motor.address - 1] = await motor.getRange();
 	}
@@ -162,6 +160,10 @@ async function enumerate(): Promise<void> {
 async function adjustOffset(motor: Motor): Promise<void> {
 	await motor.adjustOffset();
 	await delay(10);
+
+	if (torques.value[motor.address - 1] > 0) {
+		await motor.move(positions.value[motor.address - 1], torques.value[motor.address - 1]);
+	}
 
 	if (motor.address < 15) {
 		offsets.value[motor.address - 1] = await motor.getOffset();

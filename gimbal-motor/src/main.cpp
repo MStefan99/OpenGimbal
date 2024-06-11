@@ -50,7 +50,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             mode = Mode::Sleep;
             break;
         }
-        case (Command::CommandType::Position): {
+        case (Command::CommandType::Move): {
             auto time {util::getTime()};
             movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             lastTargetTime = time;
@@ -67,7 +67,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             hapticEnd = util::getTime() + (((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             break;
         }
-        case (Command::CommandType::Offset): {
+        case (Command::CommandType::AdjustOffset): {
             movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
             uint16_t offset = movementController.getOffset();
             nvm::edit(&nvm::options->zeroOffset, offset);
@@ -85,19 +85,19 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             }
             switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
                 case (Command::Variable::Calibration): {
-                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Calibration, 
                             static_cast<uint8_t>((!!nvm::options->polePairs << 1u) | (!!nvm::options->phaseOffset)));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
                 } case (Command::Variable::Offset): {
-                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Offset, 
                             static_cast<uint16_t>(movementController.getOffset()));
                     uart::send(command.getBuffer(), command.getLength());
                     break;
                 } case (Command::Variable::Range): {
-                    auto command = ReturnVariableCommand(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Range, 
                             movementController.getRange());
                     uart::send(command.getBuffer(), command.getLength());
