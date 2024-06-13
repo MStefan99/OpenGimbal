@@ -1,5 +1,5 @@
 import {Command} from './Command';
-import {MotorVariableID} from './MotorCommands';
+import {MotorVariableID} from './MotorCommand';
 import {BitwiseRegister} from './BitwiseRegister';
 import {CalibrationBits} from './Motor';
 

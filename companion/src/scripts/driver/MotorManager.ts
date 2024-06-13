@@ -1,5 +1,5 @@
 import {CalibrationBits, Motor} from './Motor';
-import {MotorResponse} from './MotorResponses';
+import {MotorResponse} from './MotorResponse';
 import {BitwiseRegister} from './BitwiseRegister';
 
 export type MotorEntry = {
@@ -8,12 +8,14 @@ export type MotorEntry = {
 	initialCalibration?: BitwiseRegister<CalibrationBits>;
 };
 
-export class MotorManager {
+export class MotorManager extends EventTarget {
 	readonly port: SerialPort;
 	readonly _motorEntries: MotorEntry[];
 	_reader: ReadableStreamDefaultReader;
 
 	constructor(port: SerialPort, debug?: boolean) {
+		super();
+
 		this.port = port;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
 			motor: new Motor(port, i + 1, debug),
@@ -38,12 +40,14 @@ export class MotorManager {
 	}
 
 	async parse(data: Uint8Array): Promise<MotorResponse[]> {
-		const responses = new Array<MotorResponse>();
+		this.dispatchEvent(new CustomEvent('data', {detail: data}));
 
+		const responses = new Array<MotorResponse>();
 		for (const motor of this.motors) {
 			responses.concat(await motor.parse(data));
 		}
 
+		this.dispatchEvent(new CustomEvent('response', {detail: responses}));
 		return responses;
 	}
 

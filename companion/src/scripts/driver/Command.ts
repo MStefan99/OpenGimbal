@@ -1,5 +1,5 @@
 import {clamp} from '../util';
-import {MotorCommandType} from './MotorCommands';
+import {MotorCommandType} from './MotorCommand';
 
 type CommandType = MotorCommandType;
 

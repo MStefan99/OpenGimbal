@@ -58,7 +58,10 @@ export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 								manager._reader.releaseLock();
 							}
 						}
-					})().catch(() => disconnectDevice(manager));
+					})().catch((err) => {
+						console.error(err);
+						disconnectDevice(manager);
+					});
 
 					return manager;
 				})

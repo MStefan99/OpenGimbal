@@ -8,36 +8,66 @@ import {
 	ReturnOffsetVariableResponse,
 	ReturnRangeVariableResponse,
 	ReturnVariableResponse
-} from './MotorResponses';
+} from './MotorResponse';
 import {
 	CalibrationCommand,
 	GetVariableCommand,
 	HapticCommand,
 	MotorVariableID,
 	AdjustOffsetCommand,
-	PositionCommand,
+	MoveCommand,
 	SetOffsetVariableCommand,
 	SetRangeVariableCommand,
 	SleepCommand,
-	ToneCommand
-} from './MotorCommands';
+	ToneCommand,
+	MotorCommand,
+	MotorCommandType,
+	SetVariableCommand
+} from './MotorCommand';
 
 export enum CalibrationBits {
 	Zero = 0x0,
 	Pole = 0x1
 }
 
-const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
+export const getMotorCommand: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
+	[MotorCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
+	[MotorCommandType.Move]: (buffer: Uint8Array) => new MoveCommand(buffer),
+	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
+	[MotorCommandType.Haptic]: (buffer: Uint8Array) => new HapticCommand(buffer),
+	[MotorCommandType.AdjustOffset]: (buffer: Uint8Array) => new AdjustOffsetCommand(buffer),
+	[MotorCommandType.Calibration]: (buffer: Uint8Array) => new CalibrationCommand(buffer),
+	[MotorCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
+	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
+};
+
+export const getVariableCommand: Record<
+	MotorVariableID,
+	(buffer: Uint8Array) => SetVariableCommand
+> = {
+	[MotorVariableID.Calibration]: () => {
+		throw new Error('Calibration is a read-only variable');
+	},
+	[MotorVariableID.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
+	[MotorVariableID.Range]: (buffer: Uint8Array) => new SetRangeVariableCommand(buffer),
+	[MotorVariableID.Error]: () => {
+		throw new Error('Error is a read-only variable');
+	}
+};
+
+export const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
 	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
 };
 
-const getVariableResponse: Record<MotorVariableID, (buffer: Uint8Array) => ReturnVariableResponse> =
-	{
-		[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
-		[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
-		[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
-		[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
-	};
+export const getVariableResponse: Record<
+	MotorVariableID,
+	(buffer: Uint8Array) => ReturnVariableResponse
+> = {
+	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
+	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
+	[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
+	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
+};
 
 export class Motor {
 	readonly _debug: boolean;
@@ -108,7 +138,7 @@ export class Motor {
 		});
 	}
 
-	async parse(data: Uint8Array): Promise<Array<MotorResponse>> {
+	parse(data: Uint8Array): MotorResponse[] {
 		const responses = new Array<MotorResponse>();
 
 		for (const byte of data) {
@@ -155,12 +185,12 @@ export class Motor {
 	}
 
 	move(position: number = 0, torque: number = 15): Promise<void> {
-		return this._send(new PositionCommand(0, this._address, torque, position));
+		return this._send(new MoveCommand(0, this._address, torque, position));
 	}
 
 	// Disables the motor, same as sending any position with the torque of 0
 	disable(): Promise<void> {
-		return this._send(new PositionCommand(0, this._address, 0, 0));
+		return this._send(new MoveCommand(0, this._address, 0, 0));
 	}
 
 	tone(frequency: number): Promise<void> {

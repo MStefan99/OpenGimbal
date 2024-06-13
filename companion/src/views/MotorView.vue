@@ -1,5 +1,5 @@
 <template lang="pug">
-#home.p-4
+.motors.max-w-screen-lg.my-4.mx-auto.px-4
 	datalist#ranges
 		option(value="0")
 		option(value="1024")

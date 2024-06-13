@@ -1,17 +1,23 @@
 import {createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw} from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import MotorView from '../views/MotorView.vue';
+import MonitorView from '../views/MonitorView.vue';
 import {crashCourse} from './analytics';
 
 const routes: Array<RouteRecordRaw> = [
 	{
-		path: '/',
-		name: 'home',
-		component: HomeView
+		path: '/motors',
+		name: 'motors',
+		component: MotorView
+	},
+	{
+		path: '/monitor',
+		name: 'monitor',
+		component: MonitorView
 	},
 	{
 		path: '/:pathname(.*)*',
 		redirect: {
-			name: 'home'
+			name: 'motors'
 		}
 	}
 ];

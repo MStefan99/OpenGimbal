@@ -3,8 +3,8 @@
 	#title-bar
 		span#title OpenGimbal Companion
 		nav
-			RouterLink(:to="{name: 'home'}") Home
-			//RouterLink(:to="{name: 'settings'}") Settings
+			RouterLink(:to="{name: 'motors'}") Motors
+			RouterLink(:to="{name: 'monitor'}") Monitor
 		label#device-status.connected(v-if="connectedDevices.length" for="device-toggle") Connected
 		label#device-status(v-else for="device-toggle") Not connected
 		input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")
@@ -68,7 +68,7 @@ nav a {
 }
 
 nav a:hover {
-	background-color: var(--color-blue-bright);
+	background-color: var(--color-accent-bright);
 }
 
 nav a.router-link-active {
