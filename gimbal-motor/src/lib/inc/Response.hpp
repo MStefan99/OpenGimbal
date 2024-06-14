@@ -19,8 +19,8 @@ namespace Command {
         Haptic = 0x3,
         AdjustOffset = 0x4,
         Calibrate = 0x5,
-        GetVariable = 0x6,
-        SetVariable = 0x7
+        GetVariable = 0xe,
+        SetVariable = 0xf
     };
 
     enum class Variable : uint8_t {
@@ -39,13 +39,13 @@ namespace Command {
 
 class Response {
 public:
-    using buffer_type = uint8_t[18];
+    using buffer_type = uint8_t[16];
     using size_type = uint8_t;
     using Variable = Command::Variable;
     using CalibrationMode = Command::CalibrationMode;
     
     enum class ResponseType : uint8_t {
-        ReturnVariable = 0x0
+        ReturnVariable = 0xf
     };
 
     Response(uint8_t srcAddr, uint8_t destAddr, ResponseType type, uint8_t dataLength = 0);

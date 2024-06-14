@@ -1,6 +1,16 @@
-import {MotorCommand, MotorCommandType, SetVariableCommand} from './MotorCommand';
-import {MotorResponse, ReturnVariableResponse} from './MotorResponse';
-import {getMotorCommand, getMotorResponse, getVariableCommand, getVariableResponse} from './Motor';
+import {
+	getMotorCommand,
+	getVariableCommand,
+	MotorCommand,
+	MotorCommandType,
+	SetVariableCommand
+} from './MotorCommand';
+import {
+	getMotorResponse,
+	getVariableResponse,
+	MotorResponse,
+	ReturnVariableResponse
+} from './MotorResponse';
 
 export class Parser {
 	_incomingBuffer = new Uint8Array(20);

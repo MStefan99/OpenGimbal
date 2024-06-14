@@ -15,55 +15,42 @@
 
 class Command {
 public:
-    using data_type = uint8_t;
-    using buffer_type = data_type[16];
+    using buffer_type = uint8_t[16];
     using size_type = uint8_t;
     
-    enum class OutgoingCommand: uint8_t {
-        Sleep = 0x0,
-        Move = 0x1,
-        Calibrate = 0x2,
-        GetVariable = 0x3,
-        SetVariable = 0x4
+    enum class CommandType: uint8_t {
+        Move = 0x0,
+        Calibrate = 0x1,
+        GetVariable = 0xe,
+        SetVariable = 0xf
     };
     
-    enum class IncomingCommand: uint8_t {
-        GetVariable = 0x0
-    };
-    
-    enum class Variable: uint8_t {
-        Mode = 0x0,
-        Battery = 0x1,
-        TempController = 0x2,
-        TempMotors = 0x3,
+    enum class Variable : uint8_t {
+        PowerMode = 0x0,
+        GimbalMode = 0x1,
+        BatteryVoltage = 0x2,
         Error = 0xf
     };
     
-    Command(data_type srcAddr, data_type destAddr, data_type cmdType, data_type cmdLength, buffer_type cmdData);
+    enum class PowerMode : uint8_t {
+        Active = 0x0,
+        Idle = 0x1,
+        Sleep = 0x2
+    };
     
-    const buffer_type& getBuffer();
+    enum class GimbalMode : uint8_t {
+        Horizon = 0x0,
+        Follow = 0x1,
+        FPV = 0x2
+    };
+    
+    Command(CommandType cmdType, uint8_t dataLength);
+    
+    buffer_type& getBuffer();
     size_type getLength();
 
 protected:
-    buffer_type buffer = {0};
-    size_type length {0};
+    buffer_type _buffer = {0};
 };
-
-
-class ReturnVariableCommand : public Command {
-public:
-    template <class T>
-    ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value);
-};
-
-template <class T>
-ReturnVariableCommand::ReturnVariableCommand(data_type srcAddr, data_type destAddr, Command::Variable variableID, T value): 
-    Command {srcAddr, destAddr, 0x0, 1 + sizeof(T), nullptr} {
-    this->buffer[2] = static_cast<uint8_t>(variableID);
-    for (size_type i {0}; i < sizeof(T); ++i) {
-        this->buffer[sizeof(T) + 2 - i] = value;
-        value >>= 8;
-    }
-}
 
 #endif	/* MAIN_BOARD_HPP */

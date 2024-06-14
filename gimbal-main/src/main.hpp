@@ -18,21 +18,17 @@
 #include "lib/inc/i2c.hpp"
 #include "lib/inc/LSM6DSO32.hpp"
 #include "lib/inc/uart.hpp"
+#include "lib/inc/adc.hpp"
 #include "lib/inc/Mahony.hpp"
 #include "lib/inc/LowPassFilter.hpp"
+#include "lib/inc/MotorCommand.hpp"
+#include "lib/inc/ControlResponse.hpp"
 #include "lib/inc/motor.hpp"
 
 
-enum class PowerMode : uint8_t {
-    Sleep = 0x0,
-    Active = 0x1
-};
-
-enum class GimbalMode : uint8_t {
-    Horizon = 0x0,
-    Follow = 0x1,
-    FPV = 0x2
-};
+// Using the same modes as in the protocol for now but this allows for more states as needed
+using PowerMode = ControlCommand::PowerMode;
+using GimbalMode = ControlCommand::GimbalMode;
 
 #define DV_OUT 0
 

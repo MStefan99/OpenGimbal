@@ -47,6 +47,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
     
     switch(static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) { // Switch command type
         case (Command::CommandType::Sleep): {
+            maxTorque = 0;
             mode = Mode::Sleep;
             break;
         }
@@ -85,22 +86,22 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
             }
             switch (static_cast<Command::Variable>(buffer.buffer[2])) { // Switch variable
                 case (Command::Variable::Calibration): {
-                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto response = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Calibration, 
                             static_cast<uint8_t>((!!nvm::options->polePairs << 1u) | (!!nvm::options->phaseOffset)));
-                    uart::send(command.getBuffer(), command.getLength());
+                    uart::send(response.getBuffer(), response.getLength());
                     break;
                 } case (Command::Variable::Offset): {
-                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto response = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Offset, 
                             static_cast<uint16_t>(movementController.getOffset()));
-                    uart::send(command.getBuffer(), command.getLength());
+                    uart::send(response.getBuffer(), response.getLength());
                     break;
                 } case (Command::Variable::Range): {
-                    auto command = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
+                    auto response = ReturnVariableResponse(deviceAddress, buffer.buffer[1] >> 8u,
                             Command::Variable::Range, 
                             movementController.getRange());
-                    uart::send(command.getBuffer(), command.getLength());
+                    uart::send(response.getBuffer(), response.getLength());
                     break;
                 }
             }

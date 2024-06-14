@@ -9,7 +9,7 @@
 #define	MOTOR_HPP
 
 #include "uart.hpp"
-#include "Command.hpp"
+#include "MotorCommand.hpp"
 
 namespace motor {
     constexpr uint8_t all {15};

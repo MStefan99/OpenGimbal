@@ -4,11 +4,25 @@ import {BitwiseRegister} from './BitwiseRegister';
 import {CalibrationBits} from './Motor';
 
 export enum MotorResponseType {
-	ReturnVariable = 0x0
+	ReturnVariable = 0xf
 }
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'
+};
+
+export const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
+	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
+};
+
+export const getVariableResponse: Record<
+	MotorVariableID,
+	(buffer: Uint8Array) => ReturnVariableResponse
+> = {
+	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
+	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
+	[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
+	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
 };
 
 export class MotorResponse extends Command {

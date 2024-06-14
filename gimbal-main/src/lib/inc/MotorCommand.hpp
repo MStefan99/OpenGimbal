@@ -1,17 +1,17 @@
 /* 
- * File:   Command.hpp
+ * File:   MotorCommand.hpp
  * Author: Mikhail
  *
  * Created on June 11, 2024, 7:51 PM
  */
 
-#ifndef COMMAND_HPP
-#define	COMMAND_HPP
+#ifndef MOTOR_COMMAND_HPP
+#define	MOTOR_COMMAND_HPP
 
 #include "device.h"
 
 
-class Command {
+class MotorCommand {
 public:
     using buffer_type = uint8_t[18];
     using size_type = uint8_t;
@@ -39,7 +39,7 @@ public:
         Pole = 1u
     };
     
-    Command(uint8_t srcAddr, uint8_t destAddr, CommandType type, uint8_t dataLength = 0);
+    MotorCommand(uint8_t srcAddr, uint8_t destAddr, CommandType type, uint8_t dataLength = 0);
     
     buffer_type& getBuffer();
     size_type getLength();
@@ -49,14 +49,14 @@ protected:
 };
 
 
-namespace Response {
-    using Variable = Command::Variable;
-    using CalibrationMode = Command::CalibrationMode;
+namespace MotorResponse {
+    using Variable = MotorCommand::Variable;
+    using CalibrationMode = MotorCommand::CalibrationMode;
     
     enum class ResponseType : uint8_t {
         ReturnVariable = 0x0
     };
 }
 
-#endif	/* COMMAND_HPP */
+#endif	/* MOTOR_COMMAND_HPP */
 

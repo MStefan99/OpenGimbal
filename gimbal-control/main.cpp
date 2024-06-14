@@ -20,7 +20,7 @@
  * 
  */
 
-#define DV_OUT 1
+#define DV_OUT 0
 
 
 void setPower(bool enabled) {
@@ -28,6 +28,22 @@ void setPower(bool enabled) {
         PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
     } else {
         PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 5u;
+    }
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
+    uint16_t voltage = (((buffer.buffer[2] << 8u) | buffer.buffer[3]) - 2048) * 2;
+    
+    uint8_t numLEDsOn = voltage / (4096 / 4);  // Number of fully-on LEDs
+    uint8_t remainingVoltage = (voltage % (4096 / 4)) / 4;  // Voltage to distribute among semi-on LEDs
+    
+    for (uint8_t i {0}; i < 4; ++i) {
+        pwm::setBrightness(i, i < numLEDsOn ? 255 : 0);
+    }
+    
+    if (numLEDsOn < 4) {
+        pwm::setBrightness(numLEDsOn, remainingVoltage);
     }
 }
 
@@ -48,6 +64,8 @@ int main() {
     buttons::init();
     pwm::init();
     uart::init();
+    
+    uart::setCallback(processResponse);
 
     PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 5u;
 
@@ -56,18 +74,20 @@ int main() {
             auto startMs = util::getTime();
             auto startUs = SysTick->VAL;
         #endif
+    
+        #if 0
+            ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
+                | ADC_INPUTCTRL_MUXPOS_PIN0; // Set temperature sensor as positive input
+            ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+            while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+            uint16_t joystickY = 4095 - ADC_REGS->ADC_RESULT;
 
-        ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-            | ADC_INPUTCTRL_MUXPOS_PIN0; // Set temperature sensor as positive input
-        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-        uint16_t joystickY = 4095 - ADC_REGS->ADC_RESULT;
-        
-        ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-            | ADC_INPUTCTRL_MUXPOS_PIN2; // Set temperature sensor as positive input
-        ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-        while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-        uint16_t joystickX = ADC_REGS->ADC_RESULT;
+            ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
+                | ADC_INPUTCTRL_MUXPOS_PIN2; // Set temperature sensor as positive input
+            ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+            while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+            uint16_t joystickX = ADC_REGS->ADC_RESULT;
+        #endif
     
         #if DV_OUT
             DVData data {};
@@ -77,8 +97,6 @@ int main() {
             data.joystickY = joystickY;
             uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
         #endif
-
-        buttons::update();
         
         util::sleep(5);
     }

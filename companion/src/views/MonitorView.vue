@@ -1,6 +1,12 @@
 <template lang="pug">
 .monitor.max-w-screen-lg.my-4.mx-auto.px-4
 	h2.mb-4.text-xl.font-bold Commands
+	div
+		label Slow mode
+		input.ml-2(type="checkbox" v-model="slowMode")
+	div
+		label History size
+		RangeSlider.inline-block.ml-2(v-model="historySize" :min="1" :max="200")
 	.command.card.my-4(v-for="entry in commandEntries" :key="entry.id")
 		p.text-lg.text-accent(v-if="!entry.command.srcAddr") Controller → Motor {{entry.command.destAddr}}
 		p.text-lg.text-accent(v-else) Motor {{entry.command.destAddr}} → Controller
@@ -14,6 +20,7 @@ import {activeDevice} from '../scripts/driver/driver';
 import {Parser} from '../scripts/driver/parser';
 import {MotorCommand, motorCommandNames} from '../scripts/driver/MotorCommand';
 import {MotorResponse} from '../scripts/driver/MotorResponse';
+import RangeSlider from '../components/RangeSlider.vue';
 
 type CommandEntry = {
 	time: number;
@@ -25,15 +32,19 @@ let lastID: number = 0;
 let lastUpdate: number = 0;
 const commandEntries = ref<CommandEntry[]>([]);
 const parser = new Parser();
+const slowMode = ref<boolean>(true);
+const historySize = ref<number>(20);
 
 function onData(event: CustomEvent): void {
 	const commands = parser.parse(event.detail);
 
-	const now = Date.now();
-	if (now - lastUpdate < 200) {
-		return;
+	if (slowMode.value) {
+		const now = Date.now();
+		if (now - lastUpdate < 200) {
+			return;
+		}
+		lastUpdate = now;
 	}
-	lastUpdate = now;
 
 	if (commands.length) {
 		const now = Date.now();
@@ -49,7 +60,7 @@ function onData(event: CustomEvent): void {
 			.concat(commandEntries.value);
 	}
 
-	while (commandEntries.value.length > 20) {
+	while (commandEntries.value.length > historySize.value) {
 		commandEntries.value.pop();
 	}
 }

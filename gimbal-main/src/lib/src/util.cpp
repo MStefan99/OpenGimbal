@@ -19,7 +19,7 @@ void util::init() { // TODO: move away
      *
      * OSC16M @ 8MHz
      * |
-     * `--> GCLK1 @ 500KHz
+     * `--> GCLK1 @ 250KHz
      *      |
      *      `--> ADC @ 250KHz
      *
@@ -51,7 +51,7 @@ void util::init() { // TODO: move away
 
     // OSCCTRL config
     OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1) // Enable OSC16M
-            | OSCCTRL_OSC16MCTRL_FSEL_8; // Set frequency to 8MHz
+            | OSCCTRL_OSC16MCTRL_FSEL_16; // Set frequency to 16MHz
     OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE(calibration >> 26u) // Load calibration value
             | OSCCTRL_DFLLVAL_FINE(512); // Middle value for FINE (0-1023) is a good starting point
     OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1) // Enable DFLL48M
@@ -64,7 +64,7 @@ void util::init() { // TODO: move away
     GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1) // Enable GCLK 1
             | GCLK_GENCTRL_SRC_OSC16M // Set OSC16M as a source
             | GCLK_GENCTRL_DIVSEL_DIV2 // Set division mode (2^(x+1))
-            | GCLK_GENCTRL_DIV(3); // Divide by 16 (2^(3+1))
+            | GCLK_GENCTRL_DIV(5); // Divide by 64 (2^(5+1))
     
     // SysTick config
     SysTick_Config(48000);

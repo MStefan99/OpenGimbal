@@ -15,8 +15,8 @@
 			:max="max"
 			:step="step")
 		.track
-		.value.short {{formatShortValue(value / scale)}}
-		.value.long {{Math.round((value / scale) * 100)}}%
+		.value.short {{formatShortValue(value)}}
+		.value.long {{scale !== undefined ? Math.round((value / scale) * 100) + '%' : formatShortValue(value)}}
 </template>
 
 <script setup lang="ts">
@@ -38,11 +38,11 @@ const props = withDefaults(
 	{
 		vertical: true,
 		max: 1000,
-		scale: 1000,
 		step: 1
 	}
 );
 defineEmits<{(e: 'update:modelValue', value: number): void; (e: 'change', value: number): void}>();
+
 watch(
 	() => props.modelValue,
 	() => (sliderModel.value = props.modelValue?.toString() ?? '0')

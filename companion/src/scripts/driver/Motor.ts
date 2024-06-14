@@ -1,10 +1,10 @@
 import {Command} from './Command';
 import {BitwiseRegister} from './BitwiseRegister';
 import {
+	getMotorResponse,
+	getVariableResponse,
 	MotorResponse,
-	MotorResponseType,
 	ReturnCalibrationVariableResponse,
-	ReturnErrorVariableResponse,
 	ReturnOffsetVariableResponse,
 	ReturnRangeVariableResponse,
 	ReturnVariableResponse
@@ -19,55 +19,13 @@ import {
 	SetOffsetVariableCommand,
 	SetRangeVariableCommand,
 	SleepCommand,
-	ToneCommand,
-	MotorCommand,
-	MotorCommandType,
-	SetVariableCommand
+	ToneCommand
 } from './MotorCommand';
 
 export enum CalibrationBits {
 	Zero = 0x0,
 	Pole = 0x1
 }
-
-export const getMotorCommand: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
-	[MotorCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
-	[MotorCommandType.Move]: (buffer: Uint8Array) => new MoveCommand(buffer),
-	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
-	[MotorCommandType.Haptic]: (buffer: Uint8Array) => new HapticCommand(buffer),
-	[MotorCommandType.AdjustOffset]: (buffer: Uint8Array) => new AdjustOffsetCommand(buffer),
-	[MotorCommandType.Calibration]: (buffer: Uint8Array) => new CalibrationCommand(buffer),
-	[MotorCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
-	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
-};
-
-export const getVariableCommand: Record<
-	MotorVariableID,
-	(buffer: Uint8Array) => SetVariableCommand
-> = {
-	[MotorVariableID.Calibration]: () => {
-		throw new Error('Calibration is a read-only variable');
-	},
-	[MotorVariableID.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
-	[MotorVariableID.Range]: (buffer: Uint8Array) => new SetRangeVariableCommand(buffer),
-	[MotorVariableID.Error]: () => {
-		throw new Error('Error is a read-only variable');
-	}
-};
-
-export const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
-	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
-};
-
-export const getVariableResponse: Record<
-	MotorVariableID,
-	(buffer: Uint8Array) => ReturnVariableResponse
-> = {
-	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
-	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
-	[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
-	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
-};
 
 export class Motor {
 	readonly _debug: boolean;
