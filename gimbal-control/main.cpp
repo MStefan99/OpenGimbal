@@ -69,10 +69,6 @@ void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
     
     uint8_t voltage = buffer.buffer[2];
     voltageBars = voltage / (256 / 8) + 1;
-    
-    for (uint8_t i {0}; i < voltageBars / 2; ++i) {
-        pwm::setBrightness(i, 255);
-    }
 }
 
 
@@ -183,10 +179,16 @@ int main() {
                 break;
             }
             case (DisplayState::BatteryLevel): {
-                uint32_t time = util::getTime() - stateChangeTime;
-                pwm::setBrightness(voltageBars / 2, voltageBars % 2 && time % 500 > 250? 255 : 0);
+                uint8_t step = (util::getTime() - stateChangeTime) / VOLTAGE_DISPLAY_TIME;
+                uint8_t leds = voltageBars / 2;
                 
-                if (time > 3000) {
+                if (step >= leds) {
+                    pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2? 255 : 0);
+                } else {
+                    pwm::setBrightness(step, leds? 255 : 0);
+                }
+                
+                if (step > 15) {
                     setDisplayState(powerMode == PowerMode::Idle? DisplayState::Off : DisplayState::GimbalMode);
                 }
                 break;

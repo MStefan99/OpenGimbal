@@ -25,6 +25,7 @@ using PowerMode = Command::PowerMode;
 constexpr uint16_t MAX_SHORT_PRESS_TIME {7500};
 constexpr uint16_t MAX_PRESS_WAIT_TIME {1000};
 constexpr uint16_t LONG_PRESS_STEP_TIME {250};
+constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
 
 
 enum class DisplayState : uint8_t {
