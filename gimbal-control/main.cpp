@@ -22,6 +22,22 @@
 
 #define DV_OUT 0
 
+PowerMode powerMode {PowerMode::Idle};
+DisplayState displayState {DisplayState::Off};
+GimbalMode gimbalMode {GimbalMode::Follow};
+uint32_t stateChangeTime {0};
+uint8_t voltageBars {0};
+
+
+uint32_t ledStates[6][2] = {
+    {0, 0},
+    {0, 0xffffffff},
+    {0xffffffff, 0},
+    {0xffffffff, 0},
+    {0, 0xff0000ff},
+    {0, 0}
+};
+
 
 void setPower(bool enabled) {
     if (enabled) {
@@ -31,19 +47,58 @@ void setPower(bool enabled) {
     }
 }
 
+
+void setLEDs(uint32_t brightnesses) {
+    for (uint8_t i {0}; i < 4; ++i) {
+        pwm::setBrightness(i, brightnesses);
+        brightnesses >>= 8u;
+    }
+}
+
+
+void setDisplayState(DisplayState state) {
+    displayState = state;
+    setLEDs(ledStates[static_cast<uint8_t>(displayState)][static_cast<uint8_t>(powerMode)]);
+    stateChangeTime = util::getTime();
+}
+
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
-    uint16_t voltage = (((buffer.buffer[2] << 8u) | buffer.buffer[3]) - 2048) * 2;
+    setDisplayState(DisplayState::BatteryLevel);
     
-    uint8_t numLEDsOn = voltage / (4096 / 4);  // Number of fully-on LEDs
-    uint8_t remainingVoltage = (voltage % (4096 / 4)) / 4;  // Voltage to distribute among semi-on LEDs
+    uint8_t voltage = buffer.buffer[2];
+    voltageBars = voltage / (256 / 8) + 1;
     
-    for (uint8_t i {0}; i < 4; ++i) {
-        pwm::setBrightness(i, i < numLEDsOn ? 255 : 0);
+    for (uint8_t i {0}; i < voltageBars / 2; ++i) {
+        pwm::setBrightness(i, 255);
     }
-    
-    if (numLEDsOn < 4) {
-        pwm::setBrightness(numLEDsOn, remainingVoltage);
+}
+
+
+void processButtons(bool left, bool pressed) {
+    switch (displayState) {
+        case (DisplayState::Off):
+        case (DisplayState::GimbalMode):
+            if (pressed) {
+                setDisplayState(DisplayState::ShortPress);
+            }
+            break;
+        case (DisplayState::ShortPress):
+            if (!pressed) {
+                setDisplayState(DisplayState::PressWait);
+            }
+            break;
+        case (DisplayState::PressWait): 
+            if (pressed) {
+                setDisplayState(DisplayState::LongPress);
+            }
+            break;
+        case (DisplayState::LongPress): 
+            if (!pressed) {
+                setDisplayState(DisplayState::Off);
+            }
+            break;
     }
 }
 
@@ -66,6 +121,7 @@ int main() {
     uart::init();
     
     uart::setCallback(processResponse);
+    buttons::setCallback(processButtons);
 
     PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 5u;
 
@@ -88,6 +144,54 @@ int main() {
             while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
             uint16_t joystickX = ADC_REGS->ADC_RESULT;
         #endif
+
+        switch(displayState) {
+            case (DisplayState::ShortPress): {
+                if (util::getTime() - stateChangeTime > MAX_SHORT_PRESS_TIME) {
+                    setDisplayState(DisplayState::Off);
+                }
+                break;
+            }
+            case (DisplayState::PressWait): {
+                if (util::getTime() - stateChangeTime > MAX_PRESS_WAIT_TIME) {
+                    setDisplayState(DisplayState::Off);
+                    
+                    auto command {Command {Command::CommandType::GetVariable, 1}};
+                    auto buf {command.getBuffer()};
+                    buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
+                    
+                    uart::send(buf, command.getLength());
+                }
+                break;
+            }
+            case (DisplayState::LongPress): {
+                uint8_t led = (util::getTime() - stateChangeTime) / LONG_PRESS_STEP_TIME;
+                bool isOff = powerMode == PowerMode::Idle;
+                pwm::setBrightness(led, isOff? 0xff : 0);
+                
+                if (led >= 3) {
+                    setDisplayState(DisplayState::GimbalMode);
+                    powerMode = isOff? PowerMode::Active : PowerMode::Idle;
+                    
+                    auto command {Command {Command::CommandType::SetVariable, 2}};
+                    auto buf {command.getBuffer()};
+                    buf[1] = static_cast<uint8_t>(Command::Variable::PowerMode);
+                    buf[2] = static_cast<uint8_t>(powerMode);
+                    
+                    uart::send(buf, command.getLength());
+                }
+                break;
+            }
+            case (DisplayState::BatteryLevel): {
+                uint32_t time = util::getTime() - stateChangeTime;
+                pwm::setBrightness(voltageBars / 2, voltageBars % 2 && time % 500 > 250? 255 : 0);
+                
+                if (time > 3000) {
+                    setDisplayState(powerMode == PowerMode::Idle? DisplayState::Off : DisplayState::GimbalMode);
+                }
+                break;
+            }
+        }
     
         #if DV_OUT
             DVData data {};
@@ -98,6 +202,6 @@ int main() {
             uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
         #endif
         
-        util::sleep(5);
+        util::sleep(50);
     }
 }

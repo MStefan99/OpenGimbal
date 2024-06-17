@@ -30,6 +30,9 @@
 using PowerMode = ControlCommand::PowerMode;
 using GimbalMode = ControlCommand::GimbalMode;
 
+constexpr uint16_t MIN_VOLTAGE {2900};
+constexpr uint16_t MAX_VOLTAGE {3900};
+
 #define DV_OUT 0
 
 #endif	/* MAIN_HPP */

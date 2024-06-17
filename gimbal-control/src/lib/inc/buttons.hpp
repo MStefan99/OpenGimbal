@@ -14,15 +14,11 @@
 #include "main.hpp"
 
 
-namespace buttons  {
-    constexpr uint16_t MAX_SHORT_PRESS_TIME {1000};
-    constexpr uint16_t MAX_PRESS_WAIT_TIME {2000};
-    constexpr uint16_t LONG_PRESS_STEP_TIME {250};
+namespace buttons  {    
+    using Callback = void(*)(bool left, bool pressed);
 
     void init();
-    
-    void update(); // Should be called regularly to update state machine
+    void setCallback(Callback cb);
 }
 
 #endif	/* BUTTONS_HPP */
-

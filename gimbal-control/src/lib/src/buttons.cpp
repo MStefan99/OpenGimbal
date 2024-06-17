@@ -1,68 +1,20 @@
 #include "lib/inc/buttons.hpp"
 #include "lib/inc/pwm.hpp"
-
-enum class State : uint8_t {
-    Idle,
-    Short,
-    Waiting,
-    Long
-};
-
-static State currentState {State::Idle};
-static uint32_t switchTime {0};
-static bool power {false};
-
-static void leds(uint8_t brightness) {
-    if (power) {
-        brightness = 255 - brightness;
-    }
-    for (uint8_t i {0}; i < 4; ++i) {
-        pwm::setBrightness(i, brightness);
-    }
-}
+#include "lib/inc/uart.hpp"
+#include "lib/inc/Command.hpp"
 
 
-static void onPress() {
-    switch (currentState) {
-        case (State::Idle): {
-            currentState = State::Short;
-            switchTime = util::getTime();
-            leds(255);
-            break;
-        }
-        case (State::Waiting): {
-            currentState = State::Long;
-            switchTime = util::getTime();
-            break;
-        }
-    }
-}
-
-
-static void onRelease() {
-    switch (currentState) {
-        case (State::Short): {
-            currentState = State::Waiting;
-            switchTime = util::getTime();
-            leds(0);
-            break;
-        }
-        case (State::Long): {
-            currentState = State::Idle;
-            leds(0);
-            break;
-        }
-    }
-}
-
+static buttons::Callback callback {nullptr};
 
 extern "C" {
     void EIC_Handler() {
-        if (PORT_REGS->GROUP[0].PORT_IN & (0x1 << 24u)) {
-            onRelease();
-        } else {
-            onPress();
+        if (callback) {
+            bool left = EIC_REGS->EIC_INTFLAG & EIC_INTFLAG_EXTINT4_Msk;
+            uint8_t state = (~(PORT_REGS->GROUP[0].PORT_IN >> 24u)) & 0x3;
+            
+            callback(left, left? state & 0x1 : state & 0x2);
         }
+        
         EIC_REGS->EIC_INTFLAG = EIC_INTFLAG_Msk;
     }
 }
@@ -108,34 +60,6 @@ static void sleep() {
     while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_CPU);
 }
 
-void buttons::update() {
-    switch (currentState) {
-        case (State::Idle): {
-            sleep();
-            break;
-        }
-        case (State::Short): {
-            if (util::getTime() - switchTime > MAX_SHORT_PRESS_TIME) {
-                currentState = State::Idle;
-                leds(0);
-            }
-            break;
-        }
-        case (State::Waiting): {
-            if (util::getTime() - switchTime > MAX_PRESS_WAIT_TIME) {
-                currentState = State::Idle;
-                leds(0);
-            }
-            break;
-        }
-        case (State::Long): {
-            uint32_t duration = util::getTime() - switchTime;
-            pwm::setBrightness(duration / LONG_PRESS_STEP_TIME - 1, power? 0 : 255);
-            if (duration >= 4 * LONG_PRESS_STEP_TIME) {
-                currentState = State::Idle;
-                setPower(power = !power);
-            }
-            break;
-        }
-    }
+void buttons::setCallback(Callback cb) {
+    callback = cb;
 }

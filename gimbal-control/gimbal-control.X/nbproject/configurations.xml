@@ -31,7 +31,7 @@
           <itemPath>../src/config/default/definitions.h</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="inc" displayName="inc" projectFiles="true">
+      <logicalFolder name="inc" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
         <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
         <itemPath>../src/lib/inc/util.hpp</itemPath>
@@ -163,7 +163,7 @@
           <itemPath>../src/config/default/initialization.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="src" displayName="src" projectFiles="true">
+      <logicalFolder name="src" displayName="lib" projectFiles="true">
         <itemPath>../src/lib/src/util.cpp</itemPath>
         <itemPath>../src/lib/src/uart.cpp</itemPath>
         <itemPath>../src/lib/src/pwm.cpp</itemPath>
@@ -190,8 +190,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
         <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
+        <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>

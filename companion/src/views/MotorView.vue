@@ -140,7 +140,8 @@ async function enumerate(): Promise<void> {
 	motors.value = await activeDevice.value.enumerate();
 	motors.value.length && motors.value.push(activeDevice.value.all);
 
-	torques.value = new Array(15).fill(15);
+	positions.value = new Array(15).fill(0);
+	torques.value = new Array(15).fill(0);
 	offsets.value = new Array(15);
 	ranges.value = new Array(15);
 	toneFrequencies.value = new Array(15).fill(25000);

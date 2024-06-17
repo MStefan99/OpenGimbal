@@ -41,7 +41,9 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
                     break;
                 } case (ControlCommand::Variable::BatteryVoltage): {
                     adc::measureBattery([] (uint16_t voltage) {
-                        auto response = ReturnVariableResponse(ControlResponse::Variable::BatteryVoltage, voltage);
+                        uint8_t scaledVoltage = static_cast<uint8_t>(util::scale(util::clamp(voltage, MIN_VOLTAGE, MAX_VOLTAGE), MIN_VOLTAGE, MAX_VOLTAGE, 
+                                    static_cast<uint16_t>(0), static_cast<uint16_t>(255)));
+                        auto response = ReturnVariableResponse(ControlResponse::Variable::BatteryVoltage, scaledVoltage);
                         uart::sendToControl(response.getBuffer(), response.getLength());
                     });
                     break;
@@ -212,11 +214,14 @@ int main() {
                 util::sleep(10);
                 break;
             }
-            case (PowerMode::Idle): {
+            case (PowerMode::Idle):
+            default: {
+                motor::sleep();
                 __WFI();
                 break;
             }
             case (PowerMode::Sleep): {
+                motor::sleep();
                 sleep();
                 break;
             }
