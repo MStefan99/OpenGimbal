@@ -11,7 +11,6 @@
 
 #include "device.h"
 
-#include "TaskScheduler.hpp"
 
 constexpr float F_2_PI {6.283185307179586476925286766559};
 constexpr float F_PI {3.1415926535897932384626433832795};
@@ -41,13 +40,6 @@ namespace util {
 
 	uint32_t getTime();
 	void sleep(uint32_t ms);
-    
-    uint8_t setTimeout(uint32_t timeout, void (*cb)());
-	uint8_t setInterval(uint32_t interval, void (*cb)());
-	void clearTimeout(uint8_t id);
-	void clearInterval(uint8_t id);
-    
-    void runTasks();
 
     
     template <class T>

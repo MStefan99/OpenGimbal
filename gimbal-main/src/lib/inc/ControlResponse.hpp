@@ -23,7 +23,9 @@ namespace ControlCommand {
         PowerMode = 0x0,
         GimbalMode = 0x1,
         BatteryVoltage = 0x2,
-        Error = 0xf
+        YawOffset = 0x3,
+        PitchOffset = 0x4,
+        RollOffset = 0x5
     };
     
     enum class PowerMode : uint8_t {

@@ -14,7 +14,6 @@ static void initSERCOM(sercom_registers_t* regs) {
 					| SERCOM_USART_INT_CTRLB_SBMODE_1_BIT
 					| SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;
 	regs->USART_INT.SERCOM_BAUD = 63020; // 115200 baud
-    regs->USART_INT.SERCOM_DBGCTRL = SERCOM_USART_INT_DBGCTRL_DBGSTOP(1);
 	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB
                     | SERCOM_USART_INT_CTRLA_RUNSTDBY(1)
 					| SERCOM_USART_INT_CTRLA_CMODE_ASYNC
@@ -58,7 +57,7 @@ static void SERCOM_Handler(sercom_registers_t* regs,
         uart::DefaultCallback::buffer_type& inBuffer, 
         uart::DefaultCallback::callback_type callback,
         uint32_t& prevByteTime) {
-    if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)){// Not a framing error
+    if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) { // Not a framing error
         if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
             --outQueue.front().remaining;
             if (!outQueue.front().remaining) { // Transmitted last byte, turning off transmitter
@@ -99,7 +98,7 @@ extern "C" {
 
 void uart::init() {
 	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM3 clock
-					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+					| GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
 
 	// PORT config
 	PORT_REGS->GROUP[0].PORT_PINCFG[22] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 22
@@ -119,10 +118,8 @@ uint8_t uart::print(const char* buf) {
     uint8_t len {0};
     for (; buf[len] && len < 32; ++len); 
     
-    __disable_irq();
     outQueue.push_back({{}, 0, len});
     util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
-    __enable_irq();
     startTransfer(SERCOM3_REGS, outQueue);
     return len;
 }
@@ -132,10 +129,8 @@ void uart::send(const uint8_t* buf, uint8_t len) {
         return;
     }
     
-    __disable_irq();
     outQueue.push_back({{}, 0, len});
     util::copy(outQueue.back().buffer, buf, len);
-    __enable_irq();
     startTransfer(SERCOM3_REGS, outQueue);
 }
 

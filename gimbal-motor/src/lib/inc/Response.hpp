@@ -26,8 +26,7 @@ namespace Command {
     enum class Variable : uint8_t {
         Calibration = 0x0,
         Offset = 0x1,
-        Range = 0x2,
-        Error = 0xf
+        Range = 0x2
     };
     
     enum class CalibrationMode : uint8_t {

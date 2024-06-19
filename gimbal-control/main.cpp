@@ -22,7 +22,7 @@
 
 #define DV_OUT 0
 
-PowerMode powerMode {PowerMode::Idle};
+PowerMode powerMode {PowerMode::Sleep};
 DisplayState displayState {DisplayState::Off};
 GimbalMode gimbalMode {GimbalMode::Follow};
 uint32_t stateChangeTime {0};
@@ -31,21 +31,12 @@ uint8_t voltageBars {0};
 
 uint32_t ledStates[6][2] = {
     {0, 0},
+    {0xffffffff, 0},
     {0, 0xffffffff},
-    {0xffffffff, 0},
-    {0xffffffff, 0},
-    {0, 0xff0000ff},
+    {0, 0xffffffff},
+    {0xff0000ff, 0},
     {0, 0}
 };
-
-
-void setPower(bool enabled) {
-    if (enabled) {
-        PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
-    } else {
-        PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 5u;
-    }
-}
 
 
 void setLEDs(uint32_t brightnesses) {
@@ -58,7 +49,11 @@ void setLEDs(uint32_t brightnesses) {
 
 void setDisplayState(DisplayState state) {
     displayState = state;
-    setLEDs(ledStates[static_cast<uint8_t>(displayState)][static_cast<uint8_t>(powerMode)]);
+    if (state != DisplayState::GimbalMode) {
+        setLEDs(ledStates[static_cast<uint8_t>(displayState)][powerMode == PowerMode::Active? 1 : 0]);
+    } else {
+        setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8u);
+    }
     stateChangeTime = util::getTime();
 }
 
@@ -76,6 +71,7 @@ void processButtons(bool left, bool pressed) {
     switch (displayState) {
         case (DisplayState::Off):
         case (DisplayState::GimbalMode):
+        case (DisplayState::BatteryLevel):
             if (pressed) {
                 setDisplayState(DisplayState::ShortPress);
             }
@@ -162,12 +158,12 @@ int main() {
             }
             case (DisplayState::LongPress): {
                 uint8_t led = (util::getTime() - stateChangeTime) / LONG_PRESS_STEP_TIME;
-                bool isOff = powerMode == PowerMode::Idle;
-                pwm::setBrightness(led, isOff? 0xff : 0);
+                bool isOn = powerMode == PowerMode::Active;
+                pwm::setBrightness(led, isOn? 0 : 0xff);
                 
                 if (led >= 3) {
-                    setDisplayState(DisplayState::GimbalMode);
-                    powerMode = isOff? PowerMode::Active : PowerMode::Idle;
+                    setDisplayState(isOn? DisplayState::Off : DisplayState::GimbalMode);
+                    powerMode = isOn? PowerMode::Sleep : PowerMode::Active;
                     
                     auto command {Command {Command::CommandType::SetVariable, 2}};
                     auto buf {command.getBuffer()};
@@ -183,13 +179,14 @@ int main() {
                 uint8_t leds = voltageBars / 2;
                 
                 if (step >= leds) {
+                    // The calculation steps + leds + 1 is just to ensure the same timing for all LEDs
                     pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2? 255 : 0);
                 } else {
                     pwm::setBrightness(step, leds? 255 : 0);
                 }
                 
                 if (step > 15) {
-                    setDisplayState(powerMode == PowerMode::Idle? DisplayState::Off : DisplayState::GimbalMode);
+                    setDisplayState(powerMode == PowerMode::Active? DisplayState::GimbalMode : DisplayState::Off);
                 }
                 break;
             }

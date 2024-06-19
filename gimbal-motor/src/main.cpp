@@ -6,7 +6,7 @@ static constexpr uint16_t halfRevolution {fullRevolution / 2};
 static constexpr uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
-static Mode mode {Mode::Drive};
+static Mode mode {Mode::Sleep};
 static uint8_t calibrationMode = nvm::options->polePairs? 0 : 3;
 static uint32_t lastTargetTime {0};
 
@@ -347,13 +347,12 @@ bool calibrate() {
 }
 
 void sleep() {
-    bldc::applyTorque(0, 0);
-    // Motor timers are double-buffered, meaning the outputs aren't disabled immediately
-    // Waiting for the next tick as a workaround, this needs to be fixed later
-    util::sleep(1);
+    bldc::removeTorque();
     PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
-    while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
-    __WFI();
+    while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);    
+    do {
+        __WFI();
+    } while (mode == Mode::Sleep);
     PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
     while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
@@ -384,6 +383,7 @@ int main() {
     i2c::init();
     AS5600::init();
     bldc::init();
+    bldc::enable();
     
     uart::setCallback(processCommand);
     
@@ -414,7 +414,6 @@ int main() {
                 movementController.interpolate(time - lastTargetTime);
                 moveToTarget(movementController.getTarget());
                 
-                util::runTasks();
                 util::sleep(1); // Waiting until next tick
                 break;
             }
@@ -431,12 +430,10 @@ int main() {
                     hapticDuration = 0;
                 }
                 
-                util::runTasks();
                 util::sleep(1); // Waiting until next tick
                 break;
             }
             case (Mode::Idle): {
-                util::runTasks();
                 __WFI();
                 break;
             }

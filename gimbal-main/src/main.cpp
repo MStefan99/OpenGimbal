@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-static PowerMode powerMode {PowerMode::Active};
+static PowerMode powerMode {PowerMode::Sleep};
 static GimbalMode gimbalMode {GimbalMode::Follow};
 
 static constexpr float attFactor {2048 / F_PI};
@@ -12,6 +12,7 @@ static float rollTarget {0};
 
 static float yawOffset {0};
 static float pitchOffset {0};
+static float rollOffset {0};
 
 constexpr float sqrt2 = sqrtf(2);
 
@@ -34,18 +35,38 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
                             static_cast<uint8_t>(powerMode));
                     uart::sendToControl(response.getBuffer(), response.getLength());
                     break;
-                } case (ControlCommand::Variable::GimbalMode): {
+                }
+                case (ControlCommand::Variable::GimbalMode): {
                     auto response = ReturnVariableResponse(ControlResponse::Variable::GimbalMode, 
                             static_cast<uint8_t>(gimbalMode));
                     uart::sendToControl(response.getBuffer(), response.getLength());
                     break;
-                } case (ControlCommand::Variable::BatteryVoltage): {
+                }
+                case (ControlCommand::Variable::BatteryVoltage): {
                     adc::measureBattery([] (uint16_t voltage) {
                         uint8_t scaledVoltage = static_cast<uint8_t>(util::scale(util::clamp(voltage, MIN_VOLTAGE, MAX_VOLTAGE), MIN_VOLTAGE, MAX_VOLTAGE, 
                                     static_cast<uint16_t>(0), static_cast<uint16_t>(255)));
                         auto response = ReturnVariableResponse(ControlResponse::Variable::BatteryVoltage, scaledVoltage);
                         uart::sendToControl(response.getBuffer(), response.getLength());
                     });
+                    break;
+                }
+                case (ControlCommand::Variable::YawOffset): {
+                    auto response = ReturnVariableResponse(ControlResponse::Variable::YawOffset, 
+                            static_cast<int16_t>(yawOffset * attFactor));
+                    uart::sendToControl(response.getBuffer(), response.getLength());
+                    break;
+                }
+                case (ControlCommand::Variable::PitchOffset): {
+                    auto response = ReturnVariableResponse(ControlResponse::Variable::PitchOffset,
+                            static_cast<int16_t>(pitchOffset * attFactor));
+                    uart::sendToControl(response.getBuffer(), response.getLength());
+                    break;
+                }
+                case (ControlCommand::Variable::RollOffset): {
+                    auto response = ReturnVariableResponse(ControlResponse::Variable::RollOffset, 
+                            static_cast<int16_t>(rollOffset * attFactor));
+                    uart::sendToControl(response.getBuffer(), response.getLength());
                     break;
                 }
             }
@@ -59,6 +80,18 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
                 }
                 case (ControlCommand::Variable::GimbalMode): {
                     gimbalMode = static_cast<GimbalMode>(buffer.buffer[2]);
+                    break;
+                }
+                case (ControlCommand::Variable::YawOffset): {
+                    yawOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
+                    break;
+                }
+                case (ControlCommand::Variable::PitchOffset): {
+                    pitchOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
+                    break;
+                }
+                case (ControlCommand::Variable::RollOffset): {
+                    rollOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
                     break;
                 }
             }
@@ -123,10 +156,11 @@ float normalize(float difference) {
 
 void sleep() { // TODO: disable IMU
     motor::sleep();
-    util::sleep(1);
     PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
     while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
-    __WFI();
+    do {
+        __WFI();
+    } while (powerMode == PowerMode::Sleep);
     PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
     while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
@@ -147,20 +181,6 @@ int main() {
     
     float yawTarget {0};
     float pitchTarget {0};
-    
-    motor::move();
-    motor::tone(motor::all, 247);
-    util::sleep(205);
-    
-    for (uint8_t i {15}; i > 4; i -= 5) {
-        motor::tone(motor::all, 294);
-        motor::move(motor::all, 0, i);
-        util::sleep(205);
-        motor::tone(motor::all, 392);
-        motor::move(motor::all, 0, i);
-        util::sleep(205);
-    }
-    motor::tone();
     
     while (1) {
         switch (powerMode) {
@@ -221,7 +241,6 @@ int main() {
                 break;
             }
             case (PowerMode::Sleep): {
-                motor::sleep();
                 sleep();
                 break;
             }

@@ -36,17 +36,17 @@ static uint8_t getPin(uint8_t channel) {
 }
 
 void servo::init() {
-    // GLCK config
+    // Clock setup
     GCLK_REGS->GCLK_PCHCTRL[25] = GCLK_PCHCTRL_CHEN(1) // Enable TCC[0:1] clock
-            | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
     GCLK_REGS->GCLK_PCHCTRL[26] = GCLK_PCHCTRL_CHEN(1) // Enable TCC2 clock
-            | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
 }
 
 void servo::enable(uint8_t channel) {
     tcc_registers_t* timer {getTimer(channel)};
 
-    // TCC config
+    // TCC setup
     timer->TCC_CTRLA = TCC_CTRLA_PRESCALER_DIV8;
     timer->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1); // Run while debugging
     timer->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM; // PWM generation
@@ -54,7 +54,7 @@ void servo::enable(uint8_t channel) {
 	timer->TCC_CC[getTimerChannel(channel)] = 1500; // 1.5ms * GCLK_TCC
     timer->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
 
-    // PORT config
+    // Pin setup
     uint8_t pin {getPin(channel)};
     PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin
     if (pin & 0x1) { // Odd pin

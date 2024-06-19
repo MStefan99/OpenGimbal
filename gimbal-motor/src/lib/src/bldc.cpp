@@ -68,15 +68,15 @@ static constexpr uint16_t SQRT3 = sqrtf(3) * 128;
 static constexpr uint16_t MAX_VAL = 255 * 255;
 
 void bldc::init() {
-    // GLCK config
-    GCLK_REGS->GCLK_PCHCTRL[25] = GCLK_PCHCTRL_CHEN(1) // Enable TCC[0:1] clock
-            | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
-    GCLK_REGS->GCLK_PCHCTRL[26] = GCLK_PCHCTRL_CHEN(1) // Enable TCC2 clock
-            | GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+    // Clock setup
+    GCLK_REGS->GCLK_PCHCTRL[TCC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1) // Enable TCC[0:1] clock
+            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
+    GCLK_REGS->GCLK_PCHCTRL[TCC2_GCLK_ID] = GCLK_PCHCTRL_CHEN(1) // Enable TCC2 clock
+            | GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
 
     uint16_t period {silentPeriod + 1};
     
-    // TCC config
+    // TCC setup
     TCC0_REGS->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1); // Run while debugging
     TCC0_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1) | TCC_WAVE_POL3(1); // PWM generation
     TCC0_REGS->TCC_PER = silentPeriod;
@@ -92,8 +92,11 @@ void bldc::init() {
     TCC1_REGS->TCC_CC[0] = 0;
     TCC1_REGS->TCC_CC[1] = period;
     TCC1_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1); // Enable timer
+}
 
-    // PORT config
+
+void bldc::enable() {
+    // Pin setup
     for (uint8_t i{0}; i < 6; ++i) {
         uint8_t pin {getPin(i)};
         PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin
@@ -109,7 +112,7 @@ void bldc::init() {
 
 
 void bldc::disable() {
-    // PORT config
+    // Pin setup
     for (uint8_t i{0}; i < 6; ++i) {
         uint8_t pin {getPin(i)};
         PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(0); // Enable mux on pin
@@ -132,6 +135,16 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
 
     TCC1_REGS->TCC_CCBUF[0] = power * (((-va - ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
     TCC1_REGS->TCC_CCBUF[1] = TCC1_REGS->TCC_CCBUF[0] + inv;
+}
+
+void bldc::removeTorque() {
+    TCC0_REGS->TCC_CC[0] =
+    TCC0_REGS->TCC_CC[2] =
+    TCC1_REGS->TCC_CC[0] = 0;
+    
+    TCC0_REGS->TCC_CC[1] =
+    TCC0_REGS->TCC_CC[3] =
+    TCC1_REGS->TCC_CC[1] = silentPeriod + 1;
 }
 
 void bldc::tone(uint16_t frequency) {

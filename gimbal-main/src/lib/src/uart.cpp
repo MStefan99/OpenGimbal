@@ -19,8 +19,8 @@ static void initSERCOM(sercom_registers_t* regs) {
 					| SERCOM_USART_INT_CTRLB_SBMODE_1_BIT
 					| SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;
 	regs->USART_INT.SERCOM_BAUD = 63020; // 115200 baud
-    regs->USART_INT.SERCOM_DBGCTRL = SERCOM_USART_INT_DBGCTRL_DBGSTOP(1);
 	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB
+                    | SERCOM_USART_INT_CTRLA_RUNSTDBY(1)
 					| SERCOM_USART_INT_CTRLA_CMODE_ASYNC
                     | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC
 					| SERCOM_USART_INT_CTRLA_FORM_USART_FRAME_WITH_PARITY
@@ -32,7 +32,7 @@ static void initSERCOM(sercom_registers_t* regs) {
 	regs->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1)
             | SERCOM_USART_INT_INTENSET_TXC(1);
 }
-        
+
 
 static void disableTx(sercom_registers_t* regs) {
     regs->USART_INT.SERCOM_CTRLB &= ~SERCOM_USART_INT_CTRLB_TXEN(1);
@@ -64,7 +64,7 @@ static void SERCOM_Handler(sercom_registers_t* regs,
         uart::DefaultCallback::buffer_type& inBuffer, 
         uart::DefaultCallback::callback_type callback,
         uint32_t& prevByteTime) {
-    if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)){ // Not a framing error
+    if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) { // Not a framing error
         if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) { // Transmitter enabled (outgoing transfer)
             --outQueue.front().remaining;
             if (!outQueue.front().remaining) { // Transmitted last byte, turning off transmitter
@@ -108,18 +108,19 @@ extern "C" {
 }
 
 void uart::init() {
+    // Clock setup
     GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM1 clock
-					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+					| GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
 	GCLK_REGS->GCLK_PCHCTRL[SERCOM2_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1) // Enable SERCOM2 clock
-					| GCLK_PCHCTRL_GEN_GCLK0; //Set GCLK0 as a clock source
+					| GCLK_PCHCTRL_GEN_GCLK1; //Set GCLK1 as a clock source
 
-	// PORT config
+	// Pin setup
 	PORT_REGS->GROUP[0].PORT_PINCFG[8] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 8
 	PORT_REGS->GROUP[0].PORT_PINCFG[16] = PORT_PINCFG_PMUXEN(1); // Enable mux on pin 16
 	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE(MUX_PA08D_SERCOM2_PAD0); // Mux pin 8 to SERCOM2
 	PORT_REGS->GROUP[0].PORT_PMUX[8] = PORT_PMUX_PMUXE(MUX_PA16C_SERCOM1_PAD0); // Mux pin 16 to SERCOM1
 
-	// SERCOM config
+	// SERCOM setup
     initSERCOM(SERCOM1_REGS);
     NVIC_EnableIRQ(SERCOM1_IRQn);
     
