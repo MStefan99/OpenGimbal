@@ -107,6 +107,7 @@ KeepEmptyLinesAtEOF: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 LambdaBodyIndentation: OuterScope
 Language: Cpp
+LineEnding: LF
 #MacroBlockBegin:
 #MacroBlockEnd:
 #Macros:

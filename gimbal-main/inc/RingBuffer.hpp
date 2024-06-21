@@ -24,10 +24,7 @@ public:
 	using reference = value_type&;
 	using const_reference = const value_type&;
 
-	RingBuffer():
-	  _front(0),
-	  _back(0),
-	  _size(0) {}
+	RingBuffer() = default;
 
 	RingBuffer(const RingBuffer& buffer);
 #if !PLAIN_DATA

@@ -12,9 +12,9 @@
 	},
 	"dependencies": {
 		"pug": "^3.0.3",
-		"sass": "^1.77.4",
-		"vue": "^3.4.27",
-		"vue-router": "^4.3.2"
+		"sass": "^1.77.6",
+		"vue": "^3.4.29",
+		"vue-router": "^4.4.0"
 	},
 	"devDependencies": {
 		"@prettier/plugin-pug": "^3.0.0",
@@ -26,10 +26,10 @@
 		"eslint-plugin-vue": "^9.26.0",
 		"eslint-plugin-vue-pug": "^0.6.2",
 		"postcss": "^8.4.38",
-		"prettier": "^3.3.0",
-		"tailwindcss": "^3.4.3",
-		"vite": "^5.2.12",
-		"vue-tsc": "^2.0.19"
+		"prettier": "^3.3.2",
+		"tailwindcss": "^3.4.4",
+		"vite": "^5.3.1",
+		"vue-tsc": "^2.0.21"
 	},
 	"keywords": [],
 	"author": "",
