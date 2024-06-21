@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   pwm.hpp
  * Author: Mikhail
  *
@@ -6,16 +6,15 @@
  */
 
 #ifndef PWM_HPP
-#define	PWM_HPP
+#define PWM_HPP
 
 #include "device.h"
 
 namespace pwm {
-    void init();
-    
-    void setDuty(uint8_t channel, uint8_t duty);
-    void setBrightness(uint8_t channel, uint8_t brightness);
+	void init();
+
+	void setDuty(uint8_t channel, uint8_t duty);
+	void setBrightness(uint8_t channel, uint8_t brightness);
 }
 
-#endif	/* PWM_HPP */
-
+#endif /* PWM_HPP */

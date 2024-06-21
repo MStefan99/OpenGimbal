@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   input.hpp
  * Author: Mikhail
  *
@@ -6,16 +6,14 @@
  */
 
 #ifndef PWM_HPP
-#define	PWM_HPP
+#define PWM_HPP
 
 #include "device.h"
 
 #include "util.hpp"
 
-
 namespace pwm {
-    void init();
+	void init();
 }
 
-#endif	/* PWM_HPP */
-
+#endif /* PWM_HPP */

@@ -9,16 +9,11 @@
 
 #include "util.hpp"
 
-
-
 class AttitudeEstimator {
 public:
 	explicit AttitudeEstimator(float roll, float pitch);
 
-	void update(
-			const float* rot,
-			const float* acc,
-			float dt);
+	void update(const float* rot, const float* acc, float dt);
 
 	float getRoll() const;
 	float getPitch() const;
@@ -29,4 +24,4 @@ protected:
 };
 
 
-#endif //ATTITUDE_ESTIMATOR_HPP
+#endif  // ATTITUDE_ESTIMATOR_HPP

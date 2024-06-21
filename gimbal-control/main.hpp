@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   main.hpp
  * Author: Mikhail
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef MAIN_HPP
-#define	MAIN_HPP
+#define MAIN_HPP
 
 #include <cstdio>
 
@@ -29,13 +29,12 @@ constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
 
 
 enum class DisplayState : uint8_t {
-    Off = 0x0,
-    ShortPress = 0x1,
-    PressWait = 0x2,
-    LongPress = 0x3,
-    GimbalMode = 0x4,
-    BatteryLevel = 0x5
+	Off = 0x0,
+	ShortPress = 0x1,
+	PressWait = 0x2,
+	LongPress = 0x3,
+	GimbalMode = 0x4,
+	BatteryLevel = 0x5
 };
 
-#endif	/* MAIN_HPP */
-
+#endif /* MAIN_HPP */

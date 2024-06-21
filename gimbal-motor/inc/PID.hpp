@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   PID.hpp
  * Author: MStefan99
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef PID_HPP
-#define	PID_HPP
+#define PID_HPP
 
 #include "util.hpp"
 
@@ -20,7 +20,7 @@ struct PID {
 	T kp {};
 	T ki {};
 	T kd {};
-	
+
 	T iLim {};
 
 protected:
@@ -30,19 +30,22 @@ protected:
 
 template <class T>
 PID<T>::PID(T kp, T ki, T kd, T iLim):
-	kp {kp}, ki {ki}, kd {kd}, iLim {iLim} {
+  kp {kp},
+  ki {ki},
+  kd {kd},
+  iLim {iLim} {
 	// Nothing to do
 }
-    
+
 template <class T>
 T PID<T>::process(T val, T sp, float dt) {
 	T error {val - sp};
-	
+
 	_sum = util::clamp(ki * error * dt + _sum, -iLim, iLim);
 	T out = kp * error + _sum + kd * (val - _prev) / dt;
 	_prev = val;
-	
+
 	return out;
 }
 
-#endif	/* PID_HPP */
+#endif /* PID_HPP */

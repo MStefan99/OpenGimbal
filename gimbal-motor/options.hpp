@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   options.hpp
  * Author: Mikhail
  *
@@ -6,11 +6,11 @@
  */
 
 #ifndef OPTIONS_HPP
-#define	OPTIONS_HPP
+#define OPTIONS_HPP
 
-#include "util.hpp"
-#include "PID.hpp"
 #include "Matrix.hpp"
+#include "PID.hpp"
+#include "util.hpp"
 
 
 /* This will enable diagnostic output for Data Visualizer
@@ -20,27 +20,30 @@
 #define DV_OUT 0
 
 // Encoder counts per one full revolution
-static constexpr uint16_t fullRevolution {4096};
+constexpr static uint16_t fullRevolution {4096};
 /* Motor range can be limited to avoid tangling the wires
  * The range is the maximum motor deflection from the zero point in either direction
  * An offset of 2048 means the motor can take any position from -2048 to 2048,
  * or one full revolution. The range can be changed over UART.
  */
-static constexpr uint16_t defaultRange {0};
+constexpr static uint16_t defaultRange {0};
 /* Arriving position commands are interpolated to avoid jerky movements and noise
  * Maximum interpolation time can be adjusted here
  */
-static constexpr uint32_t maxInterpolationTime {500};
+constexpr static uint32_t maxInterpolationTime {500};
 // Minimum torque to get the motor moving
-static constexpr uint8_t idleTorque {140};
+constexpr static uint8_t  idleTorque {140};
 // Interval in milliseconds at which torque direction will flip in haptic mode
-static constexpr uint8_t hapticCycleDuration {25};
+constexpr static uint8_t  hapticCycleDuration {25};
 // Device address
-static constexpr uint8_t deviceAddress {3};
+constexpr static uint8_t  deviceAddress {3};
 
 
 // Full state feedback gain matrix
-constexpr auto K = Matrix<float, uint8_t, 1, 2>{{30, 8}} * 10;
+constexpr auto K =
+    Matrix<float, uint8_t, 1, 2> {
+      {30, 8}
+}
+    * 10;
 
-#endif	/* OPTIONS_HPP */
-
+#endif /* OPTIONS_HPP */

@@ -14,8 +14,7 @@
  */
 #define PLAIN_DATA true
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 class RingBuffer {
 public:
 	using value_type = T;
@@ -25,12 +24,15 @@ public:
 	using reference = value_type&;
 	using const_reference = const value_type&;
 
-	RingBuffer() : _front(0), _back(0), _size(0) {}
+	RingBuffer():
+	  _front(0),
+	  _back(0),
+	  _size(0) {}
 
 	RingBuffer(const RingBuffer& buffer);
-	#if !PLAIN_DATA
+#if !PLAIN_DATA
 	~RingBuffer();
-	#endif
+#endif
 
 	void push_front(const_reference value);
 	void push_back(const_reference value);
@@ -38,9 +40,9 @@ public:
 	void pop_front(size_type amount = 1);
 	void pop_back(size_type amount = 1);
 
-	reference front();
+	reference       front();
 	const_reference front() const;
-	reference back();
+	reference       back();
 	const_reference back() const;
 
 	size_type size() const;
@@ -51,45 +53,45 @@ public:
 
 	void clear();
 
-	pointer data();
+	pointer       data();
 	const_pointer data() const;
-	size_type contiguous() const;
+	size_type     contiguous() const;
 
-	reference operator[](size_type index);
-	const_reference operator[](size_type index) const;
-	RingBuffer& operator=(const RingBuffer& buffer) = default;
+	reference       operator[] (size_type index);
+	const_reference operator[] (size_type index) const;
+	RingBuffer&     operator= (const RingBuffer& buffer) = default;
 
 protected:
-	T _elements[C];
-	size_type _front {0};
-	size_type _back {0};
-	size_type _size {0};
-	static constexpr size_type _capacity {C};
+	T                          _elements[C];
+	size_type                  _front {0};
+	size_type                  _back {0};
+	size_type                  _size {0};
+	constexpr static size_type _capacity {C};
 
-	#if !PLAIN_DATA
+#if !PLAIN_DATA
 	void destroy_elements();
-	#endif
+#endif
 };
 
-
-
 // Copy constructor
-template<class T, class size_type, size_type C>
-RingBuffer<T, size_type, C>::RingBuffer(const RingBuffer& buffer) : _back(buffer._size), _size(buffer._size) {
+template <class T, class size_type, size_type C>
+RingBuffer<T, size_type, C>::RingBuffer(const RingBuffer& buffer):
+  _back(buffer._size),
+  _size(buffer._size) {
 	for (size_type i = 0; i < _size; ++i) {
-		new(&_elements[(_front + i) % _capacity]) T(buffer._elements[(buffer._front + i) % _capacity]);
+		new (&_elements[(_front + i) % _capacity]) T(buffer._elements[(buffer._front + i) % _capacity]);
 	}
 }
 
 #if !PLAIN_DATA
 // Destructor
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 RingBuffer<T, size_type, C>::~RingBuffer() {
 	clear();
 }
 
 // Utility cb to destroy elements
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::destroy_elements() {
 	while (_size > 0) {
 		_elements[_front].~T();
@@ -101,137 +103,127 @@ void RingBuffer<T, size_type, C>::destroy_elements() {
 #endif
 
 // Clear method
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::clear() {
-	#if !PLAIN_DATA
+#if !PLAIN_DATA
 	destroy_elements();
-	#endif
+#endif
 	_front = _back = _size = 0;
 }
 
 // push_back method
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::push_back(const_reference value) {
 	if (_size == _capacity) {
 		pop_front();
 	}
 
-	new(&_elements[_back]) T(value); // Use placement new for construction
+	new (&_elements[_back]) T(value);  // Use placement new for construction
 	_back = (_back + 1) % _capacity;
 	++_size;
 }
 
 // push_front method
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::push_front(const_reference value) {
 	if (_size == _capacity) {
 		pop_back();
 	}
 
 	_front = (_front + _capacity - 1) % _capacity;
-	new(&_elements[_front]) T(value); // Use placement new for construction
+	new (&_elements[_front]) T(value);  // Use placement new for construction
 	++_size;
 }
 
 // pop_front method
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::pop_front(size_type amount) {
 	while (amount-- > 0 && _size > 0) {
-		#if !PLAIN_DATA
-		_elements[_front].~T(); // Call the destructor explicitly.
-		#endif
+#if !PLAIN_DATA
+		_elements[_front].~T();  // Call the destructor explicitly.
+#endif
 		_front = (_front + 1) % _capacity;
 		--_size;
 	}
 }
 
 // pop_back method
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 void RingBuffer<T, size_type, C>::pop_back(size_type amount) {
 	while (amount-- > 0 && _size > 0) {
 		_back = (_back + _capacity - 1) % _capacity;
-		#if !PLAIN_DATA
-		_elements[_back].~T(); // Call the destructor explicitly.
-		#endif
+#if !PLAIN_DATA
+		_elements[_back].~T();  // Call the destructor explicitly.
+#endif
 		--_size;
 	}
 }
 
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::reference RingBuffer<T, size_type, C>::back() {
 	return _elements[_back == 0 ? _capacity - 1 : _back - 1];
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::const_reference RingBuffer<T, size_type, C>::back() const {
 	return _elements[_back == 0 ? _capacity - 1 : _back - 1];
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::reference RingBuffer<T, size_type, C>::front() {
 	return _elements[_front == _capacity ? 0 : _front];
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::const_reference RingBuffer<T, size_type, C>::front() const {
 	return _elements[_front == _capacity ? 0 : _front];
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 size_type RingBuffer<T, size_type, C>::size() const {
 	return _size;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 size_type RingBuffer<T, size_type, C>::capacity() const {
 	return _capacity;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 bool RingBuffer<T, size_type, C>::empty() const {
 	return !_size;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 bool RingBuffer<T, size_type, C>::full() const {
 	return _size == _capacity;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::pointer RingBuffer<T, size_type, C>::data() {
 	return _elements + _front;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 typename RingBuffer<T, size_type, C>::const_pointer RingBuffer<T, size_type, C>::data() const {
 	return _elements;
 }
 
-
-template<class T, class size_type, size_type C>
+template <class T, class size_type, size_type C>
 size_type RingBuffer<T, size_type, C>::contiguous() const {
 	size_type dist = _capacity - _front;
 	return _size < dist ? _size : dist;
 }
 
-template<class T, class size_type, size_type C>
-typename RingBuffer<T, size_type, C>::reference RingBuffer<T, size_type, C>::operator[](size_type index) {
+template <class T, class size_type, size_type C>
+typename RingBuffer<T, size_type, C>::reference RingBuffer<T, size_type, C>::operator[] (size_type index) {
 	return _elements[(_front + index) % _capacity];
 }
 
-template<class T, class size_type, size_type C>
-typename RingBuffer<T, size_type, C>::const_reference RingBuffer<T, size_type, C>::operator[](size_type index) const {
+template <class T, class size_type, size_type C>
+typename RingBuffer<T, size_type, C>::const_reference RingBuffer<T, size_type, C>::operator[] (size_type index) const {
 	return _elements[(_front + index) % _capacity];
 }
 
 
-#endif //RING_BUFFER_HPP
+#endif  // RING_BUFFER_HPP

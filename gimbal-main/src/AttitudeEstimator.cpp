@@ -1,10 +1,11 @@
 #include "AttitudeEstimator.hpp"
 
 
-static constexpr float ALPHA {0.1f};
+constexpr static float ALPHA {0.1f};
 
-
-AttitudeEstimator::AttitudeEstimator(float roll, float pitch): _roll {roll}, _pitch {pitch} {
+AttitudeEstimator::AttitudeEstimator(float roll, float pitch):
+  _roll {roll},
+  _pitch {pitch} {
 	// Nothing to do
 }
 
@@ -19,11 +20,9 @@ void AttitudeEstimator::update(const float* rot, const float* acc, float dt) {
 	_roll = std::fmod(_roll * (1 - ALPHA) + rollAcc * ALPHA, F_PI);
 }
 
-
 float AttitudeEstimator::getRoll() const {
 	return _roll;
 }
-
 
 float AttitudeEstimator::getPitch() const {
 	return _pitch;

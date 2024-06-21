@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   adc.hpp
  * Author: Mikhail
  *
@@ -6,16 +6,14 @@
  */
 
 #ifndef ADC_HPP
-#define	ADC_HPP
+#define ADC_HPP
 
 #include "device.h"
 
-
 namespace adc {
-    void init();
-    
-    void measureBattery(void (*cb)(uint16_t value) = nullptr);
+	void init();
+
+	void measureBattery(void (*cb)(uint16_t value) = nullptr);
 }
 
-#endif	/* ADC_HPP */
-
+#endif /* ADC_HPP */

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   buttons.hpp
  * Author: Mikhail
  *
@@ -6,17 +6,17 @@
  */
 
 #ifndef BUTTONS_HPP
-#define	BUTTONS_HPP
+#define BUTTONS_HPP
 
 #include "device.h"
 
 #include "util.hpp"
 
-namespace buttons  {    
-    using Callback = void(*)(bool left, bool pressed);
+namespace buttons {
+	using Callback = void (*)(bool left, bool pressed);
 
-    void init();
-    void setCallback(Callback cb);
+	void init();
+	void setCallback(Callback cb);
 }
 
-#endif	/* BUTTONS_HPP */
+#endif /* BUTTONS_HPP */

@@ -1,6 +1,5 @@
 #include "MovementController.hpp"
 
-
 void MovementController::setRange(uint16_t range) {
 	_range = range;
 }
@@ -35,10 +34,10 @@ void MovementController::setTarget(int32_t newTarget) {
 			newTarget = util::mod(newDeflection, static_cast<int32_t>(4096));
 		}
 	}
-    
+
 	_target = newTarget;
-    _deflection = newDeflection;
-    _desiredDeflection = newDesiredDeflection;
+	_deflection = newDeflection;
+	_desiredDeflection = newDesiredDeflection;
 }
 
 void MovementController::setOffset(int32_t newOffset) {
@@ -46,9 +45,9 @@ void MovementController::setOffset(int32_t newOffset) {
 }
 
 void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPosition) {
-    sourcePosition = util::mod(sourcePosition, static_cast<int32_t>(4096));
-    desiredPosition = util::mod(desiredPosition, static_cast<int32_t>(4096));
-    
+	sourcePosition = util::mod(sourcePosition, static_cast<int32_t>(4096));
+	desiredPosition = util::mod(desiredPosition, static_cast<int32_t>(4096));
+
 	int32_t adjustedOffset = sourcePosition - desiredPosition;
 	setOffset(adjustedOffset);
 }
@@ -73,58 +72,60 @@ int32_t MovementController::getDesiredDeflection() const {
 	return _desiredDeflection;
 }
 
-MovementController::Interpolator::Interpolator(int32_t offset): 
-        _prev(offset), _actual(offset), _extrapolated(offset) {
-    // Nothing to do
+MovementController::Interpolator::Interpolator(int32_t offset):
+  _prev(offset),
+  _actual(offset),
+  _extrapolated(offset) {
+	// Nothing to do
 }
 
 int32_t MovementController::Interpolator::extrapolate(int32_t target) const {
-    auto actual {_actual};
-    int32_t change {target - _actual};
-    
-    if (change < -2048) {
-        actual -= 4096;
-        change = target - actual;
-    } else if (change > 2048) {
-        actual += 4096;
-        change = target - actual;
-    }
-    
-    return _actual + change;
+	auto    actual {_actual};
+	int32_t change {target - _actual};
+
+	if (change < -2048) {
+		actual -= 4096;
+		change = target - actual;
+	} else if (change > 2048) {
+		actual += 4096;
+		change = target - actual;
+	}
+
+	return _actual + change;
 }
 
 void MovementController::Interpolator::applyTarget(uint32_t dt, int32_t target) {
-    int32_t change {target - _actual};
-    
-    if (change < -2048) {
-        _actual -= 4096;
-        _extrapolated -= 4096;
-        change = target - _actual;
-    } else if (change > 2048) {
-        _actual += 4096;
-        _extrapolated += 4096;
-        change = target - _actual;
-    }
-    
-    _actual = target;
-    _prev = _extrapolated;
-    _extrapolated = _actual + change;
-    _dt = dt;
+	int32_t change {target - _actual};
+
+	if (change < -2048) {
+		_actual -= 4096;
+		_extrapolated -= 4096;
+		change = target - _actual;
+	} else if (change > 2048) {
+		_actual += 4096;
+		_extrapolated += 4096;
+		change = target - _actual;
+	}
+
+	_actual = target;
+	_prev = _extrapolated;
+	_extrapolated = _actual + change;
+	_dt = dt;
 }
 
 int32_t MovementController::Interpolator::interpolate(uint32_t dt) const {
-    return util::interpolate(_prev, _extrapolated, static_cast<float>(dt) / static_cast<float>(_dt));
+	return util::interpolate(_prev, _extrapolated, static_cast<float>(dt) / static_cast<float>(_dt));
 }
 
 void MovementController::extrapolate(uint32_t dt, int32_t target) {
-    setTarget(_interpolator.extrapolate(target));
-    
-    if (dt > maxInterpolationTime) {
-        dt = 1;
-    }
-    _interpolator.applyTarget(dt, _target);
+	setTarget(_interpolator.extrapolate(target));
+
+	if (dt > maxInterpolationTime) {
+		dt = 1;
+	}
+	_interpolator.applyTarget(dt, _target);
 }
 
 void MovementController::interpolate(uint32_t dt) {
-    _target = util::mod(_interpolator.interpolate(dt), static_cast<int32_t>(4096));
+	_target = util::mod(_interpolator.interpolate(dt), static_cast<int32_t>(4096));
 }
