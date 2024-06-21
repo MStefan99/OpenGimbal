@@ -34,24 +34,27 @@
           <itemPath>../src/config/default/device.h</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f3" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/inc/dma.hpp</itemPath>
-        <itemPath>../src/lib/inc/i2c.hpp</itemPath>
-        <itemPath>../src/lib/inc/uart.hpp</itemPath>
-        <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/bldc.hpp</itemPath>
-        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
-        <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
-        <itemPath>../src/lib/inc/MovementController.hpp</itemPath>
-        <itemPath>../src/lib/inc/LowPassFilter.hpp</itemPath>
-        <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
-        <itemPath>../src/lib/inc/Kalman.hpp</itemPath>
-        <itemPath>../src/lib/inc/interop.h</itemPath>
-        <itemPath>../src/lib/inc/PID.hpp</itemPath>
-        <itemPath>../src/lib/inc/AS5600.hpp</itemPath>
-        <itemPath>../src/lib/inc/AS5600_regs.h</itemPath>
-        <itemPath>../src/lib/inc/nvm.hpp</itemPath>
-        <itemPath>../src/lib/inc/Response.hpp</itemPath>
+      <logicalFolder name="inc" displayName="inc" projectFiles="true">
+        <logicalFolder name="regs" displayName="regs" projectFiles="true">
+          <itemPath>../inc/regs/AS5600_regs.h</itemPath>
+        </logicalFolder>
+        <itemPath>../inc/as5600.hpp</itemPath>
+        <itemPath>../inc/bldc.hpp</itemPath>
+        <itemPath>../inc/dma.hpp</itemPath>
+        <itemPath>../inc/i2c.hpp</itemPath>
+        <itemPath>../inc/interop.h</itemPath>
+        <itemPath>../inc/Kalman.hpp</itemPath>
+        <itemPath>../inc/LowPassFilter.hpp</itemPath>
+        <itemPath>../inc/Matrix.hpp</itemPath>
+        <itemPath>../inc/MovementController.hpp</itemPath>
+        <itemPath>../inc/nvm.hpp</itemPath>
+        <itemPath>../inc/PID.hpp</itemPath>
+        <itemPath>../inc/pwm.hpp</itemPath>
+        <itemPath>../inc/Response.hpp</itemPath>
+        <itemPath>../inc/RingBuffer.hpp</itemPath>
+        <itemPath>../inc/TaskScheduler.hpp</itemPath>
+        <itemPath>../inc/uart.hpp</itemPath>
+        <itemPath>../inc/util.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -152,8 +155,8 @@
           </logicalFolder>
         </logicalFolder>
       </logicalFolder>
-      <itemPath>../src/main.hpp</itemPath>
-      <itemPath>../src/options.hpp</itemPath>
+      <itemPath>../main.hpp</itemPath>
+      <itemPath>../options.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -217,25 +220,24 @@
           <itemPath>../src/config/default/libc_syscalls.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f2" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/src/dma.cpp</itemPath>
-        <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/util.cpp</itemPath>
-        <itemPath>../src/lib/src/bldc.cpp</itemPath>
-        <itemPath>../src/lib/src/MovementController.cpp</itemPath>
-        <itemPath>../src/lib/src/interop.cpp</itemPath>
-        <itemPath>../src/lib/src/AS5600.cpp</itemPath>
-        <itemPath>../src/lib/src/nvm.cpp</itemPath>
-        <itemPath>../src/lib/src/Response.cpp</itemPath>
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <itemPath>../src/as5600.cpp</itemPath>
+        <itemPath>../src/bldc.cpp</itemPath>
+        <itemPath>../src/dma.cpp</itemPath>
+        <itemPath>../src/i2c.cpp</itemPath>
+        <itemPath>../src/interop.cpp</itemPath>
+        <itemPath>../src/MovementController.cpp</itemPath>
+        <itemPath>../src/nvm.cpp</itemPath>
+        <itemPath>../src/pwm.cpp</itemPath>
+        <itemPath>../src/Response.cpp</itemPath>
+        <itemPath>../src/uart.cpp</itemPath>
+        <itemPath>../src/util.cpp</itemPath>
       </logicalFolder>
-      <itemPath>../src/main.cpp</itemPath>
+      <itemPath>../main.cpp</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../src</Elem>
-    <Elem>../../controller/src/lib/inc</Elem>
-    <Elem>../../controller/src/lib/src</Elem>
+    <Elem>..</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -251,8 +253,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
         <pack name="SAML21_DFP" vendor="Microchip" version="3.7.217"/>
+        <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -314,7 +316,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
+                  value="../inc;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
@@ -412,7 +414,7 @@
         <property key="exceptions" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
+                  value="..;../inc;../inc/regs;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
@@ -968,8 +970,6 @@
         <property key="periphComp5.gte" value="gt"/>
         <property key="periphComp6.gte" value="gt"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="D:/Programming/embedded/flight_computer/receiver/firmware/receiver.X/debug/default/receiver_ptg"/>
         <property key="programmerToGoImageName" value="receiver_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

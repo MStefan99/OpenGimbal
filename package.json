@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "postinstall": "run-p install:*",
+    "install:husky": "husky",
+    "install:companion": "cd ./companion && npm install",
+    "install:generator": "cd ./register-generator && npm install",
+    "fmt": "run-p fmt:*",
+    "lint": "run-p lint:*",
+    "fmt:companion": "cd ./companion && npm run fmt",
+    "lint:companion": "cd ./companion && npm run lint",
+    "fmt:control": "cd ./gimbal-control && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "lint:control": "cd ./gimbal-control && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "fmt:main": "cd ./gimbal-main && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "lint:main": "cd ./gimbal-main && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "fmt:motor": "cd ./gimbal-motor && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "lint:motor": "cd ./gimbal-motor && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "npm-run-all": "^4.1.5"
+  }
+}

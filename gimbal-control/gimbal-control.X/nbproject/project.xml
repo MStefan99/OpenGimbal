@@ -6,7 +6,7 @@
             <name>gimbal-control</name>
             <creation-uuid>defad942-21d2-4d29-9fa2-55eabc345f41</creation-uuid>
             <make-project-type>0</make-project-type>
-            <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>..</sourceRootElem>
