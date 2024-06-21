@@ -1,4 +1,4 @@
-<config configName="default" projectName="gimbal-main" configVersion="1.1" device="ATSAML21E16B" deviceLibraryClass="com.microchip.mcc.harmony.Harmony3Library" coreVersion="5.5.7">
+<config configName="default" projectName="gimbal-main" configVersion="1.1" device="ATSAML21E16B" deviceLibraryClass="com.microchip.mcc.harmony.Harmony3Library" coreVersion="5.7.0">
    <usedPackages class="java.util.ArrayList"/>
    <usedClasses class="java.util.TreeMap">
       <entry>
@@ -13,21 +13,9 @@
          <string>dfp</string>
          <string>class com.microchip.mcc.harmony.HarmonyModule</string>
       </entry>
-      <entry>
-         <string>evsys</string>
-         <string>class com.microchip.mcc.harmony.HarmonyModule</string>
-      </entry>
-      <entry>
-         <string>nvmctrl</string>
-         <string>class com.microchip.mcc.harmony.HarmonyModule</string>
-      </entry>
-      <entry>
-         <string>pm</string>
-         <string>class com.microchip.mcc.harmony.HarmonyModule</string>
-      </entry>
    </usedClasses>
    <usedLibraries class="java.util.ArrayList">
-      <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.harmony.Harmony3Library" version="1.3.2"/>
+      <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.harmony.Harmony3Library" version="1.5.2"/>
    </usedLibraries>
    <tokenMap class="java.util.TreeMap">
       <entry>
@@ -38,15 +26,15 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="!@#harmonyUserData"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;UserData&gt;
   &lt;UserData dnOrder=&quot;0&quot;&gt;
-    &lt;GraphSettings canvasHeight=&quot;132&quot; canvasWidth=&quot;850&quot; dnOrder=&quot;0&quot;/&gt;
-    &lt;ComponentGraph dnOrder=&quot;1&quot; id=&quot;__ROOTVIEW&quot;&gt;
+    &lt;GraphSettings canvasHeight=&quot;89&quot; canvasWidth=&quot;853&quot; dnOrder=&quot;0&quot;/&gt;
+    &lt;PowerProfiles dnOrder=&quot;1&quot;&gt;
+      &lt;Profile dnOrder=&quot;0&quot; id=&quot;profile0&quot; name=&quot;Main&quot;/&gt;
+    &lt;/PowerProfiles&gt;
+    &lt;ComponentGraph dnOrder=&quot;2&quot; id=&quot;__ROOTVIEW&quot;&gt;
       &lt;ElementPositions dnOrder=&quot;0&quot;&gt;
         &lt;ElementPosition dnOrder=&quot;0&quot; id=&quot;cmsis&quot; x=&quot;740&quot; y=&quot;20&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;core&quot; x=&quot;640&quot; y=&quot;19&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;2&quot; id=&quot;dfp&quot; x=&quot;300&quot; y=&quot;20&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;3&quot; id=&quot;evsys&quot; x=&quot;160&quot; y=&quot;20&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;4&quot; id=&quot;nvmctrl&quot; x=&quot;20&quot; y=&quot;20&quot;/&gt;
-        &lt;ElementPosition dnOrder=&quot;5&quot; id=&quot;pm&quot; x=&quot;500&quot; y=&quot;20&quot;/&gt;
       &lt;/ElementPositions&gt;
     &lt;/ComponentGraph&gt;
   &lt;/UserData&gt;
@@ -102,6 +90,17 @@
 </value>
       </entry>
       <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="CPLUSPLUS_PROJECT"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;CPLUSPLUS_PROJECT&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="CPU_CLOCK_FREQUENCY"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;CPU_CLOCK_FREQUENCY&quot;&gt;
@@ -139,6 +138,28 @@
 </value>
       </entry>
       <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="CoreMainFile"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;CoreMainFile&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;false&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="CoreSysInitFile"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;CoreSysInitFile&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;false&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="DEVICE_SECURITY_CMD"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;DEVICE_SECURITY_CMD&quot;&gt;
@@ -155,6 +176,17 @@
   &lt;core dnOrder=&quot;0&quot; id=&quot;DFLL_CLOCK_FREQ&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
       &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;48000000&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="FUSE_CONFIG_ENABLE"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;FUSE_CONFIG_ENABLE&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;true&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -298,6 +330,19 @@
 </value>
       </entry>
       <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="INITIALIZATION_C"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;INITIALIZATION_C&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="KEIL_STACK_HEAP_SIZE"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;KEIL_STACK_HEAP_SIZE&quot;&gt;
@@ -315,6 +360,22 @@
     &lt;Values dnOrder=&quot;0&quot;&gt;
       &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;48000000&quot;/&gt;
     &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="MAIN_C"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;MAIN_C&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+      &lt;String dnOrder=&quot;1&quot; id=&quot;name&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;main.cpp&lt;/Value&gt;
+      &lt;/String&gt;
+    &lt;/Attributes&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -381,6 +442,45 @@
     &lt;Values dnOrder=&quot;0&quot;&gt;
       &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;PORT&quot;/&gt;
     &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="SYSTICK_FILE_0"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;SYSTICK_FILE_0&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="SYSTICK_FILE_1"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;SYSTICK_FILE_1&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="SYSTICK_FILE_2"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;SYSTICK_FILE_2&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -455,9 +555,49 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="USE_SYSTICK_INTERRUPT"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;USE_SYSTICK_INTERRUPT&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;readOnly&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
+    &lt;Values dnOrder=&quot;1&quot;&gt;
       &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;core&quot; value=&quot;false&quot;/&gt;
     &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="XC32_HEAP_SIZE"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;XC32_HEAP_SIZE&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="systickEnable"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;systickEnable&quot;&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;false&quot;/&gt;
+    &lt;/Values&gt;
+  &lt;/core&gt;
+&lt;/core&gt;
+</value>
+      </entry>
+      <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="systickSystemInitFile"/>
+         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
+  &lt;core dnOrder=&quot;0&quot; id=&quot;systickSystemInitFile&quot;&gt;
+    &lt;Attributes dnOrder=&quot;0&quot;&gt;
+      &lt;Boolean dnOrder=&quot;0&quot; id=&quot;enabled&quot;&gt;
+        &lt;Value dnOrder=&quot;0&quot;&gt;false&lt;/Value&gt;
+      &lt;/Boolean&gt;
+    &lt;/Attributes&gt;
   &lt;/core&gt;
 &lt;/core&gt;
 </value>
@@ -466,457 +606,167 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="dfp" name="#&amp;__MCC_Group_Parrent_id"/>
          <value>__ROOTVIEW</value>
       </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="#&amp;__MCC_Group_Parrent_id"/>
-         <value>__ROOTVIEW</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_0_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_0_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_10_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_10_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_11_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_11_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_1_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_1_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_2_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_2_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_3_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_3_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_4_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_4_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_5_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_5_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_6_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_6_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_7_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_7_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_8_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_8_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="evsys" name="EVSYS_CHANNEL_9_USER_READY"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;evsys&gt;
-  &lt;evsys dnOrder=&quot;0&quot; id=&quot;EVSYS_CHANNEL_9_USER_READY&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;evsys&quot; value=&quot;false&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/evsys&gt;
-&lt;/evsys&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="nvmctrl" name="#&amp;__MCC_Group_Parrent_id"/>
-         <value>__ROOTVIEW</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="nvmctrl" name="NVM_RWS"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;nvmctrl&gt;
-  &lt;nvmctrl dnOrder=&quot;0&quot; id=&quot;NVM_RWS&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;nvmctrl&quot; value=&quot;2&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/nvmctrl&gt;
-&lt;/nvmctrl&gt;
-</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="pm" name="#&amp;__MCC_Group_Parrent_id"/>
-         <value>__ROOTVIEW</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="pm" name="PM_PLCFG_PLSEL"/>
-         <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;pm&gt;
-  &lt;pm dnOrder=&quot;0&quot; id=&quot;PM_PLCFG_PLSEL&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;pm&quot; value=&quot;1&quot;/&gt;
-    &lt;/Values&gt;
-  &lt;/pm&gt;
-&lt;/pm&gt;
-</value>
-      </entry>
    </tokenMap>
-   <generatedFileHashHistoryMap class="java.util.HashMap">
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cachel1_armv7.h</file>
-         <hash>6cdb5b324f2fd1bb5b2f47298ba6e6777e735d7cad3bb8d942cd36e2c6e65328</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\mtb.h</file>
-         <hash>4cb7a28fb965f39ef03b78a73dc239aa8dcf2fb757296a8cce7e9d9f501af0dc</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\rtc.h</file>
-         <hash>1e20f1923006ccba16497475aade9ec9a9e18ef06e5c440318bf09c1baf1f17f</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_gcc.h</file>
-         <hash>3d4e265d0aa42f888385ccf073666e6ebb5ec9f834760b9da27c474e177f708d</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\port.h</file>
-         <hash>a5e1c4994f1050a1ea443e8ad8220ba3daf3b5d3c722002074ed2a8ef911fa1f</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom5.h</file>
-         <hash>e25f5977ce02f39d9f53a446e803da26af48a9b42b81784541d731f3e59fe57a</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\toolchain_specifics.h</file>
-         <hash>a4f1774c6f1f8c6cd522567536c9e9d75ca63259b868015ac9b0fb0aeeffe1f4</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\pm\plib_pm.h</file>
-         <hash>643429281888e9ac6543abed62f23e4f2a882ef6f2fb4c42ee61af83cc953a22</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\dmac.h</file>
-         <hash>4bdc9dc6f371f084b3773918fa404e72847c4c443ecc0ba70237f6a73c0dd3fe</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom1.h</file>
-         <hash>9573b8c530e2604d69cff69ef47b580bfde3253d5f4c5e266111c439d1c88740</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\adc.h</file>
-         <hash>157d71cae7b200fecd5b7124cef20e81e436c89b948af9bd69d30f19e3103232</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\aes.h</file>
-         <hash>84ae33a854832902a9de5e3492ea10c1c1ea472af17d0a6b55f1aee1c2d23447</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\nvmctrl.h</file>
-         <hash>13f04072318bdb1474e3241cdb4b9ae716a4915bb7b4380f5b142a5abfeef276</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\dmac.h</file>
-         <hash>6a971f368d3161efd30e6622547fd096e0c8d31cf74bbc69a3f5ee529f926602</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\oscctrl.h</file>
-         <hash>c4fe9ba38e12b4fce43250dc318dfcc90c0aa5d3c41eb0b05b689633f75a903e</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\saml21e16b.h</file>
-         <hash>9c79326bbf2936d7fc06eed51afd0e0353762547eca5c6a0967fdbc9ba6b2312</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\pm.h</file>
-         <hash>1e0f32aa5379bf57e6896c35c5edcd002ed295e120fd790e643f2815bacd7519</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\ptc.h</file>
-         <hash>df52f731808a65cfdc2664a9f418cd149309cf983058e49f7265e072c356a8f1</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\opamp.h</file>
-         <hash>65ff96bdccc28a200f9235d84ee42f4e3a46affd32a5da84d536e4796bac37ee</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\tc.h</file>
-         <hash>59972d78b93d7a67f847b7383f038653fec30bceee74bd0408aaf2a3bc6ab901</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\pac.h</file>
-         <hash>437b6af966709c3df99ebe878fcb26b2b9d845456146e625cbe730293bd59279</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\core_cm0plus.h</file>
-         <hash>a19e24c136145b4c72630d0ab7c83a7aef010f3ba165e34c56a05057a2d9fed5</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc2.h</file>
-         <hash>b3a680ce8e2718f5d87c2ae4a363442a4eaa73dc5a35d98fe48765923a7ea99e</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\nvmctrl.h</file>
-         <hash>de29d58dd469081897c112e7e8e68379faf0a80cde01272ee9283ebd5f8c1905</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc0.h</file>
-         <hash>8a00ef39092f46e5422f8815d8fa546bbf2bc21d58ce15f39a5b842bbf7887a7</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\dsu.h</file>
-         <hash>d8f75f9e9c673f8b1570b26e7b329316ff802d1ad37cfd458bdaf5e4912f2749</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\interrupts.h</file>
-         <hash>82c38c865926d077afa6cf0ba929acdaad72aed83c3b52dacd93e912a2d671d8</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\clock\plib_clock.h</file>
-         <hash>5946c10fc7c152286b6e389905cafd7883bdf730b74ef1aae08dbee0907add30</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\port.h</file>
-         <hash>898a558529203be5307800d9b91c95b096c5b61ff764023b3dd480fa715268f4</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\device_vectors.h</file>
-         <hash>7e05bd1f3ac22488070358bd0521dfe653f673cec01c9e6a8967279051d476f2</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\pm.h</file>
-         <hash>dc4de1c477bbc8d55e4a8e3254999da6b9b1d3d5bb6e718bbdcac0ac4b258146</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\ac.h</file>
-         <hash>bc74104b28a7734bc077a130926bec9c2842f9298e800a9d33d7c61ae76db40d</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\oscctrl.h</file>
-         <hash>6ba9680602b5f53df7101476ac266ddacce2a13da47b507b93d5e1da8f2787bc</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\clock\plib_clock.c</file>
-         <hash>c13f14047313a4f04cacc437a2f7a6ad4c75c866e078d0c03d890133b4a71f16</hash>
-      </entry>
+   <generatedFileHashHistoryMap class="java.util.TreeMap">
       <entry>
          <file>..\src\config\default\ATSAML21E16B.ld</file>
          <hash>96e0b6280687c28bec7a6b3acc043fbc31d499ff9c6900a4ff5d525b0704ac62</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc4.h</file>
-         <hash>5f2c8606519a9ac192099d3d5111fc8946e4e1522cafbf1649c5428c8c668d55</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\interrupts.c</file>
-         <hash>dd46b4d9df4a7bea347732b0074996fdf34ca58af8110ddde37c41408c2487cf</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\port\plib_port.h</file>
-         <hash>dc9ab52a3ffc940db156634d15b68822dffcef77e6e3fc228cd01189fc1f045a</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\nvmctrl\plib_nvmctrl.h</file>
-         <hash>3dbe7691ca7c7220aa1c9f1126b3297e1c39c6b88467c9ff2f42329a915be9b0</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\ccl.h</file>
-         <hash>a96bb0d9ac736136706703495bd6097959b6027eaa415df74557e50f44694045</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\nvmctrl\plib_nvmctrl.c</file>
-         <hash>1fb8d05a455e4b5ec9a5e2fdfe11470cbde614fa7df8a005b0f0110a95f071bc</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\mclk.h</file>
-         <hash>bbedfe3ccfca47e439f46e977f7aed3783ac49b45222f58dff77dea4c5eea9ef</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\mpu_armv7.h</file>
-         <hash>de1b5eb9ed566527b66dc06f4ecb6a43ab6800f7dac47e87c9cb42984dca41bb</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\port\plib_port.c</file>
-         <hash>989c0672607ff55b62b6f7d7733b24d7b4b2f9b0d95959ba29ba44a85a2a0a9b</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armcc.h</file>
-         <hash>d074534d7106cec83474b3b0a897bd2553e1a8895ecbd54f4f4fb25928066eee</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\usb.h</file>
-         <hash>a129276508558e453e5445f830f28e35e585d466e701e29a59d3e0505d288b4d</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\gclk.h</file>
-         <hash>801d13cb6c34e8a25efacad6d31596de2184f95cc72bbc3981d25eb657bc7091</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom2.h</file>
-         <hash>1efe4bf68e571e7ab3f9941449417c09234296894d7ea9569a406059d9e3ccc2</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\supc.h</file>
-         <hash>348abfe933432629552b0437549a6653b7c3e614f32be08ab6ba463ced8f2615</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armclang.h</file>
-         <hash>11b39b96ddc1125124762b3423a77b90dd40ea5b4582a3513830245046b24311</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\pin_configurations.csv</file>
-         <hash>a8b3c52e8ef8bf927dae9e813d681e52250ecd2e429e5c393656132bfafd7bee</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\fuses.h</file>
-         <hash>52ae187e859906e8c5a3afd1a333068cfb6d6dd4e81d193b2a223236540f963e</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\initialization.c</file>
-         <hash>d4d47f9e60f5df0dd5b75699ac04a4992229fc504ca2a6ade3268c05bcc7ffed</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\ac.h</file>
-         <hash>1adc6683f8f6640b2d85e2ec8625feb56600265f5a45aa7dd1f7c3090e1ce1c6</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_compiler.h</file>
-         <hash>869640702d811c4c63abb52206715c891a93fd03be954df5ad40d378355af3d6</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\mtb.h</file>
-         <hash>5cc3300703c0aeb769a26489041301f20346775835a59161fe3ff57b400cd877</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\fuses.h</file>
-         <hash>986dc3398986c1c0f782894aff9496aab4d49e4a468f96078df5d2b77506f0f1</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\pm\plib_pm.c</file>
-         <hash>e578d4cd062a5146385d78d6a87cb74ed9cbf07404af5104ecbbcfb85a443dbd</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc1.h</file>
-         <hash>dcd0934ccdae5042e64f7789e943bfd3af9bfd5cda1b258f73476b8cf03d9b2b</hash>
+         <file>..\src\config\default\definitions.h</file>
+         <hash>741a4f438d4e010a2546e1e8a54c320bfcbe3b8653abc8dd9ad5381dad414ef3</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
          <hash>4d9b40506bdabad38d176fb9dbce9b0ab3a89396b78befcf6a8560cca76ccae5</hash>
       </entry>
       <entry>
-         <file>..\src\main.c</file>
-         <hash>d3c233d419e6304bfacbafc18cc68c0f5c26e365f23b20ea40ccfac458f664c5</hash>
+         <file>..\src\config\default\device_cache.h</file>
+         <hash>e2914501b361bbc93a56d6915b1bf4fac00277e61f31fdee87a587bc15dea5b6</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\dac.h</file>
-         <hash>9b25f32b2f962522b3248efc23682f7084cad904e541a3e1aa45bdcea5275e81</hash>
+         <file>..\src\config\default\device_vectors.h</file>
+         <hash>7e05bd1f3ac22488070358bd0521dfe653f673cec01c9e6a8967279051d476f2</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\dsu.h</file>
-         <hash>3587b49ee4aa3e8ab99dc14d90fa6f4d70b5b9fd33195e4e940b711b920b7449</hash>
+         <file>..\src\config\default\exceptions.c</file>
+         <hash>5efbe5a64a17c496d2f5b177bc9cd66a7f0f80323d9558e220c073a13570a2a7</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\stdio\xc32_monitor.c</file>
-         <hash>858f8710d4287200a5ee7f3b3ad7c24f505aed9c05c16956ab0ff9f7bb162a6a</hash>
+         <file>..\src\config\default\interrupts.c</file>
+         <hash>dd46b4d9df4a7bea347732b0074996fdf34ca58af8110ddde37c41408c2487cf</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\rstc.h</file>
-         <hash>0c9c360aa90baa646c1c15ba00f438ee088cada7c232033513b5f1983e10299b</hash>
+         <file>..\src\config\default\interrupts.h</file>
+         <hash>82c38c865926d077afa6cf0ba929acdaad72aed83c3b52dacd93e912a2d671d8</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\aes.h</file>
-         <hash>3d3753bc2f064f8c6de93c98fd8dc27b472f82be795c6c29099ee922b6ba51d9</hash>
+         <file>..\src\config\default\libc_syscalls.c</file>
+         <hash>88bb2e34c939601b5b7ad076556e3ee0fcedf388436b8cddb6d6fd3e9d07472f</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\startup_xc32.c</file>
-         <hash>e6227d89e36b74af1bc21e00e80b390502c97aaaa65796291f63b2d96cf0678e</hash>
+         <file>..\src\config\default\peripheral\clock\plib_clock.c</file>
+         <hash>c13f14047313a4f04cacc437a2f7a6ad4c75c866e078d0c03d890133b4a71f16</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\adc.h</file>
-         <hash>cd9da3a1757507d8dd952921a07d4b24c46f0f5a6aa601a2258b14ae1579ca88</hash>
+         <file>..\src\config\default\peripheral\clock\plib_clock.h</file>
+         <hash>5946c10fc7c152286b6e389905cafd7883bdf730b74ef1aae08dbee0907add30</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\evsys.h</file>
-         <hash>16a7bb8770b2da2a9f1da8d0d4d857879ad396ce067614e6c3560aeb49d5533d</hash>
+         <file>..\src\config\default\peripheral\nvic\plib_nvic.c</file>
+         <hash>056a589ef1f8f3bbb9c37fd4685b97207b957116104636b2ead4e442cc135a46</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\nvic\plib_nvic.h</file>
          <hash>81e813a093101d546799e00723cbf7245e2d18471fa51c8d130c5809cecca03e</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom3.h</file>
-         <hash>ea6210746d806adbdd64c9f28a51850b3e77eda1f2164401af87b848ffefdacd</hash>
+         <file>..\src\config\default\peripheral\port\plib_port.c</file>
+         <hash>989c0672607ff55b62b6f7d7733b24d7b4b2f9b0d95959ba29ba44a85a2a0a9b</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\port\plib_port.h</file>
+         <hash>dc9ab52a3ffc940db156634d15b68822dffcef77e6e3fc228cd01189fc1f045a</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\pin_configurations.csv</file>
+         <hash>a8b3c52e8ef8bf927dae9e813d681e52250ecd2e429e5c393656132bfafd7bee</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\startup_xc32.c</file>
+         <hash>e6227d89e36b74af1bc21e00e80b390502c97aaaa65796291f63b2d96cf0678e</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\stdio\xc32_monitor.c</file>
+         <hash>858f8710d4287200a5ee7f3b3ad7c24f505aed9c05c16956ab0ff9f7bb162a6a</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\toolchain_specifics.h</file>
+         <hash>a4f1774c6f1f8c6cd522567536c9e9d75ca63259b868015ac9b0fb0aeeffe1f4</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\ac.h</file>
+         <hash>1adc6683f8f6640b2d85e2ec8625feb56600265f5a45aa7dd1f7c3090e1ce1c6</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\adc.h</file>
+         <hash>157d71cae7b200fecd5b7124cef20e81e436c89b948af9bd69d30f19e3103232</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\aes.h</file>
+         <hash>3d3753bc2f064f8c6de93c98fd8dc27b472f82be795c6c29099ee922b6ba51d9</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\ccl.h</file>
+         <hash>8805b8e9d6acaceedd2207f9da8743ccace53cdf69c4cd0b1a0595a3ae3801ba</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\dac.h</file>
+         <hash>4fc9a830be0ccad61b1dbd0a7bcf9ad2018aa7138510a62a2b5fb6169c59fa88</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\dmac.h</file>
+         <hash>4bdc9dc6f371f084b3773918fa404e72847c4c443ecc0ba70237f6a73c0dd3fe</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\dsu.h</file>
+         <hash>3587b49ee4aa3e8ab99dc14d90fa6f4d70b5b9fd33195e4e940b711b920b7449</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\eic.h</file>
+         <hash>744ad54add070f990e5b44120d2eb4284f79da781948eb9a3712359cd05bcd8e</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\evsys.h</file>
+         <hash>7d987580e07011e247edb32153e3f1d3272545ad1f8af4b12a262dde2f348432</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\fuses.h</file>
+         <hash>52ae187e859906e8c5a3afd1a333068cfb6d6dd4e81d193b2a223236540f963e</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\gclk.h</file>
+         <hash>801d13cb6c34e8a25efacad6d31596de2184f95cc72bbc3981d25eb657bc7091</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\mclk.h</file>
+         <hash>bbedfe3ccfca47e439f46e977f7aed3783ac49b45222f58dff77dea4c5eea9ef</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\mtb.h</file>
+         <hash>5cc3300703c0aeb769a26489041301f20346775835a59161fe3ff57b400cd877</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\nvmctrl.h</file>
+         <hash>de29d58dd469081897c112e7e8e68379faf0a80cde01272ee9283ebd5f8c1905</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\opamp.h</file>
+         <hash>e4bf82e4e7b9eedf06cb41c161d8beb6e4b6d65031a678541e9f530621f2a722</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\osc32kctrl.h</file>
+         <hash>c86d2ba4cf962d1f04593b470abff9cca2747affbe66bed98810d5b4a36c71e4</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\oscctrl.h</file>
+         <hash>6ba9680602b5f53df7101476ac266ddacce2a13da47b507b93d5e1da8f2787bc</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\pac.h</file>
+         <hash>d549411b7e6b854def452879c18d245cc041abc88540493b1bb6dbf02d869dbc</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\pm.h</file>
+         <hash>dc4de1c477bbc8d55e4a8e3254999da6b9b1d3d5bb6e718bbdcac0ac4b258146</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\port.h</file>
+         <hash>898a558529203be5307800d9b91c95b096c5b61ff764023b3dd480fa715268f4</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\ptc.h</file>
+         <hash>bf296a1d712ed456b683b205ba8c8d6aa7119fa4179bea257ddeb1f55f5b9359</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\component\rstc.h</file>
@@ -927,152 +777,244 @@
          <hash>781a7225535b2a90a76a17b50073c0dcface742537fd53064d992fa6633f0cb3</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\peripheral\nvic\plib_nvic.c</file>
-         <hash>056a589ef1f8f3bbb9c37fd4685b97207b957116104636b2ead4e442cc135a46</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_version.h</file>
-         <hash>2de01ae2556a38eb82c389de23c701805ec63308cfbcf3f84cb12141589b0858</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_iccarm.h</file>
-         <hash>f28119adbc81fb0e3c957c9aebe8fb423ad93634e76ead3caa2b0818d2e123ae</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\osc32kctrl.h</file>
-         <hash>c86d2ba4cf962d1f04593b470abff9cca2747affbe66bed98810d5b4a36c71e4</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\device_cache.h</file>
-         <hash>e2914501b361bbc93a56d6915b1bf4fac00277e61f31fdee87a587bc15dea5b6</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc0.h</file>
-         <hash>814a023fd48a51166943388604fee9046588d269f77f53f5e119d846915c4cda</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\ccl.h</file>
-         <hash>8805b8e9d6acaceedd2207f9da8743ccace53cdf69c4cd0b1a0595a3ae3801ba</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\eic.h</file>
-         <hash>744ad54add070f990e5b44120d2eb4284f79da781948eb9a3712359cd05bcd8e</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc2.h</file>
-         <hash>d55c5d0f6911bfdd27f7e5fb225b510e5249955d53622dd3bdaab298d17ab703</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\trng.h</file>
-         <hash>687f7d4aecb51053128342ceb5ad8e56a84adcec99953fa45b650ce5733a14ba</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\dac.h</file>
-         <hash>4fc9a830be0ccad61b1dbd0a7bcf9ad2018aa7138510a62a2b5fb6169c59fa88</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\evsys.h</file>
-         <hash>7d987580e07011e247edb32153e3f1d3272545ad1f8af4b12a262dde2f348432</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\pio\saml21e16b.h</file>
-         <hash>3ab5c22d68b7e0cb7ab821112cc132c0ad2c38bac59801dc070c5e035b3e0f2a</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armclang_ltm.h</file>
-         <hash>8621969ea669a1b230ff2125a760ef66d575c48cb45e9e457f768909abcbda46</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\libc_syscalls.c</file>
-         <hash>88bb2e34c939601b5b7ad076556e3ee0fcedf388436b8cddb6d6fd3e9d07472f</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\wdt.h</file>
-         <hash>491e2870602c1e97f18a524d06f980445a5d0b96800dbde44e02dd48a7f10701</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\usb.h</file>
-         <hash>80dd6d178845f236c0af9820a3ba6e639c40199b6fc722faa6cd3c359a1ce296</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\sercom.h</file>
+         <hash>0d02d31a460074717ce25b506a1a9be2db4740e0aeab9159c65b5556aba63922</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\component\supc.h</file>
          <hash>c4f981a1defed20fd4f9d6a9391137742e82757a1ca6b007706ac691d7a69b00</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom4.h</file>
-         <hash>0189b68518d4a53dd0140afc04a1925115afc2759424194c5cdc3b633720208d</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\mclk.h</file>
-         <hash>711fd75bdde2591bed6801bd8860f11ef201210e0f2d64cca354d604ce77789a</hash>
-      </entry>
-      <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom0.h</file>
-         <hash>ec0fcdadafa818f05d55f24725a2712dcb8da4873906c7d96bac9f6c163325d7</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\tc.h</file>
+         <hash>59972d78b93d7a67f847b7383f038653fec30bceee74bd0408aaf2a3bc6ab901</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\component\tcc.h</file>
          <hash>cd4d6eca875f4f8c398fdfa4977cde080f03f86ef23a3c960771bcb64c57dc19</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\gclk.h</file>
-         <hash>a009c6954c31a8e07e9a8856f20e7f6c4924bae68c845e9a017ec1c5b605bca3</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\trng.h</file>
+         <hash>62e6b0098d8350db8bc19ee17e11fb659f17d4c7cab177312dc7fa8274ec8427</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\sercom.h</file>
-         <hash>0d02d31a460074717ce25b506a1a9be2db4740e0aeab9159c65b5556aba63922</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\usb.h</file>
+         <hash>a129276508558e453e5445f830f28e35e585d466e701e29a59d3e0505d288b4d</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\exceptions.c</file>
-         <hash>5efbe5a64a17c496d2f5b177bc9cd66a7f0f80323d9558e220c073a13570a2a7</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\component\wdt.h</file>
+         <hash>491e2870602c1e97f18a524d06f980445a5d0b96800dbde44e02dd48a7f10701</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\ac.h</file>
+         <hash>bc74104b28a7734bc077a130926bec9c2842f9298e800a9d33d7c61ae76db40d</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\adc.h</file>
+         <hash>cd9da3a1757507d8dd952921a07d4b24c46f0f5a6aa601a2258b14ae1579ca88</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\aes.h</file>
+         <hash>84ae33a854832902a9de5e3492ea10c1c1ea472af17d0a6b55f1aee1c2d23447</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\ccl.h</file>
+         <hash>a96bb0d9ac736136706703495bd6097959b6027eaa415df74557e50f44694045</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\dac.h</file>
+         <hash>9b25f32b2f962522b3248efc23682f7084cad904e541a3e1aa45bdcea5275e81</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\dmac.h</file>
+         <hash>6a971f368d3161efd30e6622547fd096e0c8d31cf74bbc69a3f5ee529f926602</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\dsu.h</file>
+         <hash>d8f75f9e9c673f8b1570b26e7b329316ff802d1ad37cfd458bdaf5e4912f2749</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\instance\eic.h</file>
          <hash>b92873451e1f632033bec0aa1d732cf5df8982f150c390684e8abe2f8ec2faa5</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\wdt.h</file>
-         <hash>cc9da4c7df70c92890fa3b1eb541ab6395d443b34a6348390e4dd38d6f3016c2</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\evsys.h</file>
+         <hash>16a7bb8770b2da2a9f1da8d0d4d857879ad396ce067614e6c3560aeb49d5533d</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc1.h</file>
-         <hash>883ed1de6e5dcddd94d4efa44faec93ed3cbb2b15acdf1ad5f68326e15569984</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\fuses.h</file>
+         <hash>986dc3398986c1c0f782894aff9496aab4d49e4a468f96078df5d2b77506f0f1</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\pac.h</file>
-         <hash>d549411b7e6b854def452879c18d245cc041abc88540493b1bb6dbf02d869dbc</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\gclk.h</file>
+         <hash>a009c6954c31a8e07e9a8856f20e7f6c4924bae68c845e9a017ec1c5b605bca3</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\mclk.h</file>
+         <hash>711fd75bdde2591bed6801bd8860f11ef201210e0f2d64cca354d604ce77789a</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\mtb.h</file>
+         <hash>4cb7a28fb965f39ef03b78a73dc239aa8dcf2fb757296a8cce7e9d9f501af0dc</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\nvmctrl.h</file>
+         <hash>13f04072318bdb1474e3241cdb4b9ae716a4915bb7b4380f5b142a5abfeef276</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\opamp.h</file>
+         <hash>65ff96bdccc28a200f9235d84ee42f4e3a46affd32a5da84d536e4796bac37ee</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\instance\osc32kctrl.h</file>
          <hash>9b3dab9d0c61d8eab81b2c473c73901bcb2fc209c4db6e5f39d6c7be5ab37661</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\peripheral\evsys\plib_evsys.c</file>
-         <hash>7bb3bc0d60c4cf18638d76d3dfe9e5b13d2915d09e6a8a7bc4b5faae870c8f48</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\oscctrl.h</file>
+         <hash>c4fe9ba38e12b4fce43250dc318dfcc90c0aa5d3c41eb0b05b689633f75a903e</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\definitions.h</file>
-         <hash>6aa7315dd973cd5eee3838df9d760ed85c4d4c68908ba133e20446cf5ea235cf</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\pac.h</file>
+         <hash>437b6af966709c3df99ebe878fcb26b2b9d845456146e625cbe730293bd59279</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\opamp.h</file>
-         <hash>e4bf82e4e7b9eedf06cb41c161d8beb6e4b6d65031a678541e9f530621f2a722</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\pm.h</file>
+         <hash>1e0f32aa5379bf57e6896c35c5edcd002ed295e120fd790e643f2815bacd7519</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\ptc.h</file>
-         <hash>bf296a1d712ed456b683b205ba8c8d6aa7119fa4179bea257ddeb1f55f5b9359</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\port.h</file>
+         <hash>a5e1c4994f1050a1ea443e8ad8220ba3daf3b5d3c722002074ed2a8ef911fa1f</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\ptc.h</file>
+         <hash>df52f731808a65cfdc2664a9f418cd149309cf983058e49f7265e072c356a8f1</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\rstc.h</file>
+         <hash>0c9c360aa90baa646c1c15ba00f438ee088cada7c232033513b5f1983e10299b</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\rtc.h</file>
+         <hash>1e20f1923006ccba16497475aade9ec9a9e18ef06e5c440318bf09c1baf1f17f</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom0.h</file>
+         <hash>ec0fcdadafa818f05d55f24725a2712dcb8da4873906c7d96bac9f6c163325d7</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom1.h</file>
+         <hash>9573b8c530e2604d69cff69ef47b580bfde3253d5f4c5e266111c439d1c88740</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom2.h</file>
+         <hash>1efe4bf68e571e7ab3f9941449417c09234296894d7ea9569a406059d9e3ccc2</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom3.h</file>
+         <hash>ea6210746d806adbdd64c9f28a51850b3e77eda1f2164401af87b848ffefdacd</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom4.h</file>
+         <hash>0189b68518d4a53dd0140afc04a1925115afc2759424194c5cdc3b633720208d</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\sercom5.h</file>
+         <hash>e25f5977ce02f39d9f53a446e803da26af48a9b42b81784541d731f3e59fe57a</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\supc.h</file>
+         <hash>348abfe933432629552b0437549a6653b7c3e614f32be08ab6ba463ced8f2615</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc0.h</file>
+         <hash>8a00ef39092f46e5422f8815d8fa546bbf2bc21d58ce15f39a5b842bbf7887a7</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc1.h</file>
+         <hash>dcd0934ccdae5042e64f7789e943bfd3af9bfd5cda1b258f73476b8cf03d9b2b</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc2.h</file>
+         <hash>d55c5d0f6911bfdd27f7e5fb225b510e5249955d53622dd3bdaab298d17ab703</hash>
       </entry>
       <entry>
          <file>..\src\packs\ATSAML21E16B_DFP\instance\tc3.h</file>
          <hash>ddf53e4f8942bda165daa5ee2ff02f2dc8a7a175fa1ad8e16695f589c2444f53</hash>
       </entry>
       <entry>
-         <file>..\src\packs\ATSAML21E16B_DFP\component\trng.h</file>
-         <hash>62e6b0098d8350db8bc19ee17e11fb659f17d4c7cab177312dc7fa8274ec8427</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tc4.h</file>
+         <hash>5f2c8606519a9ac192099d3d5111fc8946e4e1522cafbf1649c5428c8c668d55</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\peripheral\evsys\plib_evsys.h</file>
-         <hash>f7d08eb8162f271ce1db384c082586a6624e506aa7f502c64c4ab5a1aadac47d</hash>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc0.h</file>
+         <hash>814a023fd48a51166943388604fee9046588d269f77f53f5e119d846915c4cda</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc1.h</file>
+         <hash>883ed1de6e5dcddd94d4efa44faec93ed3cbb2b15acdf1ad5f68326e15569984</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\tcc2.h</file>
+         <hash>b3a680ce8e2718f5d87c2ae4a363442a4eaa73dc5a35d98fe48765923a7ea99e</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\trng.h</file>
+         <hash>687f7d4aecb51053128342ceb5ad8e56a84adcec99953fa45b650ce5733a14ba</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\usb.h</file>
+         <hash>80dd6d178845f236c0af9820a3ba6e639c40199b6fc722faa6cd3c359a1ce296</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\instance\wdt.h</file>
+         <hash>cc9da4c7df70c92890fa3b1eb541ab6395d443b34a6348390e4dd38d6f3016c2</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\pio\saml21e16b.h</file>
+         <hash>3ab5c22d68b7e0cb7ab821112cc132c0ad2c38bac59801dc070c5e035b3e0f2a</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\ATSAML21E16B_DFP\saml21e16b.h</file>
+         <hash>9c79326bbf2936d7fc06eed51afd0e0353762547eca5c6a0967fdbc9ba6b2312</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cachel1_armv7.h</file>
+         <hash>6cdb5b324f2fd1bb5b2f47298ba6e6777e735d7cad3bb8d942cd36e2c6e65328</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armcc.h</file>
+         <hash>d074534d7106cec83474b3b0a897bd2553e1a8895ecbd54f4f4fb25928066eee</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armclang.h</file>
+         <hash>11b39b96ddc1125124762b3423a77b90dd40ea5b4582a3513830245046b24311</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_armclang_ltm.h</file>
+         <hash>8621969ea669a1b230ff2125a760ef66d575c48cb45e9e457f768909abcbda46</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_compiler.h</file>
+         <hash>869640702d811c4c63abb52206715c891a93fd03be954df5ad40d378355af3d6</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_gcc.h</file>
+         <hash>3d4e265d0aa42f888385ccf073666e6ebb5ec9f834760b9da27c474e177f708d</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_iccarm.h</file>
+         <hash>f28119adbc81fb0e3c957c9aebe8fb423ad93634e76ead3caa2b0818d2e123ae</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\cmsis_version.h</file>
+         <hash>8cda7ac3ff6f0eb5e83c4fe613dd195151b24da54167f5c3c007e599a03f1edc</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\core_cm0plus.h</file>
+         <hash>a19e24c136145b4c72630d0ab7c83a7aef010f3ba165e34c56a05057a2d9fed5</hash>
+      </entry>
+      <entry>
+         <file>..\src\packs\CMSIS\CMSIS\Core\Include\mpu_armv7.h</file>
+         <hash>de1b5eb9ed566527b66dc06f4ecb6a43ab6800f7dac47e87c9cb42984dca41bb</hash>
       </entry>
    </generatedFileHashHistoryMap>
 </config>

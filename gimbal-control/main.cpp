@@ -190,6 +190,8 @@ int main() {
 				}
 				break;
 			}
+			default:
+				break;
 		}
 
 #if DV_OUT

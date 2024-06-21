@@ -10,14 +10,8 @@
             <logicalFolder name="clock" displayName="clock" projectFiles="true">
               <itemPath>../src/config/default/peripheral/clock/plib_clock.h</itemPath>
             </logicalFolder>
-            <logicalFolder name="evsys" displayName="evsys" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/evsys/plib_evsys.h</itemPath>
-            </logicalFolder>
             <logicalFolder name="nvic" displayName="nvic" projectFiles="true">
               <itemPath>../src/config/default/peripheral/nvic/plib_nvic.h</itemPath>
-            </logicalFolder>
-            <logicalFolder name="nvmctrl" displayName="nvmctrl" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h</itemPath>
             </logicalFolder>
             <logicalFolder name="port" displayName="port" projectFiles="true">
               <itemPath>../src/config/default/peripheral/port/plib_port.h</itemPath>
@@ -140,14 +134,8 @@
             <logicalFolder name="clock" displayName="clock" projectFiles="true">
               <itemPath>../src/config/default/peripheral/clock/plib_clock.c</itemPath>
             </logicalFolder>
-            <logicalFolder name="evsys" displayName="evsys" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/evsys/plib_evsys.c</itemPath>
-            </logicalFolder>
             <logicalFolder name="nvic" displayName="nvic" projectFiles="true">
               <itemPath>../src/config/default/peripheral/nvic/plib_nvic.c</itemPath>
-            </logicalFolder>
-            <logicalFolder name="nvmctrl" displayName="nvmctrl" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/nvmctrl/plib_nvmctrl.c</itemPath>
             </logicalFolder>
             <logicalFolder name="port" displayName="port" projectFiles="true">
               <itemPath>../src/config/default/peripheral/port/plib_port.c</itemPath>
@@ -160,7 +148,6 @@
           <itemPath>../src/config/default/libc_syscalls.c</itemPath>
           <itemPath>../src/config/default/interrupts.c</itemPath>
           <itemPath>../src/config/default/startup_xc32.c</itemPath>
-          <itemPath>../src/config/default/initialization.c</itemPath>
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f1" displayName="inc" projectFiles="true">
@@ -316,7 +303,7 @@
         <property key="warn-section-align" value="false"/>
       </C32-LD>
       <C32CPP>
-        <property key="additional-warnings" value="false"/>
+        <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
         <property key="check-new" value="false"/>
         <property key="eh-specs" value="false"/>

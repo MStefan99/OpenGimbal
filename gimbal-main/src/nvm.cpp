@@ -7,10 +7,6 @@ const nvm::Options*        nvm::options {&nvm::_internal::rows.options};
 uint8_t        nvm::_internal::rowCopy[FLASH_ROW_SIZE] {};
 const uint8_t* nvm::_internal::modifiedRow {nullptr};
 
-static void nvmWaitUntilReady();
-static void nvmRowErase(uint32_t address);
-static void nvmPageWrite();
-
 static void nvmWaitUntilReady() {
 	while ((NVMCTRL_REGS->NVMCTRL_INTFLAG & NVMCTRL_INTFLAG_READY_Msk) != NVMCTRL_INTFLAG_READY_Msk);
 }

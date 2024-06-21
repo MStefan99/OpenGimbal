@@ -1,21 +1,5 @@
 #include "bldc.hpp"
 
-static tcc_registers_t* getTimer(uint8_t channel) {
-	if (channel < 4) {
-		return TCC0_REGS;
-	} else {
-		return TCC1_REGS;
-	}
-}
-
-static uint8_t getTimerChannel(uint8_t channel) {
-	if (channel < 4) {
-		return channel;
-	} else {
-		return channel & 0x01;
-	}
-}
-
 static uint8_t getPin(uint8_t channel) {
 	if (channel < 2) {
 		return channel + 4;

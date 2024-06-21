@@ -134,6 +134,8 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					nvm::write();
 					break;
 				}
+				default:
+					break;
 			}
 			break;
 		}

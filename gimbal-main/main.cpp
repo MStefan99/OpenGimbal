@@ -102,6 +102,8 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					rollOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
 					break;
 				}
+				default:
+					break;
 			}
 			break;
 		}

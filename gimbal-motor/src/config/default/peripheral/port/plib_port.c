@@ -53,6 +53,29 @@
 // *****************************************************************************
 // *****************************************************************************
 // *****************************************************************************
+/* Function:
+
+    void PORT_Initialize(void)
+
+  Summary:
+    Initializes the PORT Library.
+
+  Description:
+    This function initializes all ports and pins as configured in the
+    MHC Pin Manager.
+
+  Remarks:
+    Refer plib_port.h file for more information.
+*/
+
+void PORT_Initialize(void)
+{
+   /************************** GROUP 0 Initialization *************************/
+   PORT_REGS->GROUP[0].PORT_DIR = 0x50U;
+
+
+
+}
 // *****************************************************************************
 /* Function:
     uint32_t PORT_GroupRead(PORT_GROUP group)
