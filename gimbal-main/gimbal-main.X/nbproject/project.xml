@@ -13,9 +13,7 @@
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
-                <sourceRootElem>../src</sourceRootElem>
-                <sourceRootElem>../../controller/src/lib/inc</sourceRootElem>
-                <sourceRootElem>../../controller/src/lib/src</sourceRootElem>
+                <sourceRootElem>..</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

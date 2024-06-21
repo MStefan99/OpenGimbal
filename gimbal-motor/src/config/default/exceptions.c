@@ -46,7 +46,7 @@
 // *****************************************************************************
 #include "interrupts.h"
 #include "definitions.h"
-#include "../../lib/inc/interop.h"
+#include "interop.h"
 
  
 /* Brief default interrupt handlers for core IRQs.*/

@@ -39,7 +39,7 @@
 *******************************************************************************/
 #include <cstddef>
 
-#include "lib/inc/uart.hpp"
+#include "uart.hpp"
 
 
 extern "C" {

@@ -34,24 +34,28 @@
           <itemPath>../src/config/default/device.h</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f3" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/inc/servo.hpp</itemPath>
-        <itemPath>../src/lib/inc/dma.hpp</itemPath>
-        <itemPath>../src/lib/inc/i2c.hpp</itemPath>
-        <itemPath>../src/lib/inc/uart.hpp</itemPath>
-        <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/LSM6DSO32.hpp</itemPath>
-        <itemPath>../src/lib/inc/LSM6DSO32_regs.h</itemPath>
-        <itemPath>../src/lib/inc/adc.hpp</itemPath>
-        <itemPath>../src/lib/inc/AttitudeEstimator.hpp</itemPath>
-        <itemPath>../src/lib/inc/Quaternion.hpp</itemPath>
-        <itemPath>../src/lib/inc/Matrix.hpp</itemPath>
-        <itemPath>../src/lib/inc/Mahony.hpp</itemPath>
-        <itemPath>../src/lib/inc/LowPassFilter.hpp</itemPath>
-        <itemPath>../src/lib/inc/nvm.hpp</itemPath>
-        <itemPath>../src/lib/inc/motor.hpp</itemPath>
-        <itemPath>../src/lib/inc/ControlResponse.hpp</itemPath>
-        <itemPath>../src/lib/inc/MotorCommand.hpp</itemPath>
+      <logicalFolder name="inc" displayName="inc" projectFiles="true">
+        <logicalFolder name="regs" displayName="regs" projectFiles="true">
+          <itemPath>../inc/regs/LSM6DSO32_regs.h</itemPath>
+        </logicalFolder>
+        <itemPath>../inc/adc.hpp</itemPath>
+        <itemPath>../inc/AttitudeEstimator.hpp</itemPath>
+        <itemPath>../inc/ControlResponse.hpp</itemPath>
+        <itemPath>../inc/dma.hpp</itemPath>
+        <itemPath>../inc/i2c.hpp</itemPath>
+        <itemPath>../inc/LowPassFilter.hpp</itemPath>
+        <itemPath>../inc/LSM6DSO32.hpp</itemPath>
+        <itemPath>../inc/Mahony.hpp</itemPath>
+        <itemPath>../inc/Matrix.hpp</itemPath>
+        <itemPath>../inc/motor.hpp</itemPath>
+        <itemPath>../inc/MotorCommand.hpp</itemPath>
+        <itemPath>../inc/nvm.hpp</itemPath>
+        <itemPath>../inc/Quaternion.hpp</itemPath>
+        <itemPath>../inc/RingBuffer.hpp</itemPath>
+        <itemPath>../inc/servo.hpp</itemPath>
+        <itemPath>../inc/TaskScheduler.hpp</itemPath>
+        <itemPath>../inc/uart.hpp</itemPath>
+        <itemPath>../inc/util.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -152,7 +156,7 @@
           </logicalFolder>
         </logicalFolder>
       </logicalFolder>
-      <itemPath>../src/main.hpp</itemPath>
+      <itemPath>../main.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -215,29 +219,27 @@
           <itemPath>../src/config/default/libc_syscalls.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f2" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/src/dma.cpp</itemPath>
-        <itemPath>../src/lib/src/i2c.cpp</itemPath>
-        <itemPath>../src/lib/src/servo.cpp</itemPath>
-        <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/util.cpp</itemPath>
-        <itemPath>../src/lib/src/LSM6DSO32.cpp</itemPath>
-        <itemPath>../src/lib/src/adc.cpp</itemPath>
-        <itemPath>../src/lib/src/AttitudeEstimator.cpp</itemPath>
-        <itemPath>../src/lib/src/Quaternion.cpp</itemPath>
-        <itemPath>../src/lib/src/Mahony.cpp</itemPath>
-        <itemPath>../src/lib/src/nvm.cpp</itemPath>
-        <itemPath>../src/lib/src/motor.cpp</itemPath>
-        <itemPath>../src/lib/src/ControlResponse.cpp</itemPath>
-        <itemPath>../src/lib/src/MotorCommand.cpp</itemPath>
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <itemPath>../src/adc.cpp</itemPath>
+        <itemPath>../src/AttitudeEstimator.cpp</itemPath>
+        <itemPath>../src/ControlResponse.cpp</itemPath>
+        <itemPath>../src/dma.cpp</itemPath>
+        <itemPath>../src/i2c.cpp</itemPath>
+        <itemPath>../src/LSM6DSO32.cpp</itemPath>
+        <itemPath>../src/Mahony.cpp</itemPath>
+        <itemPath>../src/motor.cpp</itemPath>
+        <itemPath>../src/MotorCommand.cpp</itemPath>
+        <itemPath>../src/nvm.cpp</itemPath>
+        <itemPath>../src/Quaternion.cpp</itemPath>
+        <itemPath>../src/servo.cpp</itemPath>
+        <itemPath>../src/uart.cpp</itemPath>
+        <itemPath>../src/util.cpp</itemPath>
       </logicalFolder>
-      <itemPath>../src/main.cpp</itemPath>
+      <itemPath>../main.cpp</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../src</Elem>
-    <Elem>../../controller/src/lib/inc</Elem>
-    <Elem>../../controller/src/lib/src</Elem>
+    <Elem>..</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -414,7 +416,7 @@
         <property key="exceptions" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
+                  value="../inc;../inc/regs;../src/config/default;../src/packs/ATSAML21E16B_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
@@ -970,8 +972,6 @@
         <property key="periphComp5.gte" value="gt"/>
         <property key="periphComp6.gte" value="gt"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="D:/Programming/embedded/flight_computer/receiver/firmware/receiver.X/debug/default/receiver_ptg"/>
         <property key="programmerToGoImageName" value="receiver_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

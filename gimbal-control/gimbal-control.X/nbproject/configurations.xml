@@ -31,15 +31,6 @@
           <itemPath>../src/config/default/definitions.h</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="inc" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/inc/RingBuffer.hpp</itemPath>
-        <itemPath>../src/lib/inc/TaskScheduler.hpp</itemPath>
-        <itemPath>../src/lib/inc/util.hpp</itemPath>
-        <itemPath>../src/lib/inc/uart.hpp</itemPath>
-        <itemPath>../src/lib/inc/pwm.hpp</itemPath>
-        <itemPath>../src/lib/inc/buttons.hpp</itemPath>
-        <itemPath>../src/lib/inc/Command.hpp</itemPath>
-      </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
                        displayName="ATSAMD09C13A_DFP"
@@ -114,7 +105,16 @@
           </logicalFolder>
         </logicalFolder>
       </logicalFolder>
-      <itemPath>../src/main.hpp</itemPath>
+      <logicalFolder name="f1" displayName="src" projectFiles="true">
+        <itemPath>../inc/buttons.hpp</itemPath>
+        <itemPath>../inc/Command.hpp</itemPath>
+        <itemPath>../inc/pwm.hpp</itemPath>
+        <itemPath>../inc/RingBuffer.hpp</itemPath>
+        <itemPath>../inc/TaskScheduler.hpp</itemPath>
+        <itemPath>../inc/uart.hpp</itemPath>
+        <itemPath>../inc/util.hpp</itemPath>
+      </logicalFolder>
+      <itemPath>../main.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -163,12 +163,12 @@
           <itemPath>../src/config/default/initialization.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="src" displayName="lib" projectFiles="true">
-        <itemPath>../src/lib/src/util.cpp</itemPath>
-        <itemPath>../src/lib/src/uart.cpp</itemPath>
-        <itemPath>../src/lib/src/pwm.cpp</itemPath>
-        <itemPath>../src/lib/src/buttons.cpp</itemPath>
-        <itemPath>../src/lib/src/Command.cpp</itemPath>
+      <logicalFolder name="f1" displayName="inc" projectFiles="true">
+        <itemPath>../src/buttons.cpp</itemPath>
+        <itemPath>../src/Command.cpp</itemPath>
+        <itemPath>../src/pwm.cpp</itemPath>
+        <itemPath>../src/uart.cpp</itemPath>
+        <itemPath>../src/util.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
@@ -190,8 +190,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
         <pack name="CMSIS" vendor="ARM" version="5.8.0"/>
+        <pack name="SAMD09_DFP" vendor="Microchip" version="2.5.147"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -327,7 +327,7 @@
         <property key="exceptions" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../src/config/default;../src/packs/ATSAMD09C13A_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
+                  value="..;../inc;../src/config/default;../src/packs/ATSAMD09C13A_DFP;../src/packs/CMSIS/;../src/packs/CMSIS/CMSIS/Core/Include"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
