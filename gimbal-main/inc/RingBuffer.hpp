@@ -2,8 +2,8 @@
 // Created by mikha on 30.11.21.
 //
 
-#ifndef RINGBUFFER_H
-#define RINGBUFFER_H
+#ifndef RING_BUFFER_HPP
+#define RING_BUFFER_HPP
 
 #include <cstdint>
 #include <new>
@@ -234,4 +234,4 @@ typename RingBuffer<T, size_type, C>::const_reference RingBuffer<T, size_type, C
 }
 
 
-#endif //RINGBUFFER_H
+#endif //RING_BUFFER_HPP

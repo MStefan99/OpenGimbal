@@ -2,8 +2,8 @@
 // Created by MStefan99 on 21.3.22.
 //
 
-#ifndef FILTERS_ATTITUDEESTIMATOR_H
-#define FILTERS_ATTITUDEESTIMATOR_H
+#ifndef ATTITUDE_ESTIMATOR_HPP
+#define ATTITUDE_ESTIMATOR_HPP
 
 #include <cmath>
 
@@ -29,4 +29,4 @@ protected:
 };
 
 
-#endif //FILTERS_ATTITUDEESTIMATOR_H
+#endif //ATTITUDE_ESTIMATOR_HPP

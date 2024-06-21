@@ -2,8 +2,8 @@
 // Created by Mikhail on 16.11.23.
 //
 
-#ifndef MOVEMENTCONTROLLER_HPP
-#define MOVEMENTCONTROLLER_HPP
+#ifndef MOVEMENT_CONTROLLER_HPP
+#define MOVEMENT_CONTROLLER_HPP
 
 
 #include "device.h"
@@ -55,4 +55,4 @@ protected:
     Interpolator _interpolator {nvm::options->zeroOffset};
 };
 
-#endif //MOVEMENTCONTROLLER_HPP
+#endif //MOVEMENT_CONTROLLER_HPP

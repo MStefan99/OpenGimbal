@@ -2,8 +2,8 @@
 // Created by Mikhail on 12.12.23.
 //
 
-#ifndef SANDBOX_TASKSCHEDULER_HPP
-#define SANDBOX_TASKSCHEDULER_HPP
+#ifndef TASK_SCHEDULER_HPP
+#define TASK_SCHEDULER_HPP
 
 #include "RingBuffer.hpp"
 
@@ -173,4 +173,4 @@ void TaskScheduler<size_type, C>::reset() {
 }
 
 
-#endif //SANDBOX_TASKSCHEDULER_HPP
+#endif //TASK_SCHEDULER_HPP

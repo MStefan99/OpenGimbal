@@ -5,8 +5,8 @@
  * Created on January 30, 2024, 9:36 AM
  */
 
-#ifndef MAIN_BOARD_HPP
-#define	MAIN_BOARD_HPP
+#ifndef COMMAND_HPP
+#define	COMMAND_HPP
 
 #include "device.h"
 
@@ -53,4 +53,4 @@ protected:
     buffer_type _buffer = {0};
 };
 
-#endif	/* MAIN_BOARD_HPP */
+#endif	/* COMMAND_HPP */

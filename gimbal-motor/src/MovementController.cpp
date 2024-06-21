@@ -1,5 +1,6 @@
 #include "MovementController.hpp"
 
+
 void MovementController::setRange(uint16_t range) {
 	_range = range;
 }

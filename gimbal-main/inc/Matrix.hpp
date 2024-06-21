@@ -2,8 +2,8 @@
 // Created by MStefan99 on 23.7.21.
 //
 
-#ifndef FILTERS_MATRIX_HPP
-#define FILTERS_MATRIX_HPP
+#ifndef MATRIX_HPP
+#define MATRIX_HPP
 
 #include <cstdint>
 #include <initializer_list>
@@ -23,7 +23,7 @@ public:
 	constexpr explicit Matrix(scalar* values);
 	constexpr Matrix(const std::initializer_list<std::initializer_list<scalar>>& values);
 	constexpr Matrix(const Matrix& matrix);
-	constexpr Matrix& operator=(const Matrix& matrix);
+	Matrix& operator=(const Matrix& matrix);
 
 	static constexpr Matrix identity();
 
@@ -100,7 +100,7 @@ constexpr Matrix<scalar, size_type, h, w>::Matrix(const Matrix& matrix) {
 
 
 template <class scalar, class size_type, size_type h, size_type w>
-constexpr Matrix<scalar, size_type, h, w>& Matrix<scalar, size_type, h, w>::operator=(const Matrix& matrix) {
+Matrix<scalar, size_type, h, w>& Matrix<scalar, size_type, h, w>::operator=(const Matrix& matrix) {
 	if (this != &matrix) {
 		for (size_type j {0}; j < h; ++j) {
 			for (size_type i {0}; i < w; ++i) {
@@ -367,4 +367,4 @@ std::ostream& operator<<(std::ostream& out, const Matrix<scalar, size_type, h, w
 
 #endif
 
-#endif //FILTERS_MATRIX_HPP
+#endif //MATRIX_HPP

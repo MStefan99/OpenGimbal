@@ -1,5 +1,6 @@
 #include "LSM6DSO32.hpp"
 
+
 static constexpr float ACC_LSB {0.122f / 1000.0f}; //mg
 static constexpr float ROT_LSB {8.75f / 1000.0f}; // dps
 

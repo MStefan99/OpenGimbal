@@ -5,8 +5,8 @@
  * Created on November 20, 2021, 4:05 PM
  */
 
-#ifndef SERVO_H
-#define	SERVO_H
+#ifndef SERVO_HPP
+#define	SERVO_HPP
 
 #include "device.h"
 
@@ -25,5 +25,5 @@ namespace servo {
 }
 
 
-#endif	/* PWM_H */
+#endif	/* SERVO_HPP */
 

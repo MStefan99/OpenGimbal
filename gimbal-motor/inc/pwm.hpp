@@ -5,8 +5,8 @@
  * Created on July 29, 2023, 8:37 PM
  */
 
-#ifndef INPUT_HPP
-#define	INPUT_HPP
+#ifndef PWM_HPP
+#define	PWM_HPP
 
 #include "device.h"
 
@@ -17,5 +17,5 @@ namespace pwm {
     void init();
 }
 
-#endif	/* INPUT_HPP */
+#endif	/* PWM_HPP */
 

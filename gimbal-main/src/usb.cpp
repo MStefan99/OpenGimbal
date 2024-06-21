@@ -1,5 +1,4 @@
 #include "usb.hpp"
-#include "servo.hpp"
 
 using namespace usb;
 

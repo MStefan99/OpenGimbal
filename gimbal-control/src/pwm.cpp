@@ -1,5 +1,6 @@
 #include "pwm.hpp"
 
+
 void pwm::init() {
     GCLK_REGS->GCLK_CLKCTRL = GCLK_CLKCTRL_ID_TC1_TC2 // Enable TC1/TC2 clock
             | GCLK_CLKCTRL_CLKEN(1) // Enable clock

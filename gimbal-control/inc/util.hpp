@@ -6,8 +6,8 @@
  */
 
 
-#ifndef SYSTEM_H
-#define	SYSTEM_H
+#ifndef UTIL_HPP
+#define	UTIL_HPP
 
 #include "device.h"
 
@@ -113,5 +113,5 @@ namespace util {
 	}
 }
 
-#endif	/* SYSTEM_H */
+#endif	/* UTIL_HPP */
 

@@ -1,8 +1,5 @@
-//
-// Created by MStefan99 on 21.3.22.
-//
-
 #include "AttitudeEstimator.hpp"
+
 
 static constexpr float ALPHA {0.1f};
 

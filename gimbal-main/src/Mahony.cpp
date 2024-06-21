@@ -1,5 +1,6 @@
 #include "Mahony.hpp"
 
+
 Mahony::Mahony(float Kp, float Ki): 
         _twoKp {Kp * 2.0f}, _twoKi {Ki * 2.0f}, _quat {} {
     // Nothing to do

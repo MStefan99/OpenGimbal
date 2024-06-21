@@ -5,8 +5,8 @@
  * Created on March 5, 2024, 5:47 PM
  */
 
-#ifndef LOWPASSFILTER_HPP
-#define	LOWPASSFILTER_HPP
+#ifndef LOW_PASS_FILTER_HPP
+#define	LOW_PASS_FILTER_HPP
 
 #include "util.hpp"
 
@@ -19,8 +19,8 @@ public:
 
     void setCoefficients(float sampleRate, float cutoffFrequency) {
         // Calculate the filter coefficient
-        float RC = 1.0 / (cutoffFrequency * F_2_PI);
-        float dt = 1.0 / sampleRate;
+        float RC = 1.0f / (cutoffFrequency * F_2_PI);
+        float dt = 1.0f / sampleRate;
         _alpha = dt / (RC + dt);
     }
 
@@ -44,5 +44,5 @@ private:
     float _alpha = 0; // Filter coefficient
 };
 
-#endif	/* LOWPASSFILTER_HPP */
+#endif	/* LOW_PASS_FILTER_HPP */
 

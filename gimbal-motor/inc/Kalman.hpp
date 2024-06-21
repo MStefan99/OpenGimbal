@@ -2,8 +2,8 @@
 // Created by mikha on 11.1.22.
 //
 
-#ifndef FILTERS_KALMAN_HPP
-#define FILTERS_KALMAN_HPP
+#ifndef KALMAN_HPP
+#define KALMAN_HPP
 
 #include "Matrix.hpp"
 
@@ -86,4 +86,4 @@ Matrix<scalar, size_type, nx, nx> Kalman<scalar, size_type, nx, nu, nz>::P() con
 	return _P;
 }
 
-#endif //FILTERS_KALMAN_HPP
+#endif //KALMAN_HPP

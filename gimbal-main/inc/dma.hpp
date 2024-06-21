@@ -5,8 +5,8 @@
  * Created on November 28, 2021, 1:42 PM
  */
 
-#ifndef DMA_H
-#define	DMA_H
+#ifndef DMA_HPP
+#define	DMA_HPP
 
 #include "device.h"
 #include "RingBuffer.hpp"
@@ -44,5 +44,5 @@ namespace dma {
 	void startTransfer(const I2CTransfer& transfer);
 }
 
-#endif	/* DMA_H */
+#endif	/* DMA_HPP */
 

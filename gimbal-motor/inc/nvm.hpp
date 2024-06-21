@@ -5,8 +5,8 @@
  * Created on June 22, 2023, 17:58 PM
  */
 
-#ifndef DATA_HPP
-#define	DATA_HPP
+#ifndef NVM_HPP
+#define	NVM_HPP
 
 #include "device.h"
 #include <cstdlib>
@@ -77,4 +77,4 @@ namespace nvm {
     }
 }
 
-#endif	/* DATA_HPP */
+#endif	/* NVM_HPP */

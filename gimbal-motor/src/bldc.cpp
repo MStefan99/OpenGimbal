@@ -1,5 +1,6 @@
 #include "bldc.hpp"
 
+
 static tcc_registers_t* getTimer(uint8_t channel) {
     if (channel < 4) {
         return TCC0_REGS;

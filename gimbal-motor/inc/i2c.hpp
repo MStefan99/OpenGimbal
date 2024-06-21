@@ -5,8 +5,8 @@
  * Created on November 23, 2021, 5:12 PM
  */
 
-#ifndef I2C_H
-#define	I2C_H
+#ifndef I2C_HPP
+#define	I2C_HPP
 
 
 #include "device.h"
@@ -25,4 +25,4 @@ namespace i2c {
 	void readRegister(uint8_t devAddr, uint8_t regAddr, uint8_t size = 1, void (*cb)(bool success, const dma::I2CTransfer& transfer) = nullptr, bool littleEndian = false);
 }
 
-#endif	/* I2C_H */
+#endif	/* I2C_HPP */

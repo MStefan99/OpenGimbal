@@ -1,5 +1,6 @@
 #include "nvm.hpp"
 
+
 const nvm::_internal::Rows nvm::_internal::rows __attribute__((aligned(FLASH_ROW_SIZE),keep,space(prog))) {};
 const nvm::Options* nvm::options {&nvm::_internal::rows.options};
 
