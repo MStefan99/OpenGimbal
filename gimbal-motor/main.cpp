@@ -116,6 +116,19 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					uart::send(response.getBuffer(), response.getLength());
 					break;
 				}
+				case (Command::Variable::Position): {
+					auto response = ReturnVariableResponse(
+					    deviceAddress,
+					    buffer.buffer[1] >> 8u,
+					    Command::Variable::Position,
+					    static_cast<int16_t>(util::mod(
+					        static_cast<int32_t>(angleFilter.getState() - movementController.getOffset()),
+					        static_cast<int32_t>(fullRevolution)
+					    ))
+					);
+					uart::send(response.getBuffer(), response.getLength());
+					break;
+				}
 			}
 			break;
 		}
