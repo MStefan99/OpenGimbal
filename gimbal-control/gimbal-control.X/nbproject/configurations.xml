@@ -25,6 +25,15 @@
           <itemPath>../src/config/default/definitions.h</itemPath>
         </logicalFolder>
       </logicalFolder>
+      <logicalFolder name="f1" displayName="inc" projectFiles="true">
+        <itemPath>../inc/buttons.hpp</itemPath>
+        <itemPath>../inc/Command.hpp</itemPath>
+        <itemPath>../inc/pwm.hpp</itemPath>
+        <itemPath>../inc/RingBuffer.hpp</itemPath>
+        <itemPath>../inc/TaskScheduler.hpp</itemPath>
+        <itemPath>../inc/uart.hpp</itemPath>
+        <itemPath>../inc/util.hpp</itemPath>
+      </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
                        displayName="ATSAMD09C13A_DFP"
@@ -99,15 +108,6 @@
           </logicalFolder>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f1" displayName="src" projectFiles="true">
-        <itemPath>../inc/buttons.hpp</itemPath>
-        <itemPath>../inc/Command.hpp</itemPath>
-        <itemPath>../inc/pwm.hpp</itemPath>
-        <itemPath>../inc/RingBuffer.hpp</itemPath>
-        <itemPath>../inc/TaskScheduler.hpp</itemPath>
-        <itemPath>../inc/uart.hpp</itemPath>
-        <itemPath>../inc/util.hpp</itemPath>
-      </logicalFolder>
       <itemPath>../main.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -150,7 +150,7 @@
           <itemPath>../src/config/default/startup_xc32.c</itemPath>
         </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f1" displayName="inc" projectFiles="true">
+      <logicalFolder name="f1" displayName="src" projectFiles="true">
         <itemPath>../src/buttons.cpp</itemPath>
         <itemPath>../src/Command.cpp</itemPath>
         <itemPath>../src/pwm.cpp</itemPath>

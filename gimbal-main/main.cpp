@@ -281,7 +281,7 @@ int main() {
 				    maxRestoringVelocity
 				);
 
-				Quaternion phoneOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, 0)};
+				Quaternion phoneOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, rollTarget)};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
 
 				auto eulerAngles {gimbalRotation.toEuler()};

@@ -22,21 +22,17 @@
 
 #define DV_OUT 0
 
-PowerMode    powerMode {PowerMode::Sleep};
 DisplayState displayState {DisplayState::Off};
+PowerMode    powerMode {PowerMode::Sleep};
 GimbalMode   gimbalMode {GimbalMode::Follow};
-uint32_t     stateChangeTime {0};
-uint8_t      voltageBars {0};
 
+uint32_t stateChangeTime {0};
+uint8_t  voltageBars {0};
 
-uint32_t ledStates[6][2] = {
-  {0,          0         },
-  {0xffffffff, 0         },
-  {0,          0xffffffff},
-  {0,          0xffffffff},
-  {0xff0000ff, 0         },
-  {0,          0         }
-};
+uint8_t  shortPresses {0};
+uint32_t eventTime {0};
+bool     buttonPressed {false};
+bool     leftButton {true};
 
 void setLEDs(uint32_t brightnesses) {
 	for (uint8_t i {0}; i < 4; ++i) {
@@ -45,47 +41,109 @@ void setLEDs(uint32_t brightnesses) {
 	}
 }
 
-void setDisplayState(DisplayState state) {
-	displayState = state;
-	if (state != DisplayState::GimbalMode) {
-		setLEDs(ledStates[static_cast<uint8_t>(displayState)][powerMode == PowerMode::Active ? 1 : 0]);
+void showMode() {
+	if (displayState == DisplayState::Off) {
+		setLEDs(0);
 	} else {
-		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8u);
+		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
 	}
-	stateChangeTime = util::getTime();
+}
+
+bool triggerAction() {
+	// buttonPressed being true means this is a long press
+
+	bool isOff {displayState == DisplayState::Off};
+	if (shortPresses == 1) {
+		if (buttonPressed) {
+			uint8_t led = (util::getTime() - (eventTime + MAX_PRESS_WAIT_TIME)) / LONG_PRESS_STEP_TIME;
+			pwm::setBrightness(led - 1, isOff ? 0xff : 0);
+
+			if (!led) {
+				setLEDs(isOff ? 0 : 0xffffffff);
+			} else if (led >= 4) {
+				displayState = isOff ? DisplayState::GimbalMode : DisplayState::Off;
+				powerMode = isOff ? PowerMode::Active : PowerMode::Sleep;
+				showMode();
+
+				auto command {
+				  Command {Command::CommandType::SetVariable, 2}
+				};
+				auto buf {command.getBuffer()};
+				buf[1] = static_cast<uint8_t>(Command::Variable::PowerMode);
+				buf[2] = static_cast<uint8_t>(powerMode);
+
+				uart::send(buf, command.getLength());
+				return true;
+			}
+		} else {
+			if (isOff) {
+				auto command {
+				  Command {Command::CommandType::GetVariable, 1}
+				};
+				auto buf {command.getBuffer()};
+				buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
+
+				uart::send(buf, command.getLength());
+			} else {
+				if (gimbalMode == GimbalMode::FPV) {
+					gimbalMode = GimbalMode::Horizon;
+				} else {
+					gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
+				}
+				showMode();
+
+				auto command {
+				  Command {Command::CommandType::SetVariable, 2}
+				};
+				auto buf {command.getBuffer()};
+				buf[1] = static_cast<uint8_t>(Command::Variable::GimbalMode);
+				buf[2] = static_cast<uint8_t>(gimbalMode);
+
+				uart::send(buf, command.getLength());
+			}
+		}
+	}
+
+	return !buttonPressed;
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
-	setDisplayState(DisplayState::BatteryLevel);
-
-	uint8_t voltage = buffer.buffer[2];
-	voltageBars = voltage / (256 / 8) + 1;
+	displayState = DisplayState::BatteryLevel;
+	stateChangeTime = util::getTime();
+	voltageBars = buffer.buffer[2] / (256 / 8) + 1;
 }
 
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processButtons(bool left, bool pressed) {
+	if (!pressed && util::getTime() - eventTime < MAX_PRESS_WAIT_TIME) {
+		++shortPresses;
+	}
+
+	eventTime = util::getTime();
+	buttonPressed = pressed;
+	leftButton = left;
+
 	switch (displayState) {
-		case (DisplayState::Off):
-		case (DisplayState::GimbalMode):
-		case (DisplayState::BatteryLevel):
-			if (pressed) {
-				setDisplayState(DisplayState::ShortPress);
+		case (DisplayState::Off): {
+			if (shortPresses || !buttonPressed) {
+				showMode();
+				break;
+			} else {
+				setLEDs(0xffffffff);
 			}
 			break;
-		case (DisplayState::ShortPress):
-			if (!pressed) {
-				setDisplayState(DisplayState::PressWait);
+		}
+		case (DisplayState::GimbalMode): {
+			if (shortPresses || !buttonPressed) {
+				showMode();
+				break;
+			} else {
+				setLEDs(0);
 			}
 			break;
-		case (DisplayState::PressWait):
-			if (pressed) {
-				setDisplayState(DisplayState::LongPress);
-			}
-			break;
-		case (DisplayState::LongPress):
-			if (!pressed) {
-				setDisplayState(DisplayState::Off);
-			}
+		}
+		default:
 			break;
 	}
 }
@@ -120,78 +178,47 @@ int main() {
 #endif
 
 #if 0
-            ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-                | ADC_INPUTCTRL_MUXPOS_PIN0; // Set temperature sensor as positive input
-            ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-            while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-            uint16_t joystickY = 4095 - ADC_REGS->ADC_RESULT;
+    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
+        | ADC_INPUTCTRL_MUXPOS_PIN0; // Set temperature sensor as positive input
+    ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+    while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+    uint16_t joystickY = 4095 - ADC_REGS->ADC_RESULT;
 
-            ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-                | ADC_INPUTCTRL_MUXPOS_PIN2; // Set temperature sensor as positive input
-            ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-            while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-            uint16_t joystickX = ADC_REGS->ADC_RESULT;
+    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
+        | ADC_INPUTCTRL_MUXPOS_PIN2; // Set temperature sensor as positive input
+    ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
+    while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
+    uint16_t joystickX = ADC_REGS->ADC_RESULT;
 #endif
 
-		switch (displayState) {
-			case (DisplayState::ShortPress): {
-				if (util::getTime() - stateChangeTime > MAX_SHORT_PRESS_TIME) {
-					setDisplayState(DisplayState::Off);
-				}
-				break;
+		if (buttonPressed && util::getTime() - eventTime > MAX_LONG_PRESS_TIME) {
+			shortPresses = 0;
+			buttonPressed = false;
+			showMode();
+		}
+
+		if (displayState == DisplayState::BatteryLevel) {
+			uint8_t step = (util::getTime() - stateChangeTime) / VOLTAGE_DISPLAY_TIME;
+			uint8_t leds = voltageBars / 2;
+
+			if (step >= leds) {
+				// The calculation steps + leds + 1 is just to ensure the same timing for all LEDs
+				pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2 ? 255 : 0);
+			} else {
+				pwm::setBrightness(step, leds ? 255 : 0);
 			}
-			case (DisplayState::PressWait): {
-				if (util::getTime() - stateChangeTime > MAX_PRESS_WAIT_TIME) {
-					setDisplayState(DisplayState::Off);
 
-					auto command {
-					  Command {Command::CommandType::GetVariable, 1}
-					};
-					auto buf {command.getBuffer()};
-					buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
-
-					uart::send(buf, command.getLength());
-				}
-				break;
+			if (step > 15 || buttonPressed) {
+				displayState = powerMode == PowerMode::Active ? DisplayState::GimbalMode : DisplayState::Off;
 			}
-			case (DisplayState::LongPress): {
-				uint8_t led = (util::getTime() - stateChangeTime) / LONG_PRESS_STEP_TIME;
-				bool    isOn = powerMode == PowerMode::Active;
-				pwm::setBrightness(led, isOn ? 0 : 0xff);
+		}
 
-				if (led >= 3) {
-					setDisplayState(isOn ? DisplayState::Off : DisplayState::GimbalMode);
-					powerMode = isOn ? PowerMode::Sleep : PowerMode::Active;
-
-					auto command {
-					  Command {Command::CommandType::SetVariable, 2}
-					};
-					auto buf {command.getBuffer()};
-					buf[1] = static_cast<uint8_t>(Command::Variable::PowerMode);
-					buf[2] = static_cast<uint8_t>(powerMode);
-
-					uart::send(buf, command.getLength());
-				}
-				break;
+		if ((buttonPressed && util::getTime() - eventTime > MAX_SHORT_PRESS_TIME)
+		    || (shortPresses && util::getTime() - eventTime > MAX_PRESS_WAIT_TIME)) {
+			if (triggerAction()) {
+				shortPresses = 0;
+				buttonPressed = false;
 			}
-			case (DisplayState::BatteryLevel): {
-				uint8_t step = (util::getTime() - stateChangeTime) / VOLTAGE_DISPLAY_TIME;
-				uint8_t leds = voltageBars / 2;
-
-				if (step >= leds) {
-					// The calculation steps + leds + 1 is just to ensure the same timing for all LEDs
-					pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2 ? 255 : 0);
-				} else {
-					pwm::setBrightness(step, leds ? 255 : 0);
-				}
-
-				if (step > 15) {
-					setDisplayState(powerMode == PowerMode::Active ? DisplayState::GimbalMode : DisplayState::Off);
-				}
-				break;
-			}
-			default:
-				break;
 		}
 
 #if DV_OUT
