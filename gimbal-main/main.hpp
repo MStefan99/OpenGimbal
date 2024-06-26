@@ -27,8 +27,14 @@
 
 
 // Using the same modes as in the protocol for now but this allows for more states as needed
-using PowerMode = ControlCommand::PowerMode;
 using GimbalMode = ControlCommand::GimbalMode;
+
+enum class PowerMode : uint8_t {
+	Sleep = 0x0,
+	Idle = 0x1,
+	Startup = 0x2,
+	Active = 0x3
+};
 
 constexpr uint16_t MIN_VOLTAGE {2900};
 constexpr uint16_t MAX_VOLTAGE {3900};

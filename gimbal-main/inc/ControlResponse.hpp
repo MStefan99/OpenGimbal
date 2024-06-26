@@ -12,8 +12,7 @@
 
 namespace ControlCommand {
 	enum class CommandType : uint8_t {
-		Move = 0x0,
-		Calibrate = 0x1,
+		Calibrate = 0x0,
 		GetVariable = 0xe,
 		SetVariable = 0xf
 	};

@@ -14,20 +14,22 @@ static float yawOffset {0};
 static float pitchOffset {0};
 static float rollOffset {0};
 
+static float motorAngles[3] {0};
+
 constexpr float sqrt2 = sqrtf(2);
+
+float normalize(float difference) {
+	if (difference > F_PI) {
+		difference -= F_2_PI;
+	} else if (difference < -F_PI) {
+		difference += F_2_PI;
+	}
+	return difference;
+}
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	switch (static_cast<ControlCommand::CommandType>(buffer.buffer[0] & 0x0f)) {
-		case (ControlCommand::CommandType::Move): {
-			yawOffset = static_cast<int16_t>((buffer.buffer[1] << 8u) | buffer.buffer[2]);
-			pitchOffset = static_cast<int16_t>((buffer.buffer[3] << 8u) | buffer.buffer[4]);
-			break;
-		}
-		case (ControlCommand::CommandType::Calibrate): {
-			// TODO: start calibration
-			break;
-		}
 		case (ControlCommand::CommandType::GetVariable): {
 			switch (static_cast<ControlCommand::Variable>(buffer.buffer[1])) {  // Switch variable
 				case (ControlCommand::Variable::PowerMode): {
@@ -36,21 +38,40 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					break;
 				}
 				case (ControlCommand::Variable::GimbalMode): {
+					ControlResponse::PowerMode responseMode;
+
+					switch (powerMode) {
+						case (PowerMode::Sleep): {
+							responseMode = ControlResponse::PowerMode::Sleep;
+							break;
+						}
+						case (PowerMode::Idle): {
+							responseMode = ControlResponse::PowerMode::Idle;
+							break;
+						}
+						default: {
+							responseMode = ControlResponse::PowerMode::Active;
+							break;
+						}
+					}
+
 					auto response =
-					    ReturnVariableResponse(ControlResponse::Variable::GimbalMode, static_cast<uint8_t>(gimbalMode));
+					    ReturnVariableResponse(ControlResponse::Variable::GimbalMode, static_cast<uint8_t>(responseMode));
 					uart::sendToControl(response.getBuffer(), response.getLength());
 					break;
 				}
 				case (ControlCommand::Variable::BatteryVoltage): {
 					adc::measureBattery([](uint16_t voltage) {
-						uint8_t scaledVoltage = static_cast<uint8_t>(util::scale(
-						    util::clamp(voltage, MIN_VOLTAGE, MAX_VOLTAGE),
-						    MIN_VOLTAGE,
-						    MAX_VOLTAGE,
-						    static_cast<uint16_t>(0),
-						    static_cast<uint16_t>(255)
-						));
-						auto    response = ReturnVariableResponse(ControlResponse::Variable::BatteryVoltage, scaledVoltage);
+						auto response = ReturnVariableResponse(
+						    ControlResponse::Variable::BatteryVoltage,
+						    static_cast<uint8_t>(util::scale(
+						        util::clamp(voltage, MIN_VOLTAGE, MAX_VOLTAGE),
+						        MIN_VOLTAGE,
+						        MAX_VOLTAGE,
+						        static_cast<uint16_t>(0),
+						        static_cast<uint16_t>(255)
+						    ))
+						);
 						uart::sendToControl(response.getBuffer(), response.getLength());
 					});
 					break;
@@ -83,7 +104,19 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		case (ControlCommand::CommandType::SetVariable): {
 			switch (static_cast<ControlCommand::Variable>(buffer.buffer[1])) {  // Switch variable
 				case (ControlCommand::Variable::PowerMode): {
-					powerMode = static_cast<PowerMode>(buffer.buffer[2]);
+					switch (static_cast<ControlCommand::PowerMode>(buffer.buffer[2])) {
+						case (ControlCommand::PowerMode::Sleep): {
+							powerMode = PowerMode::Sleep;
+							break;
+						}
+						case (ControlCommand::PowerMode::Idle): {
+							powerMode = PowerMode::Idle;
+							break;
+						}
+						default:
+							powerMode = PowerMode::Startup;
+							break;
+					}
 					break;
 				}
 				case (ControlCommand::Variable::GimbalMode): {
@@ -107,12 +140,17 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			}
 			break;
 		}
+		default:
+			break;
 	}
 }
 
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {}
+
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
 	float a = eulerAngles[0][0];
-	float b = util::clamp(eulerAngles[1][0], -F_PI_4 + 1e-3f, F_PI_4 - 1e-3f);
+	float b = util::clamp(eulerAngles[1][0], -F_PI_3, F_PI_3);
 	float g = eulerAngles[2][0];
 
 	float cosA = std::cos(a);
@@ -126,10 +164,6 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
 	float sin2G = sinG * sinG;
 
 	float sinM2 = sqrt2 * sinB;
-	float sin2M2 = sinM2 * sinM2;
-
-	float cos2M2 = 1 - sin2M2;
-	float cosM2 = sqrtf(cos2M2);
 
 	auto signG {util::sign(util::abs(g) - F_PI_2)};
 
@@ -163,18 +197,7 @@ struct Data {
 } __attribute__((packed));
 #endif
 
-float normalize(float difference) {
-	if (difference > F_PI) {
-		return difference - F_2_PI;
-	} else if (difference < -F_PI) {
-		return difference + F_2_PI;
-	} else {
-		return difference;
-	}
-}
-
 void sleep() {  // TODO: disable IMU
-	motor::sleep();
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -193,16 +216,34 @@ int main() {
 	adc::init();
 
 	uart::setControlCallback(processControlCommand);
+	uart::setMotorCallback(processMotorResponse);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
 
 	Mahony mahony {};
 
-	float yawTarget {0};
-	float pitchTarget {0};
-
 	while (1) {
 		switch (powerMode) {
+			case (PowerMode::Startup): {
+				// TODO: check motor state
+
+				motor::move();
+				motor::tone(motor::all, 247);
+				util::sleep(205);
+
+				for (uint8_t i {15}; i > 4; i -= 5) {
+					motor::tone(motor::all, 294);
+					motor::move(motor::all, 0, i);
+					util::sleep(205);
+					motor::tone(motor::all, 392);
+					motor::move(motor::all, 0, i);
+					util::sleep(205);
+				}
+				motor::tone();
+
+				powerMode = PowerMode::Active;
+				break;
+			}
 			case (PowerMode::Active): {
 				LSM6DSO32::update();
 #if DV_OUT
@@ -214,23 +255,43 @@ int main() {
 				Quaternion handleOrientation {mahony.getQuat()};
 				auto       handleAngles {handleOrientation.toEuler()};
 
+				if (gimbalMode == GimbalMode::Follow) {
+					handleAngles[2][0] = 0;  // Do not follow handle roll
+				}
+				if (gimbalMode == GimbalMode::Horizon) {
+					handleAngles[1][0] = handleAngles[2][0] = 0;  // Do not follow handle pitch or roll
+				}
+
 				yawTarget += util::clamp(
-				    normalize(handleAngles[0][0] - yawTarget) / 100.0f,
-				    -maxRestoringVelocity,
-				    maxRestoringVelocity
-				);
-				pitchTarget += util::clamp(
-				    normalize(handleAngles[1][0] - pitchTarget) / 100.0f,
+				    normalize(handleAngles[0][0] - yawTarget + yawOffset) / 50.0f,
 				    -maxRestoringVelocity,
 				    maxRestoringVelocity
 				);
 				yawTarget = normalize(yawTarget);
 
+				pitchTarget += util::clamp(
+				    normalize(handleAngles[1][0] - pitchTarget + pitchOffset) / 50.0f,
+				    -maxRestoringVelocity,
+				    maxRestoringVelocity
+				);
+
+				rollTarget += util::clamp(
+				    normalize(handleAngles[2][0] - rollTarget + rollOffset) / 50.0f,
+				    -maxRestoringVelocity,
+				    maxRestoringVelocity
+				);
+
 				Quaternion phoneOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, 0)};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
 
 				auto eulerAngles {gimbalRotation.toEuler()};
-				auto motorAngles {calculateAngles(eulerAngles)};
+				auto calculatedAngles {calculateAngles(eulerAngles)};
+
+				for (uint8_t i {0}; i < 3; ++i) {
+					if (!std::isnan(calculatedAngles[i][0])) {
+						motorAngles[i] = calculatedAngles[i][0];
+					}
+				}
 
 #if DV_OUT
 				Data data {};
@@ -246,7 +307,7 @@ int main() {
 #endif
 
 				for (uint8_t i {0}; i < 3; ++i) {
-					int16_t position = motorAngles[i][0] * attFactor;
+					int16_t position = motorAngles[i] * attFactor;
 					if (position < 0) {
 						position += 4096;
 					}
@@ -264,6 +325,7 @@ int main() {
 				break;
 			}
 			case (PowerMode::Sleep): {
+				motor::sleep();
 				sleep();
 				break;
 			}
