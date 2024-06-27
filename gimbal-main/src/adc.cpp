@@ -25,6 +25,7 @@ void adc::init() {
 	                     | SUPC_VREF_SEL_1V0;     // Set 1.0V as a reference
 
 	// ADC setup
+	ADC_REGS->ADC_CTRLB = ADC_CTRLB_PRESCALER_DIV2;      // Set prescaler to 2
 	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;  // Set ADC reference voltage
 	ADC_REGS->ADC_CALIB = ADC_CALIB_BIASREFBUF(
 	                          (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_ADC_BIASREFBUF_Msk)

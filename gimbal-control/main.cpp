@@ -20,15 +20,14 @@
  *
  */
 
-#define DV_OUT 0
 
 DisplayState displayState {DisplayState::Off};
 PowerMode    powerMode {PowerMode::Sleep};
 GimbalMode   gimbalMode {GimbalMode::Follow};
 
-uint16_t yawOffset {0};
-uint16_t pitchOffset {0};
-uint16_t rollOffset {0};
+int16_t yawOffset {0};
+int16_t pitchOffset {0};
+int16_t rollOffset {0};
 
 uint32_t stateChangeTime {0};
 uint8_t  voltageBars {0};
@@ -37,6 +36,21 @@ uint8_t  shortPresses {0};
 uint32_t eventTime {0};
 bool     buttonPressed {false};
 bool     leftButton {true};
+
+int16_t joystickX {0};
+int16_t joystickY {0};
+
+int16_t normalize(int16_t difference) {
+	difference %= 4096;
+
+	if (difference > halfRevolution) {
+		return difference - fullRevolution;
+	} else if (difference < -halfRevolution) {
+		return difference + fullRevolution;
+	} else {
+		return difference;
+	}
+}
 
 void setLEDs(uint32_t brightnesses) {
 	for (uint8_t i {0}; i < 4; ++i) {
@@ -64,79 +78,67 @@ bool triggerAction() {
 			if (!led) {
 				setLEDs(isOff ? 0 : 0xffffffff);
 			} else if (led >= 4) {
-				displayState = isOff ? DisplayState::GimbalMode : DisplayState::Off;
-				powerMode = isOff ? PowerMode::Active : PowerMode::Sleep;
+				if (isOff) {
+					displayState = DisplayState::GimbalMode;
+					powerMode = PowerMode::Active;
+					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
+				} else {
+					displayState = DisplayState::Off;
+					powerMode = PowerMode::Sleep;
+					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 5u;
+					yawOffset = pitchOffset = rollOffset = 0;
+				}
 				showMode();
 
 				auto command {
-				  Command {Command::CommandType::SetVariable, 2}
+				  SetVariableCommand {Command::Variable::PowerMode, static_cast<uint8_t>(powerMode)}
 				};
-				auto buf {command.getBuffer()};
-				buf[1] = static_cast<uint8_t>(Command::Variable::PowerMode);
-				buf[2] = static_cast<uint8_t>(powerMode);
+				uart::send(command.getBuffer(), command.getLength());
 
-				uart::send(buf, command.getLength());
 				return true;
 			}
 		}
 	} else {
 		if (leftButton) {
 			if (shortPresses == 1) {
-				if (isOff) {
-					auto command {
-					  Command {Command::CommandType::GetVariable, 1}
-					};
-					auto buf {command.getBuffer()};
-					buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
-
-					uart::send(buf, command.getLength());
-				} else {
-					if (gimbalMode == GimbalMode::FPV) {
-						gimbalMode = GimbalMode::Horizon;
-					} else {
-						gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
-					}
-					showMode();
-
-					auto command {
-					  Command {Command::CommandType::SetVariable, 2}
-					};
-					auto buf {command.getBuffer()};
-					buf[1] = static_cast<uint8_t>(Command::Variable::GimbalMode);
-					buf[2] = static_cast<uint8_t>(gimbalMode);
-
-					uart::send(buf, command.getLength());
-				}
+				yawOffset = pitchOffset = rollOffset = 0;
 			} else if (shortPresses == 2) {
-				rollOffset += 1024;
-				if (rollOffset > 2048) {
+				rollOffset += quarterRevolution;
+				if (rollOffset > halfRevolution) {
 					rollOffset = 0;
 				}
 
 				auto command {
-				  Command {Command::CommandType::SetVariable, 3}
+				  SetVariableCommand {Command::Variable::RollOffset, rollOffset}
 				};
-				auto buf {command.getBuffer()};
-				buf[1] = static_cast<uint8_t>(Command::Variable::RollOffset);
-				buf[2] = rollOffset >> 8u;
-				buf[3] = rollOffset;
-
-				uart::send(buf, command.getLength());
+				uart::send(command.getBuffer(), command.getLength());
 			} else if (shortPresses == 3) {
-				yawOffset += 2050;  // Slightly more than half a revolution to indicate direction
-				if (yawOffset > 2050) {
+				yawOffset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
+				if (yawOffset > halfRevolution + 2) {
 					yawOffset = 0;
 				}
 
 				auto command {
-				  Command {Command::CommandType::SetVariable, 3}
+				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
 				};
-				auto buf {command.getBuffer()};
-				buf[1] = static_cast<uint8_t>(Command::Variable::YawOffset);
-				buf[2] = yawOffset >> 8u;
-				buf[3] = yawOffset;
+				uart::send(command.getBuffer(), command.getLength());
+			}
+		} else {
+			if (shortPresses == 1) {
+				auto command {GetVariableCommand {Command::Variable::BatteryVoltage}};
+				uart::send(command.getBuffer(), command.getLength());
+			} else if (shortPresses == 2) {
+				if (gimbalMode == GimbalMode::FPV) {
+					gimbalMode = GimbalMode::Horizon;
+				} else {
+					gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
+				}
+				showMode();
 
-				uart::send(buf, command.getLength());
+				auto command {
+				  SetVariableCommand {Command::Variable::GimbalMode, static_cast<uint8_t>(gimbalMode)}
+				};
+				uart::send(command.getBuffer(), command.getLength());
 			}
 		}
 	}
@@ -190,18 +192,30 @@ void processButtons(bool left, bool pressed) {
 struct DVData {
 	uint8_t  header {0x03};
 	uint16_t dt {};
-	uint16_t joystickX {};
-	uint16_t joystickY {};
+	int16_t  joystickX {};
+	int16_t  joystickY {};
 	uint8_t  footer {0xfc};
 } __attribute__((packed));
 #endif
 
+static void sleep() {
+	SCB->SCR = SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk;
+	PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_APB;
+	while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_APB);
+	do {
+		__WFI();
+	} while (displayState == DisplayState::Off);
+	SCB->SCR = SCB_SCR_SEVONPEND_Msk;
+	PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_CPU;
+	while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_CPU);
+}
 
 int main() {
 	util::init();
 	buttons::init();
 	pwm::init();
 	uart::init();
+	adc::init();
 
 	uart::setCallback(processResponse);
 	buttons::setCallback(processButtons);
@@ -214,19 +228,25 @@ int main() {
 		auto startUs = SysTick->VAL;
 #endif
 
-#if 0
-    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-        | ADC_INPUTCTRL_MUXPOS_PIN0; // Set temperature sensor as positive input
-    ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-    while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-    uint16_t joystickY = 4095 - ADC_REGS->ADC_RESULT;
+		if (displayState == DisplayState::GimbalMode) {
+			adc::getX([](uint16_t x) {
+				yawOffset = normalize(yawOffset + (static_cast<int16_t>(x) - 1650) / 100);
 
-    ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND // Set GND as negative input
-        | ADC_INPUTCTRL_MUXPOS_PIN2; // Set temperature sensor as positive input
-    ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1); // Start conversion
-    while (!(ADC_REGS->ADC_INTFLAG & ADC_INTFLAG_RESRDY_Msk)); // Wait for ADC result
-    uint16_t joystickX = ADC_REGS->ADC_RESULT;
-#endif
+				auto command {
+				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
+				};
+				uart::send(command.getBuffer(), command.getLength());
+
+				adc::getY([](uint16_t y) {
+					pitchOffset = normalize(pitchOffset + (1650 - static_cast<int16_t>(y)) / 100);
+
+					auto command {
+					  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
+					};
+					uart::send(command.getBuffer(), command.getLength());
+				});
+			});
+		}
 
 		if (buttonPressed && util::getTime() - eventTime > MAX_LONG_PRESS_TIME) {
 			shortPresses = 0;
@@ -247,6 +267,7 @@ int main() {
 
 			if (step > 15 || buttonPressed) {
 				displayState = powerMode == PowerMode::Active ? DisplayState::GimbalMode : DisplayState::Off;
+				showMode();
 			}
 		}
 

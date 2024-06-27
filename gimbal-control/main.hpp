@@ -12,6 +12,7 @@
 
 #include "device.h"
 
+#include "adc.hpp"
 #include "buttons.hpp"
 #include "Command.hpp"
 #include "pwm.hpp"
@@ -28,11 +29,18 @@ constexpr uint16_t MAX_PRESS_WAIT_TIME {400};
 constexpr uint16_t LONG_PRESS_STEP_TIME {250};
 constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
 
+constexpr int16_t fullRevolution {4096};
+constexpr int16_t halfRevolution {fullRevolution / 2};
+constexpr int16_t quarterRevolution {fullRevolution / 4};
+
 
 enum class DisplayState : uint8_t {
 	Off = 0x0,
 	GimbalMode = 0x1,
 	BatteryLevel = 0x2
 };
+
+
+#define DV_OUT 0
 
 #endif /* MAIN_HPP */

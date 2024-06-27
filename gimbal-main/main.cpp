@@ -124,15 +124,15 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					break;
 				}
 				case (ControlCommand::Variable::YawOffset): {
-					yawOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
+					yawOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
 					break;
 				}
 				case (ControlCommand::Variable::PitchOffset): {
-					pitchOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
+					pitchOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
 					break;
 				}
 				case (ControlCommand::Variable::RollOffset): {
-					rollOffset = ((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
+					rollOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
 					break;
 				}
 				default:

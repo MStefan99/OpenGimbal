@@ -54,4 +54,26 @@ protected:
 	buffer_type _buffer = {0};
 };
 
+class GetVariableCommand: public Command {
+public:
+	GetVariableCommand(Command::Variable variableID);
+};
+
+class SetVariableCommand: public Command {
+public:
+	template <class T>
+	SetVariableCommand(Command::Variable variableID, T value);
+};
+
+template <class T>
+SetVariableCommand::SetVariableCommand(Command::Variable variableID, T value):
+  Command {CommandType::SetVariable, 1 + sizeof(T)} {
+	this->_buffer[1] = static_cast<uint8_t>(variableID);
+
+	for (size_type i {0}; i < sizeof(T); ++i) {
+		this->_buffer[sizeof(T) + 1 - i] = value;
+		value >>= 8;
+	}
+}
+
 #endif /* COMMAND_HPP */

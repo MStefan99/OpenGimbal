@@ -178,6 +178,8 @@ uint16_t measureAngle() {
 }
 
 int16_t normalize(int16_t difference) {
+	difference %= fullRevolution;
+
 	if (difference > halfRevolution) {
 		return difference - fullRevolution;
 	} else if (difference < -halfRevolution) {

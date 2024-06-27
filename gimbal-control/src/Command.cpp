@@ -11,3 +11,8 @@ Command::buffer_type& Command::getBuffer() {
 Command::size_type Command::getLength() {
 	return (this->_buffer[0] >> 4u) + 1;
 }
+
+GetVariableCommand::GetVariableCommand(Command::Variable variableID):
+  Command {Command::CommandType::GetVariable, 1} {
+	this->_buffer[1] = static_cast<uint8_t>(variableID);
+}
