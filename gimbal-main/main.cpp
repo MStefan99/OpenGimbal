@@ -263,29 +263,29 @@ int main() {
 				}
 
 				yawTarget += util::clamp(
-				    normalize(handleAngles[0][0] - yawTarget + yawOffset) / 50.0f,
+				    normalize(handleAngles[0][0] - (yawTarget + yawOffset)) / 50.0f,
 				    -maxRestoringVelocity,
 				    maxRestoringVelocity
 				);
 				yawTarget = normalize(yawTarget);
 
 				pitchTarget += util::clamp(
-				    normalize(handleAngles[1][0] - pitchTarget + pitchOffset) / 50.0f,
+				    normalize(handleAngles[1][0] - (pitchTarget + pitchOffset)) / 50.0f,
 				    -maxRestoringVelocity,
 				    maxRestoringVelocity
 				);
 
 				rollTarget += util::clamp(
-				    normalize(handleAngles[2][0] - rollTarget + rollOffset) / 50.0f,
+				    normalize(handleAngles[2][0] - (rollTarget + rollOffset)) / 50.0f,
 				    -maxRestoringVelocity,
 				    maxRestoringVelocity
 				);
 
-				Quaternion phoneOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, rollTarget)};
-				Quaternion gimbalRotation {handleOrientation.conjugate() * phoneOrientation};
+				Quaternion cameraOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, rollTarget)};
+				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
 
-				auto eulerAngles {gimbalRotation.toEuler()};
-				auto calculatedAngles {calculateAngles(eulerAngles)};
+				auto rotationAngles {gimbalRotation.toEuler()};
+				auto calculatedAngles {calculateAngles(rotationAngles)};
 
 				for (uint8_t i {0}; i < 3; ++i) {
 					if (!std::isnan(calculatedAngles[i][0])) {
@@ -297,12 +297,12 @@ int main() {
 				Data data {};
 
 				data.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
-				data.x = eulerAngles[0][0];
-				data.y = eulerAngles[1][0];
-				data.z = eulerAngles[2][0];
-				data.m1 = motorAngles[0][0];
-				data.m2 = motorAngles[1][0];
-				data.m3 = motorAngles[2][0];
+				data.x = rotationAngles[0][0];
+				data.y = rotationAngles[1][0];
+				data.z = rotationAngles[2][0];
+				data.m1 = motorAngles[0];
+				data.m2 = motorAngles[1];
+				data.m3 = motorAngles[2];
 				uart::sendToControl(reinterpret_cast<uint8_t*>(&data), sizeof(data));
 #endif
 

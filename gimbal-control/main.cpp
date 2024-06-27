@@ -26,6 +26,10 @@ DisplayState displayState {DisplayState::Off};
 PowerMode    powerMode {PowerMode::Sleep};
 GimbalMode   gimbalMode {GimbalMode::Follow};
 
+uint16_t yawOffset {0};
+uint16_t pitchOffset {0};
+uint16_t rollOffset {0};
+
 uint32_t stateChangeTime {0};
 uint8_t  voltageBars {0};
 
@@ -50,11 +54,10 @@ void showMode() {
 }
 
 bool triggerAction() {
-	// buttonPressed being true means this is a long press
-
 	bool isOff {displayState == DisplayState::Off};
-	if (shortPresses == 1) {
-		if (buttonPressed) {
+
+	if (buttonPressed) {  // buttonPressed being true means this is a long press
+		if (shortPresses == 1) {
 			uint8_t led = (util::getTime() - (eventTime + MAX_PRESS_WAIT_TIME)) / LONG_PRESS_STEP_TIME;
 			pwm::setBrightness(led - 1, isOff ? 0xff : 0);
 
@@ -75,29 +78,63 @@ bool triggerAction() {
 				uart::send(buf, command.getLength());
 				return true;
 			}
-		} else {
-			if (isOff) {
+		}
+	} else {
+		if (leftButton) {
+			if (shortPresses == 1) {
+				if (isOff) {
+					auto command {
+					  Command {Command::CommandType::GetVariable, 1}
+					};
+					auto buf {command.getBuffer()};
+					buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
+
+					uart::send(buf, command.getLength());
+				} else {
+					if (gimbalMode == GimbalMode::FPV) {
+						gimbalMode = GimbalMode::Horizon;
+					} else {
+						gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
+					}
+					showMode();
+
+					auto command {
+					  Command {Command::CommandType::SetVariable, 2}
+					};
+					auto buf {command.getBuffer()};
+					buf[1] = static_cast<uint8_t>(Command::Variable::GimbalMode);
+					buf[2] = static_cast<uint8_t>(gimbalMode);
+
+					uart::send(buf, command.getLength());
+				}
+			} else if (shortPresses == 2) {
+				rollOffset += 1024;
+				if (rollOffset > 2048) {
+					rollOffset = 0;
+				}
+
 				auto command {
-				  Command {Command::CommandType::GetVariable, 1}
+				  Command {Command::CommandType::SetVariable, 3}
 				};
 				auto buf {command.getBuffer()};
-				buf[1] = static_cast<uint8_t>(Command::Variable::BatteryVoltage);
+				buf[1] = static_cast<uint8_t>(Command::Variable::RollOffset);
+				buf[2] = rollOffset >> 8u;
+				buf[3] = rollOffset;
 
 				uart::send(buf, command.getLength());
-			} else {
-				if (gimbalMode == GimbalMode::FPV) {
-					gimbalMode = GimbalMode::Horizon;
-				} else {
-					gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
+			} else if (shortPresses == 3) {
+				yawOffset += 2050;  // Slightly more than half a revolution to indicate direction
+				if (yawOffset > 2050) {
+					yawOffset = 0;
 				}
-				showMode();
 
 				auto command {
-				  Command {Command::CommandType::SetVariable, 2}
+				  Command {Command::CommandType::SetVariable, 3}
 				};
 				auto buf {command.getBuffer()};
-				buf[1] = static_cast<uint8_t>(Command::Variable::GimbalMode);
-				buf[2] = static_cast<uint8_t>(gimbalMode);
+				buf[1] = static_cast<uint8_t>(Command::Variable::YawOffset);
+				buf[2] = yawOffset >> 8u;
+				buf[3] = yawOffset;
 
 				uart::send(buf, command.getLength());
 			}
