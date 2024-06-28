@@ -95,7 +95,7 @@ namespace util {
 	}
 
 	template <class T>
-	T map(T val, T minSrc, T maxSrc, T minTgt, T maxTgt) {
+	T scale(T val, T minSrc, T maxSrc, T minTgt, T maxTgt) {
 		return (val - minSrc) * (maxTgt - minTgt) / (maxSrc - minSrc) + minTgt;
 	}
 

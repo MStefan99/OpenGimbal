@@ -15,6 +15,7 @@
 #include "adc.hpp"
 #include "buttons.hpp"
 #include "Command.hpp"
+#include "nvm.hpp"
 #include "pwm.hpp"
 #include "uart.hpp"
 #include "util.hpp"

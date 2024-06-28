@@ -34,6 +34,8 @@
         <itemPath>../inc/uart.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/adc.hpp</itemPath>
+        <itemPath>../inc/nvm.hpp</itemPath>
+        <itemPath>../inc/joystick.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="packs" displayName="packs" projectFiles="true">
         <logicalFolder name="ATSAMD09C13A_DFP"
@@ -158,6 +160,8 @@
         <itemPath>../src/uart.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>
         <itemPath>../src/adc.cpp</itemPath>
+        <itemPath>../src/nvm.cpp</itemPath>
+        <itemPath>../src/joystick.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>

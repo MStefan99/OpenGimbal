@@ -14,8 +14,7 @@ void util::init() {
 	uint32_t calibration = *((uint32_t*)0x00806020);
 
 	// Supply setup
-	SUPC_REGS->SUPC_VREG = SUPC_VREG_SEL_BUCK    // Select buck regulator
-	                     | SUPC_VREG_ENABLE(1);  // Enable regulator
+	SUPC_REGS->SUPC_VREG = SUPC_VREG_ENABLE(1);  // Enable regulator
 	while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
 	// Performance setup

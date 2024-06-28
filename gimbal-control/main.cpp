@@ -1,5 +1,7 @@
 #include "main.hpp"
 
+#include "joystick.hpp"
+
 /* Pinouts
  *
  * PA02 - Joystick analog input 1
@@ -82,6 +84,7 @@ bool triggerAction() {
 					displayState = DisplayState::GimbalMode;
 					powerMode = PowerMode::Active;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
+					joystick::updateCenter();
 				} else {
 					displayState = DisplayState::Off;
 					powerMode = PowerMode::Sleep;
@@ -187,7 +190,6 @@ void processButtons(bool left, bool pressed) {
 	}
 }
 
-
 #if DV_OUT
 struct DVData {
 	uint8_t  header {0x03};
@@ -229,22 +231,22 @@ int main() {
 #endif
 
 		if (displayState == DisplayState::GimbalMode) {
-			adc::getX([](uint16_t x) {
-				yawOffset = normalize(yawOffset + (static_cast<int16_t>(x) - 1650) / 100);
+			joystick::update([](int16_t x, int16_t y) {
+				yawOffset += x / 25;
+				pitchOffset -= y / 25;
 
-				auto command {
-				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
-				};
-				uart::send(command.getBuffer(), command.getLength());
-
-				adc::getY([](uint16_t y) {
-					pitchOffset = normalize(pitchOffset + (1650 - static_cast<int16_t>(y)) / 100);
-
+				{
+					auto command {
+					  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
+					};
+					uart::send(command.getBuffer(), command.getLength());
+				}
+				{
 					auto command {
 					  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
 					};
 					uart::send(command.getBuffer(), command.getLength());
-				});
+				}
 			});
 		}
 
