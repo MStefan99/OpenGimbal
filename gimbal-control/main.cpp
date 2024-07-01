@@ -23,21 +23,21 @@
  */
 
 
-DisplayState displayState {DisplayState::Off};
-PowerMode    powerMode {PowerMode::Sleep};
-GimbalMode   gimbalMode {GimbalMode::Follow};
+volatile DisplayState displayState {DisplayState::Off};
+PowerMode             powerMode {PowerMode::Sleep};
+GimbalMode            gimbalMode {GimbalMode::Follow};
 
 int16_t yawOffset {0};
 int16_t pitchOffset {0};
 int16_t rollOffset {0};
 
-uint32_t stateChangeTime {0};
-uint8_t  voltageBars {0};
+volatile uint32_t stateChangeTime {0};
+volatile uint8_t  voltageBars {0};
 
-uint8_t  shortPresses {0};
-uint32_t eventTime {0};
-bool     buttonPressed {false};
-bool     leftButton {true};
+volatile uint8_t  shortPresses {0};
+volatile uint32_t eventTime {0};
+volatile bool     buttonPressed {false};
+volatile bool     leftButton {true};
 
 int16_t joystickX {0};
 int16_t joystickY {0};
@@ -100,6 +100,8 @@ bool triggerAction() {
 
 				return true;
 			}
+		} else {
+			return true;
 		}
 	} else {
 		if (leftButton) {
@@ -202,14 +204,8 @@ struct DVData {
 
 static void sleep() {
 	SCB->SCR = SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk;
-	PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_APB;
-	while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_APB);
-	do {
-		__WFI();
-	} while (displayState == DisplayState::Off);
+	__WFI();
 	SCB->SCR = SCB_SCR_SEVONPEND_Msk;
-	PM_REGS->PM_SLEEP = PM_SLEEP_IDLE_CPU;
-	while (PM_REGS->PM_SLEEP != PM_SLEEP_IDLE_CPU);
 }
 
 int main() {
@@ -232,20 +228,24 @@ int main() {
 
 		if (displayState == DisplayState::GimbalMode) {
 			joystick::update([](int16_t x, int16_t y) {
-				yawOffset += x / 25;
-				pitchOffset -= y / 25;
+				int16_t dx = x / 25;
+				int16_t dy = y / 25;
 
-				{
-					auto command {
-					  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
-					};
-					uart::send(command.getBuffer(), command.getLength());
+				yawOffset += dx;
+				pitchOffset -= dy;
+
+				auto yawCommand {
+				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
+				};
+				auto pitchCommand {
+				  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
+				};
+
+				if (dx) {
+					uart::send(yawCommand.getBuffer(), yawCommand.getLength());
 				}
-				{
-					auto command {
-					  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
-					};
-					uart::send(command.getBuffer(), command.getLength());
+				if (dy) {
+					uart::send(pitchCommand.getBuffer(), pitchCommand.getLength());
 				}
 			});
 		}
@@ -290,6 +290,10 @@ int main() {
 		uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
 #endif
 
-		util::sleep(50);
+		if (displayState == DisplayState::Off && !shortPresses && !buttonPressed) {
+			sleep();
+		} else {
+			util::sleep(50);
+		}
 	}
 }

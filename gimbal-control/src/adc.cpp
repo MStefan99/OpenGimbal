@@ -50,10 +50,9 @@ void adc::init() {
 	    )
 	    | ADC_CALIB_BIAS_CAL(
 	        (OTP4_FUSES_REGS->FUSES_OTP4_WORD_1 & FUSES_OTP4_WORD_1_ADC_BIASCAL_Msk) >> FUSES_OTP4_WORD_1_ADC_BIASCAL_Pos
-	    );
+	    );                                            // Load calibration value
 	ADC_REGS->ADC_INTENSET = ADC_INTENSET_RESRDY(1);  // Enable result ready interrupt
-	ADC_REGS->ADC_CTRLA = ADC_CTRLA_RUNSTDBY(1)       // Enable in standby mode
-	                    | ADC_CTRLA_ENABLE(1);        // Enable ADC
+	ADC_REGS->ADC_CTRLA = ADC_CTRLA_ENABLE(1);        // Enable ADC
 
 	NVIC_EnableIRQ(ADC_IRQn);
 }
