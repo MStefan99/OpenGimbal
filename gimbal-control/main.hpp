@@ -21,7 +21,6 @@
 #include "util.hpp"
 
 
-using GimbalMode = Command::GimbalMode;
 using PowerMode = Command::PowerMode;
 
 constexpr uint16_t MAX_SHORT_PRESS_TIME {600};
@@ -39,6 +38,14 @@ enum class DisplayState : uint8_t {
 	Off = 0x0,
 	GimbalMode = 0x1,
 	BatteryLevel = 0x2
+};
+
+
+enum class GimbalMode : uint8_t {
+	Horizon = 0x0,
+	Follow = 0x1,
+	FPV = 0x2,
+	Tilt = 0x3
 };
 
 

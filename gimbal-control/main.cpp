@@ -31,6 +31,9 @@ int16_t yawOffset {0};
 int16_t pitchOffset {0};
 int16_t rollOffset {0};
 
+int16_t yawReset {0};
+int16_t rollReset {0};
+
 volatile uint32_t stateChangeTime {0};
 volatile uint8_t  voltageBars {0};
 
@@ -112,7 +115,7 @@ bool triggerAction() {
 					displayState = DisplayState::Off;
 					powerMode = PowerMode::Sleep;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 5u;
-					yawOffset = pitchOffset = rollOffset = 0;
+					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
 				}
 				showMode();
 
@@ -133,35 +136,55 @@ bool triggerAction() {
 	} else if (!isOff) {
 		if (leftButton) {
 			if (shortPresses == 1) {
-				yawOffset = pitchOffset = 0;
+				yawOffset = yawReset;
+				pitchOffset = 0;
+				rollOffset = rollReset;
 
-				sendOffsets(true, true, false);
+				sendOffsets(true, true, true);
 			} else if (shortPresses == 2) {
-				rollOffset += quarterRevolution;
-				if (rollOffset > halfRevolution) {
-					rollOffset = 0;
+				rollReset += quarterRevolution;
+				if (rollReset > halfRevolution) {
+					rollReset = 0;
 				}
+				rollOffset = rollReset;
 
 				sendOffsets(false, false, true);
 			} else if (shortPresses == 3) {
-				yawOffset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
-				if (yawOffset > halfRevolution + 2) {
-					yawOffset = 0;
+				yawReset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
+				if (yawReset > halfRevolution + 2) {
+					yawReset = 0;
 				}
+				yawOffset = yawReset;
 
 				sendOffsets(true, false, false);
 			}
 		} else {
 			if (shortPresses == 2) {
-				if (gimbalMode == GimbalMode::FPV) {
+				if (gimbalMode == GimbalMode::Tilt) {
 					gimbalMode = GimbalMode::Horizon;
 				} else {
 					gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
 				}
 				showMode();
 
+				Command::GimbalMode mode;
+				switch (gimbalMode) {
+					case GimbalMode::Horizon:
+					default:
+						mode = Command::GimbalMode::Horizon;
+						break;
+					case GimbalMode::Follow:
+						mode = Command::GimbalMode::Follow;
+						break;
+					case GimbalMode::FPV:
+						mode = Command::GimbalMode::FPV;
+						break;
+					case GimbalMode::Tilt:
+						mode = Command::GimbalMode::Follow;
+				}
+
 				auto command {
-				  SetVariableCommand {Command::Variable::GimbalMode, static_cast<uint8_t>(gimbalMode)}
+				  SetVariableCommand {Command::Variable::GimbalMode, static_cast<uint8_t>(mode)}
 				};
 				uart::send(command.getBuffer(), command.getLength());
 			}
@@ -199,7 +222,7 @@ void processButtons(bool left, bool pressed) {
 			break;
 		}
 		case (DisplayState::GimbalMode): {
-			if (shortPresses || !buttonPressed) {
+			if (!buttonPressed) {
 				showMode();
 				break;
 			} else {
@@ -251,10 +274,19 @@ int main() {
 				int16_t dx = x / 25;
 				int16_t dy = y / 25;
 
-				yawOffset += dx;
+				bool sendYaw {false};
+				bool sendRoll {false};
+
+				if (gimbalMode != GimbalMode::Tilt) {
+					yawOffset -= dx;
+					sendYaw = true;
+				} else {
+					rollOffset -= dx;
+					sendRoll = true;
+				}
 				pitchOffset -= dy;
 
-				sendOffsets(dx, dy);
+				sendOffsets(sendYaw, true, sendRoll);
 			});
 		}
 

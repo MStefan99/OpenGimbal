@@ -4,7 +4,7 @@ static PowerMode  powerMode {PowerMode::Sleep};
 static GimbalMode gimbalMode {GimbalMode::Follow};
 
 constexpr static float attFactor {2048 / F_PI};
-constexpr static float maxRestoringVelocity {F_2_PI / 100.0f};  // One revolution per second (100 iterations)
+constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
 
 static float yawTarget {0};
 static float pitchTarget {0};
@@ -263,7 +263,7 @@ int main() {
 				}
 
 				yawTarget += util::clamp(
-				    normalize(handleAngles[0][0] - (yawTarget + yawOffset)) / 50.0f,
+				    normalize(handleAngles[0][0] - (yawTarget - yawOffset)) / 50.0f,
 				    -maxRestoringVelocity,
 				    maxRestoringVelocity
 				);
