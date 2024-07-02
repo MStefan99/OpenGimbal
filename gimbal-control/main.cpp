@@ -69,6 +69,28 @@ void showMode() {
 	}
 }
 
+void sendOffsets(bool sendYaw = true, bool sendPitch = true, bool sendRoll = true) {
+	auto yawCommand {
+	  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
+	};
+	auto pitchCommand {
+	  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
+	};
+	auto rollCommand {
+	  SetVariableCommand {Command::Variable::RollOffset, rollOffset}
+	};
+
+	if (sendYaw) {
+		uart::send(yawCommand.getBuffer(), yawCommand.getLength());
+	}
+	if (sendPitch) {
+		uart::send(pitchCommand.getBuffer(), pitchCommand.getLength());
+	}
+	if (sendRoll) {
+		uart::send(rollCommand.getBuffer(), rollCommand.getLength());
+	}
+}
+
 bool triggerAction() {
 	bool isOff {displayState == DisplayState::Off};
 
@@ -85,6 +107,7 @@ bool triggerAction() {
 					powerMode = PowerMode::Active;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
 					joystick::updateCenter();
+					sendOffsets();
 				} else {
 					displayState = DisplayState::Off;
 					powerMode = PowerMode::Sleep;
@@ -103,36 +126,33 @@ bool triggerAction() {
 		} else {
 			return true;
 		}
-	} else {
+	} else if (shortPresses == 1 && (!leftButton || isOff)) {
+		setLEDs(0);
+		auto command {GetVariableCommand {Command::Variable::BatteryVoltage}};
+		uart::send(command.getBuffer(), command.getLength());
+	} else if (!isOff) {
 		if (leftButton) {
 			if (shortPresses == 1) {
-				yawOffset = pitchOffset = rollOffset = 0;
+				yawOffset = pitchOffset = 0;
+
+				sendOffsets(true, true, false);
 			} else if (shortPresses == 2) {
 				rollOffset += quarterRevolution;
 				if (rollOffset > halfRevolution) {
 					rollOffset = 0;
 				}
 
-				auto command {
-				  SetVariableCommand {Command::Variable::RollOffset, rollOffset}
-				};
-				uart::send(command.getBuffer(), command.getLength());
+				sendOffsets(false, false, true);
 			} else if (shortPresses == 3) {
 				yawOffset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
 				if (yawOffset > halfRevolution + 2) {
 					yawOffset = 0;
 				}
 
-				auto command {
-				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
-				};
-				uart::send(command.getBuffer(), command.getLength());
+				sendOffsets(true, false, false);
 			}
 		} else {
-			if (shortPresses == 1) {
-				auto command {GetVariableCommand {Command::Variable::BatteryVoltage}};
-				uart::send(command.getBuffer(), command.getLength());
-			} else if (shortPresses == 2) {
+			if (shortPresses == 2) {
 				if (gimbalMode == GimbalMode::FPV) {
 					gimbalMode = GimbalMode::Horizon;
 				} else {
@@ -234,19 +254,7 @@ int main() {
 				yawOffset += dx;
 				pitchOffset -= dy;
 
-				auto yawCommand {
-				  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
-				};
-				auto pitchCommand {
-				  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
-				};
-
-				if (dx) {
-					uart::send(yawCommand.getBuffer(), yawCommand.getLength());
-				}
-				if (dy) {
-					uart::send(pitchCommand.getBuffer(), pitchCommand.getLength());
-				}
+				sendOffsets(dx, dy);
 			});
 		}
 
