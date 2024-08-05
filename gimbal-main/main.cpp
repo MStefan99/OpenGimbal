@@ -6,9 +6,9 @@ static GimbalMode gimbalMode {GimbalMode::Follow};
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
 
-static float yawTarget {0};
-static float pitchTarget {0};
-static float rollTarget {0};
+static float yawCurrent {0};
+static float pitchCurrent {0};
+static float rollCurrent {0};
 
 static float yawOffset {0};
 static float pitchOffset {0};
@@ -255,33 +255,29 @@ int main() {
 				Quaternion handleOrientation {mahony.getQuat()};
 				auto       handleAngles {handleOrientation.toEuler()};
 
-				if (gimbalMode == GimbalMode::Follow) {
-					handleAngles[2][0] = 0;  // Do not follow handle roll
-				}
-				if (gimbalMode == GimbalMode::Horizon) {
-					handleAngles[1][0] = handleAngles[2][0] = 0;  // Do not follow handle pitch or roll
-				}
+				float yawTarget {handleAngles[0][0] + yawOffset};
 
-				yawTarget += util::clamp(
-				    normalize(handleAngles[0][0] - (yawTarget - yawOffset)) / 50.0f,
-				    -maxRestoringVelocity,
-				    maxRestoringVelocity
-				);
-				yawTarget = normalize(yawTarget);
+				float sy {sinf(yawOffset)};
+				float cy {cosf(yawOffset)};
 
-				pitchTarget += util::clamp(
-				    normalize(handleAngles[1][0] - (pitchTarget + pitchOffset)) / 50.0f,
-				    -maxRestoringVelocity,
-				    maxRestoringVelocity
-				);
+				float pitchTarget {
+				  (gimbalMode == GimbalMode::Horizon ? 0 : cy * handleAngles[1][0] - sy * handleAngles[2][0]) + pitchOffset
+				};
+				float rollTarget {
+				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - rollOffset
+				};
 
-				rollTarget += util::clamp(
-				    normalize(handleAngles[2][0] - (rollTarget + rollOffset)) / 50.0f,
-				    -maxRestoringVelocity,
-				    maxRestoringVelocity
-				);
+				yawCurrent +=
+				    util::clamp(normalize(yawTarget - yawCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+				yawCurrent = normalize(yawCurrent);
 
-				Quaternion cameraOrientation {Quaternion::fromEuler(yawTarget, pitchTarget, rollTarget)};
+				pitchCurrent +=
+				    util::clamp(normalize(pitchTarget - pitchCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+
+				rollCurrent +=
+				    util::clamp(normalize(rollTarget - rollCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+
+				Quaternion cameraOrientation {Quaternion::fromEuler(yawCurrent, pitchCurrent, rollCurrent)};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
 
 				auto rotationAngles {gimbalRotation.toEuler()};

@@ -284,7 +284,7 @@ int main() {
 					rollOffset -= dx;
 					sendRoll = true;
 				}
-				pitchOffset -= dy;
+				pitchOffset += dy;
 
 				sendOffsets(sendYaw, true, sendRoll);
 			});
