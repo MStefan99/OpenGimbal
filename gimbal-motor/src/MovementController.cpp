@@ -118,11 +118,12 @@ int32_t MovementController::Interpolator::interpolate(uint32_t dt) const {
 }
 
 void MovementController::extrapolate(uint32_t dt, int32_t target) {
-	setTarget(_interpolator.extrapolate(target));
-
-	if (dt > maxInterpolationTime) {
+	if (dt <= 0 || dt > maxInterpolationTime) {
 		dt = 1;
 	}
+
+	setTarget(_interpolator.extrapolate(target));
+
 	_interpolator.applyTarget(dt, _target);
 }
 

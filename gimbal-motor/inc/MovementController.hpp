@@ -42,7 +42,7 @@ protected:
 		int32_t  _prev {};
 		int32_t  _actual {};
 		int32_t  _extrapolated {};
-		uint32_t _dt {};
+		uint32_t _dt {1};
 	};
 
 	static int32_t wrapValue(int32_t value);
