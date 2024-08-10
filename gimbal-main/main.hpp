@@ -33,7 +33,8 @@ enum class PowerMode : uint8_t {
 	Sleep = 0x0,
 	Idle = 0x1,
 	Startup = 0x2,
-	Active = 0x3
+	Active = 0x3,
+	Shutdown = 0x4
 };
 
 constexpr uint16_t MIN_VOLTAGE {2900};

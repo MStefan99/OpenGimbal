@@ -106,7 +106,7 @@ void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
 				case (ControlCommand::Variable::PowerMode): {
 					switch (static_cast<ControlCommand::PowerMode>(buffer.buffer[2])) {
 						case (ControlCommand::PowerMode::Sleep): {
-							powerMode = PowerMode::Sleep;
+							powerMode = PowerMode::Shutdown;
 							break;
 						}
 						case (ControlCommand::PowerMode::Idle): {
@@ -312,6 +312,18 @@ int main() {
 				}
 
 				util::sleep(10);
+				break;
+			}
+			case (PowerMode::Shutdown): {
+				motor::move();
+				motor::tone(motor::all, 294);
+				util::sleep(205);
+				motor::tone(motor::all, 247);
+				util::sleep(205);
+				motor::tone();
+				util::sleep(10);  // TODO: remove, send while in sleep mode
+
+				powerMode = PowerMode::Sleep;
 				break;
 			}
 			case (PowerMode::Idle):
