@@ -44,6 +44,6 @@ constexpr auto K =
     Matrix<float, uint8_t, 1, 2> {
       {30, 8}
 }
-    * 12;
+    * 15;
 
 #endif /* OPTIONS_HPP */

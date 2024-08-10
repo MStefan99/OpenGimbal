@@ -7,6 +7,9 @@
 		option(value="4096")
 	h2.mb-4.text-xl.font-bold Motors
 	button.mb-4(@click="enumerate()" :disabled="enumerating") Find motors
+	div(v-if="motors.length")
+		label Extended ranges
+		input.ml-2(type="checkbox" v-model="extendedRanges")
 	.flex.flex-wrap.gap-2
 		.motor.min-w-48.card(v-for="motor in motors" :key="motor.address")
 			.border-b.border-accent.pt-2
@@ -16,8 +19,8 @@
 				p.text-accent.font-bold Movement
 				p Position
 				RangeSlider.mb-2(
-					:min="-4096"
-					:max="4096"
+					:min="extendedRanges ? -4096 : -2048"
+					:max="extendedRanges ? 4096 : 2048"
 					:scale="4096"
 					v-model="positions[motor.address - 1]"
 					@update:model-value="motor.move(positions[motor.address - 1], torques[motor.address - 1])")
@@ -35,8 +38,8 @@
 				p Haptic duration
 				RangeSlider.mb-2(
 					:min="0"
-					:max="4095"
-					:scale="4095"
+					:max="extendedRanges ? 4095 : 100"
+					:scale="extendedRanges ? 4095 : 100"
 					v-model="hapticDurations[motor.address - 1]")
 				button.mb-2(
 					@click="motor.haptic(hapticIntensities[motor.address - 1], hapticDurations[motor.address - 1])") Start
@@ -55,7 +58,7 @@
 				p Range
 				RangeSlider.mb-2(
 					:min="0"
-					:max="65535"
+					:max="extendedRanges ? 65535 : 2048"
 					:scale="2048"
 					listID="ranges"
 					v-model="ranges[motor.address - 1]"
@@ -123,6 +126,7 @@ import StatusIndicator from '../components/StatusIndicator.vue';
 const motors = ref<Motor[]>([]);
 const enumerating = ref<boolean>(false);
 const calibrationModes = ref<CalibrationBits[][]>(new Array(15).fill([]).map(() => []));
+const extendedRanges = ref<boolean>(false);
 
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
