@@ -12,6 +12,8 @@ class TaskScheduler {
 public:
 	using timestamp_type = uint32_t;
 	using task_type = void (*)();
+	constexpr static size_type intervalMask {1u << (sizeof(size_type) * 8 - 1)};
+	constexpr static size_type delayMask {~intervalMask};
 
 	TaskScheduler() = default;
 	~TaskScheduler() = default;
@@ -32,41 +34,41 @@ public:
 protected:
 	struct Task {
 		task_type      cb {nullptr};
-		timestamp_type timestamp {0};
-		timestamp_type interval {0};
+		timestamp_type added {0};
+		timestamp_type delay {0};
 		size_type      id {0};
 	};
 
-	size_type schedule(timestamp_type currentTime, timestamp_type timeout, task_type cb, timestamp_type interval = 0);
+	size_type schedule(timestamp_type currentTime, timestamp_type delay, task_type cb, bool interval = false);
 	void      unschedule(size_type id);
 
-	static size_type _lastID;
+	static size_type lastID;
 
 	RingBuffer<Task, size_type, C> _tasks {};
 };
 
 
 template <class size_type, size_type C>
-size_type TaskScheduler<size_type, C>::_lastID {0};
+size_type TaskScheduler<size_type, C>::lastID {0};
 
 template <class size_type, size_type C>
 size_type TaskScheduler<size_type, C>::schedule(
     timestamp_type currentTime,
-    timestamp_type timeout,
+    timestamp_type delay,
     task_type      cb,
-    timestamp_type interval
+    bool           interval
 ) {
-	timestamp_type timestamp = currentTime + timeout;
-
 	if (_tasks.full()) {
 		return 0;
 	}
 
-	size_type i {0};
-	Task      task {cb, timestamp, interval, ++_lastID != 0 ? _lastID : ++_lastID};
+	Task task {cb, currentTime, delay, interval ? static_cast<size_type>(lastID | intervalMask) : lastID};
+
+	++lastID == intervalMask ? lastID = 0 : lastID;
 
 	if (!_tasks.empty()) {
-		for (; _tasks[i].timestamp <= timestamp && i < _tasks.size(); ++i);
+		size_type i {0};
+		for (; task.delay - task.added >= _tasks[i].delay - _tasks[i].added && i < _tasks.size(); ++i);
 
 		// When the position is found, shift existing tasks
 		if (i < _tasks.size() / 2) {  // If the new task should be closer to the front, shift the tasks before
@@ -136,9 +138,9 @@ typename TaskScheduler<size_type, C>::task_type TaskScheduler<size_type, C>::get
 
 	Task task {_tasks.front()};
 
-	if (task.timestamp <= currentTime) {
-		if (task.interval) {
-			schedule(currentTime, task.interval, task.cb, task.interval);
+	if (currentTime - task.added >= task.delay) {
+		if (task.id & intervalMask) {
+			schedule(currentTime, task.delay, task.cb, true);
 		}
 		_tasks.pop_front();
 		return task.cb;
@@ -167,7 +169,7 @@ bool TaskScheduler<size_type, C>::empty() const {
 template <class size_type, size_type C>
 void TaskScheduler<size_type, C>::reset() {
 	_tasks.clear();
-	_lastID = 0;
+	lastID = 0;
 }
 
 

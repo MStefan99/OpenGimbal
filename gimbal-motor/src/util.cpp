@@ -61,9 +61,9 @@ uint32_t util::getTime() {
 }
 
 void util::sleep(uint32_t ms) {
-	uint32_t t {ticks + ms};
+	uint32_t start {ticks};
 
-	while (ticks < t) {
+	while (ticks - start < ms) {
 		__WFI();
 	}
 }
