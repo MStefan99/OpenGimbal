@@ -35,6 +35,18 @@ struct TorqueLUT {
 
 constexpr static auto torqueLUT = TorqueLUT();
 
+#if DV_OUT
+struct Data {
+	uint8_t  header {0x03};
+	uint16_t dt {};
+	float    x {};
+	float    v {};
+	float    a {};
+	float    u {};
+	uint8_t  footer {0xfc};
+} __attribute__((packed));
+#endif
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	uint8_t address = buffer.buffer[0] & 0x0f;
@@ -226,7 +238,7 @@ void moveToTarget(uint16_t target) {
 	applyTorque(angle, absTorque, torque > 0);
 
 #if DV_OUT
-	if (time % 5 < 1) {
+	if (util::getTime() % 5 < 1) {
 		Data nvm {};
 
 		nvm.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
@@ -395,18 +407,6 @@ void sleep() {
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
-
-#if DV_OUT
-struct Data {
-	uint8_t  header {0x03};
-	uint16_t dt {};
-	float    x {};
-	float    v {};
-	float    a {};
-	float    u {};
-	uint8_t  footer {0xfc};
-} __attribute__((packed));
-#endif
 
 int main() {
 	util::init();

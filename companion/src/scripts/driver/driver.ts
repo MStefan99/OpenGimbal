@@ -41,6 +41,7 @@ export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 					const manager = new MotorManager(port);
 					connectedDevices.push(manager);
 					activeDevice.value = manager;
+					resolve(manager);
 
 					(async (): Promise<void> => {
 						while (port.readable) {

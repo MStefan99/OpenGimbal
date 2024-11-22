@@ -28,7 +28,7 @@ AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortLambdasOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
