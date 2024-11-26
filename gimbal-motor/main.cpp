@@ -250,11 +250,19 @@ void moveToTarget(uint16_t target) {
 #endif
 }
 
-bool checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool counterclockwise) {
+void unwind(int16_t offset) {
+	for (; offset > 0; offset -= 8) {
+		bldc::applyTorque(offset, 255);
+		util::sleep(1);
+	}
+	bldc::applyTorque(0, 0);
+}
+
+int16_t checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool counterclockwise) {
 	uint16_t step {fullRevolution / 4096};
 	auto     startAngle {measureAngle()};
 
-	for (uint16_t i {0}; i < 4096; ++i) {
+	for (uint16_t i {0}; i < fullRevolution; ++i) {
 		uint16_t target =
 		    util::mod(static_cast<uint16_t>((counterclockwise ? -step * i : step * i) + startAngle), fullRevolution);
 
@@ -273,13 +281,13 @@ bool checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool counterclock
 		);
 
 		if (absDifference > (fullRevolution / 32)) {
-			return false;
+			return target * polePairs + phaseOffset;
 		}
 
 		util::sleep(1);
 	}
 
-	return true;
+	return 0;
 }
 
 bool calibrate() {
@@ -358,7 +366,12 @@ bool calibrate() {
 			}
 
 			if (timeout++ > 200) {  // Quit if the motor is stuck to avoid overheating
-				bldc::applyTorque(0, 0);
+				bldc::tone(294);
+				util::sleep(205);
+				bldc::tone(247);
+				util::sleep(205);
+				bldc::silent();
+				unwind(polePairs * fullRevolution + torqueAngle);
 				return false;
 			}
 
@@ -379,8 +392,14 @@ bool calibrate() {
 		 * The target moves one full revolution in the opposite direction
 		 * than that of pole pair calibration step to untangle the wires.
 		 */
-		if (!checkCalibration(phaseOffset, polePairs, direction > 0)) {
-			bldc::applyTorque(0, 0);
+		auto calibrationCheck {checkCalibration(phaseOffset, polePairs, direction > 0)};
+		if (calibrationCheck) {
+			bldc::tone(294);
+			util::sleep(205);
+			bldc::tone(247);
+			util::sleep(205);
+			bldc::silent();
+			unwind(calibrationCheck);
 			return false;
 		}
 
