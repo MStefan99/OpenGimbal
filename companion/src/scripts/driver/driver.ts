@@ -47,7 +47,6 @@ export async function connectDevice(demo?: true): Promise<MotorManager | null> {
 						while (port.readable) {
 							manager._reader = port.readable.getReader();
 							try {
-								// eslint-disable-next-line no-constant-condition
 								while (true) {
 									const {value, done} = await manager._reader.read();
 									if (done) {
