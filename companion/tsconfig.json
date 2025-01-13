@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"module": "ESNext",
 		"target": "ESNext",
-		"moduleResolution": "NodeNext",
+		"moduleResolution": "Bundler",
 		"isolatedModules": true,
 		"sourceMap": true,
 		"alwaysStrict": true,

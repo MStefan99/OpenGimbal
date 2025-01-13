@@ -125,7 +125,9 @@ import StatusIndicator from '../components/StatusIndicator.vue';
 
 const motors = ref<Motor[]>([]);
 const enumerating = ref<boolean>(false);
-const calibrationModes = ref<CalibrationBits[][]>(new Array(15).fill([]).map(() => []));
+const calibrationModes = ref<CalibrationBits[][]>(
+	new Array(15).fill([]).map<CalibrationBits[]>(() => [])
+);
 const extendedRanges = ref<boolean>(false);
 
 const positions = ref<number[]>([]);

@@ -35,8 +35,13 @@ const parser = new Parser();
 const slowMode = ref<boolean>(true);
 const historySize = ref<number>(20);
 
-function onData(event: CustomEvent): void {
-	const commands = parser.parse(event.detail);
+function onData(event: Event): void {
+	if (!('detail' in event)) {
+		return;
+	}
+	const customEvent = event as CustomEvent;
+
+	const commands = parser.parse(customEvent.detail);
 
 	if (slowMode.value) {
 		const now = Date.now();
