@@ -28,124 +28,6 @@ float normalize(float difference) {
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processControlCommand(const uart::DefaultCallback::buffer_type& buffer) {
-	switch (static_cast<ControlCommand::CommandType>(buffer.buffer[0] & 0x0f)) {
-		case (ControlCommand::CommandType::GetVariable): {
-			switch (static_cast<ControlCommand::Variable>(buffer.buffer[1])) {  // Switch variable
-				case (ControlCommand::Variable::PowerMode): {
-					auto response = ReturnVariableResponse(ControlResponse::Variable::PowerMode, static_cast<uint8_t>(powerMode));
-					uart::sendToControl(response.getBuffer(), response.getLength());
-					break;
-				}
-				case (ControlCommand::Variable::GimbalMode): {
-					ControlResponse::PowerMode responseMode;
-
-					switch (powerMode) {
-						case (PowerMode::Sleep): {
-							responseMode = ControlResponse::PowerMode::Sleep;
-							break;
-						}
-						case (PowerMode::Idle): {
-							responseMode = ControlResponse::PowerMode::Idle;
-							break;
-						}
-						default: {
-							responseMode = ControlResponse::PowerMode::Active;
-							break;
-						}
-					}
-
-					auto response =
-					    ReturnVariableResponse(ControlResponse::Variable::GimbalMode, static_cast<uint8_t>(responseMode));
-					uart::sendToControl(response.getBuffer(), response.getLength());
-					break;
-				}
-				case (ControlCommand::Variable::BatteryVoltage): {
-					adc::measureBattery([](uint16_t voltage) {
-						auto response = ReturnVariableResponse(
-						    ControlResponse::Variable::BatteryVoltage,
-						    static_cast<uint8_t>(util::scale(
-						        util::clamp(voltage, MIN_VOLTAGE, MAX_VOLTAGE),
-						        MIN_VOLTAGE,
-						        MAX_VOLTAGE,
-						        static_cast<uint16_t>(0),
-						        static_cast<uint16_t>(255)
-						    ))
-						);
-						uart::sendToControl(response.getBuffer(), response.getLength());
-					});
-					break;
-				}
-				case (ControlCommand::Variable::YawOffset): {
-					auto response =
-					    ReturnVariableResponse(ControlResponse::Variable::YawOffset, static_cast<int16_t>(yawOffset * attFactor));
-					uart::sendToControl(response.getBuffer(), response.getLength());
-					break;
-				}
-				case (ControlCommand::Variable::PitchOffset): {
-					auto response = ReturnVariableResponse(
-					    ControlResponse::Variable::PitchOffset,
-					    static_cast<int16_t>(pitchOffset * attFactor)
-					);
-					uart::sendToControl(response.getBuffer(), response.getLength());
-					break;
-				}
-				case (ControlCommand::Variable::RollOffset): {
-					auto response = ReturnVariableResponse(
-					    ControlResponse::Variable::RollOffset,
-					    static_cast<int16_t>(rollOffset * attFactor)
-					);
-					uart::sendToControl(response.getBuffer(), response.getLength());
-					break;
-				}
-			}
-			break;
-		}
-		case (ControlCommand::CommandType::SetVariable): {
-			switch (static_cast<ControlCommand::Variable>(buffer.buffer[1])) {  // Switch variable
-				case (ControlCommand::Variable::PowerMode): {
-					switch (static_cast<ControlCommand::PowerMode>(buffer.buffer[2])) {
-						case (ControlCommand::PowerMode::Sleep): {
-							powerMode = PowerMode::Shutdown;
-							break;
-						}
-						case (ControlCommand::PowerMode::Idle): {
-							powerMode = PowerMode::Idle;
-							break;
-						}
-						default:
-							powerMode = PowerMode::Startup;
-							break;
-					}
-					break;
-				}
-				case (ControlCommand::Variable::GimbalMode): {
-					gimbalMode = static_cast<GimbalMode>(buffer.buffer[2]);
-					break;
-				}
-				case (ControlCommand::Variable::YawOffset): {
-					yawOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
-					break;
-				}
-				case (ControlCommand::Variable::PitchOffset): {
-					pitchOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
-					break;
-				}
-				case (ControlCommand::Variable::RollOffset): {
-					rollOffset = static_cast<int16_t>((buffer.buffer[2] << 8u) | buffer.buffer[3]) / attFactor;
-					break;
-				}
-				default:
-					break;
-			}
-			break;
-		}
-		default:
-			break;
-	}
-}
-
-// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {}
 
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
@@ -215,7 +97,6 @@ int main() {
 	uart::init();
 	adc::init();
 
-	uart::setControlCallback(processControlCommand);
 	uart::setMotorCallback(processMotorResponse);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);

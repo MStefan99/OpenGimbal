@@ -35,9 +35,6 @@ namespace uart {
 
 	void sendToMotors(const uint8_t* buf, uint8_t len);
 	void setMotorCallback(DefaultCallback::callback_type cb);
-
-	void sendToControl(const uint8_t* buf, uint8_t len);
-	void setControlCallback(uart::DefaultCallback::callback_type cb);
 }
 
 

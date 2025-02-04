@@ -102,21 +102,14 @@ void uart::init() {
 	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM1 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM2_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM2 clock
-	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// Pin setup
-	PORT_REGS->GROUP[0].PORT_PINCFG[8] = PORT_PINCFG_PMUXEN(1);                  // Enable mux on pin 8
 	PORT_REGS->GROUP[0].PORT_PINCFG[16] = PORT_PINCFG_PMUXEN(1);                 // Enable mux on pin 16
-	PORT_REGS->GROUP[0].PORT_PMUX[4] = PORT_PMUX_PMUXE(MUX_PA08D_SERCOM2_PAD0);  // Mux pin 8 to SERCOM2
 	PORT_REGS->GROUP[0].PORT_PMUX[8] = PORT_PMUX_PMUXE(MUX_PA16C_SERCOM1_PAD0);  // Mux pin 16 to SERCOM1
 
 	// SERCOM setup
 	initSERCOM(SERCOM1_REGS);
 	NVIC_EnableIRQ(SERCOM1_IRQn);
-
-	initSERCOM(SERCOM2_REGS);
-	NVIC_EnableIRQ(SERCOM2_IRQn);
 }
 
 uint8_t uart::print(const char* buf) {
@@ -144,18 +137,4 @@ void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
 	motorCallback = cb;
-}
-
-void uart::sendToControl(const uint8_t* buf, uint8_t len) {
-	if (controlOutQueue.full()) {
-		return;
-	}
-
-	controlOutQueue.push_back({{}, 0, len});
-	util::copy(controlOutQueue.back().buffer, buf, len);
-	startTransfer(SERCOM1_REGS, controlOutQueue);
-}
-
-void uart::setControlCallback(uart::DefaultCallback::callback_type cb) {
-	controlCallback = cb;
 }
