@@ -1,10 +1,11 @@
 #include "main.hpp"
 
-static PowerMode  powerMode {PowerMode::Sleep};
+static PowerMode  powerMode {PowerMode::Active};
 static GimbalMode gimbalMode {GimbalMode::Follow};
 
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
+constexpr static float ATT_LSB {10430.0f};
 
 static float yawCurrent {0};
 static float pitchCurrent {0};
@@ -91,15 +92,15 @@ void sleep() {  // TODO: disable IMU
 
 int main() {
 	util::init();
-	dma::init();
 	i2c::init();
 	LSM6DSO32::init();
 	uart::init();
 	adc::init();
+	usb::init();
 
 	uart::setMotorCallback(processMotorResponse);
 
-	PORT_REGS->GROUP[0].PORT_DIRSET = (0x1 << 17u);
+	PORT_REGS->GROUP[0].PORT_DIRSET = 0x8000F00;
 
 	Mahony mahony {};
 
@@ -131,10 +132,18 @@ int main() {
 				auto startUs = SysTick->VAL;
 				auto startMs = util::getTime();
 #endif
-				mahony.updateIMU(LSM6DSO32::getRot(), LSM6DSO32::getAcc(), 0.01f);
+				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), 0.01f);
 
 				Quaternion handleOrientation {mahony.getQuat()};
 				auto       handleAngles {handleOrientation.toEuler()};
+
+				for (uint8_t i {0}; i < 3; ++i) {
+					data::usbSensorsResponse.accelerations[i] = LSM6DSO32::getRawAccelerations()[2 - i][0];
+					data::usbSensorsResponse.angularRates[i] = LSM6DSO32::getRawAngularRates()[2 - i][0];
+				}
+
+				data::usbStatusResponse.pitch = handleAngles[1][0] * ATT_LSB;
+				data::usbStatusResponse.roll = handleAngles[2][0] * ATT_LSB;
 
 				float yawTarget {handleAngles[0][0] + yawOffset};
 

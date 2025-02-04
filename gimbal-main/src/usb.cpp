@@ -161,12 +161,23 @@ static void vendorRequestHandler() {
 
 void endpoint1Handler() {
 	if (USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPINTFLAG & USB_DEVICE_EPINTFLAG_TRCPT0_Msk) {  // OUT transfer
+		if (EP1REQ.bRequest == static_cast<uint8_t>(data::CommandType::GetVariable)) {
+			switch (EP1REQ.bValue) {
+				case static_cast<uint8_t>(data::VariableID::Status):
+					write(reinterpret_cast<uint8_t*>(&data::usbStatusResponse), sizeof(data::USBStatusResponse));
+					break;
+				case static_cast<uint8_t>(data::VariableID::Sensors):
+					write(reinterpret_cast<uint8_t*>(&data::usbSensorsResponse), sizeof(data::USBSensorsResponse));
+					break;
+				default:
+					write(nullptr, 0);
+					break;
+			}
+		}
 		EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_PCKSIZE =
 		    USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(sizeof(EP1REQ)) | USB_DEVICE_PCKSIZE_SIZE(0x3);
 		return;
-	}
-
-	if (defaultLen) {
+	} else if (defaultLen) {
 		write(defaultData, defaultLen);
 	}
 }
@@ -185,7 +196,9 @@ static void enableEndpoints(uint8_t configurationNumber) {
 void usb::init() {
 	uint32_t calibration = *((uint32_t*)0x00806020);
 
-	NVIC_SetPriority(USB_IRQn, 3);
+	GCLK_REGS->GCLK_PCHCTRL[USB_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable USB clock
+	                                     | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
+
 	NVIC_EnableIRQ(USB_IRQn);
 
 	PORT_REGS->GROUP[0].PORT_PINCFG[24] = PORT_PINCFG_PMUXEN(1);  // Enable mux on pin 24

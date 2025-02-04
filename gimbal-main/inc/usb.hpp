@@ -12,6 +12,7 @@
 
 #include "device.h"
 
+#include "data.hpp"
 #include "nvm.hpp"
 
 namespace usb {

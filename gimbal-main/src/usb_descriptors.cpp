@@ -69,7 +69,7 @@ usb::usb_descriptor_configuration usb::DESCRIPTOR_CONFIGURATION[] = {
 usb::usb_descriptor_string usb::DESCRIPTOR_STRING[] = {
   {.bLength = 4, .bDescriptorType = (uint8_t)usb::DESCRIPTOR_TYPE::STRING, .bString = {0x0409}},
   {20,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"MStefan99"       },
-  {36,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"OpenGimbal"      }
+  {22,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"OpenGimbal"      }
 };
 
 
