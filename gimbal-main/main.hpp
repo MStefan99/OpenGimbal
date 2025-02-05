@@ -9,13 +9,11 @@
 #define MAIN_HPP
 
 #include <cmath>
-#include <cstdio>
 
 #include "device.h"
 
 #include "adc.hpp"
 #include "i2c.hpp"
-#include "LowPassFilter.hpp"
 #include "LSM6DSO32.hpp"
 #include "Mahony.hpp"
 #include "motor.hpp"

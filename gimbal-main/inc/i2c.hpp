@@ -11,7 +11,7 @@
 
 #include "device.h"
 
-#include "dma.hpp"
+#include "RingBuffer.hpp"
 #include "util.hpp"
 
 namespace i2c {

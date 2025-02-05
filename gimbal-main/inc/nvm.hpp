@@ -27,7 +27,16 @@
 
 
 namespace nvm {
-	struct __attribute__((packed)) Options {};
+	struct AxisPoints {
+		uint16_t min;
+		uint16_t center;
+		uint16_t max;
+	};
+
+	struct Options {
+		AxisPoints xAxisPoints {};
+		AxisPoints yAxisPoints {};
+	};
 
 	namespace _internal {
 		extern uint8_t        rowCopy[FLASH_ROW_SIZE];  // Copy of the row
