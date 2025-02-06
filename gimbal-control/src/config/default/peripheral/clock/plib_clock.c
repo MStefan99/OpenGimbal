@@ -1,5 +1,5 @@
 /*******************************************************************************
-  CLOCK PLIB
+ CLOCK PLIB
 
   Company:
     Microchip Technology Inc.
@@ -15,7 +15,6 @@
 
 *******************************************************************************/
 
-// DOM-IGNORE-BEGIN
 /*******************************************************************************
 * Copyright (C) 2019 Microchip Technology Inc. and its subsidiaries.
 *
@@ -38,56 +37,44 @@
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
-// DOM-IGNORE-END
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Included Files
-// *****************************************************************************
-// *****************************************************************************
 
 #include "plib_clock.h"
 #include "device.h"
-#include "interrupts.h"
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: CLOCK Interface Routines
-// *****************************************************************************
-// *****************************************************************************
 
-static void SYSCTRL_Initialize( void )
+
+
+static void OSC32KCTRL_Initialize(void)
 {
-    SYSCTRL_REGS->SYSCTRL_OSC32K = 0x0U;
+    OSC32KCTRL_REGS->OSC32KCTRL_OSC32K = 0x0U;
+
+    OSC32KCTRL_REGS->OSC32KCTRL_RTCCTRL = OSC32KCTRL_RTCCTRL_RTCSEL(0U);
 }
 
-
-static void DFLL_Initialize( void )
+static void DFLL_Initialize(void)
 {
     /****************** DFLL Initialization  *********************************/
+    OSCCTRL_REGS->OSCCTRL_DFLLCTRL = 0U ;
 
-    SYSCTRL_REGS->SYSCTRL_DFLLCTRL &= (uint16_t)(~SYSCTRL_DFLLCTRL_ONDEMAND_Msk);
-
-    while((SYSCTRL_REGS->SYSCTRL_PCLKSR & SYSCTRL_PCLKSR_DFLLRDY_Msk) != SYSCTRL_PCLKSR_DFLLRDY_Msk)
+    while((OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk) != OSCCTRL_STATUS_DFLLRDY_Msk)
     {
         /* Waiting for the Ready state */
     }
 
-    /* Load Calibration Value */
-    uint8_t calibCoarse = (uint8_t)(((*((uint32_t*)0x00806020U + 1U)) >> 26U ) & 0x3fU);
-    calibCoarse = (((calibCoarse) == 0x3FU) ? 0x1FU : (calibCoarse));
+    /*Load Calibration Value*/
+    uint8_t calibCoarse = (uint8_t)(((*(uint32_t*)0x00806020U) >> 26U ) & 0x3fU);
 
-    SYSCTRL_REGS->SYSCTRL_DFLLVAL = SYSCTRL_DFLLVAL_COARSE((uint32_t)calibCoarse) | SYSCTRL_DFLLVAL_FINE((uint32_t)512U);
+    OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE((uint32_t)calibCoarse) | OSCCTRL_DFLLVAL_FINE(512U);
 
-    while((SYSCTRL_REGS->SYSCTRL_PCLKSR & SYSCTRL_PCLKSR_DFLLRDY_Msk) != SYSCTRL_PCLKSR_DFLLRDY_Msk)
+    while((OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk) != OSCCTRL_STATUS_DFLLRDY_Msk)
     {
         /* Waiting for the Ready state */
     }
 
-    /* Configure DFLL */
-    SYSCTRL_REGS->SYSCTRL_DFLLCTRL = SYSCTRL_DFLLCTRL_ENABLE_Msk ;
+    /* Configure DFLL    */
+    OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE_Msk ;
 
-    while((SYSCTRL_REGS->SYSCTRL_PCLKSR & SYSCTRL_PCLKSR_DFLLRDY_Msk) != SYSCTRL_PCLKSR_DFLLRDY_Msk)
+    while((OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk) != OSCCTRL_STATUS_DFLLRDY_Msk)
     {
         /* Waiting for DFLL to be ready */
     }
@@ -95,32 +82,37 @@ static void DFLL_Initialize( void )
 }
 
 
-static void GCLK0_Initialize( void )
+
+static void GCLK0_Initialize(void)
 {
 
-    GCLK_REGS->GCLK_GENCTRL = GCLK_GENCTRL_SRC(7U) | GCLK_GENCTRL_GENEN_Msk | GCLK_GENCTRL_ID(0U);
+    GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_DIV(1U) | GCLK_GENCTRL_SRC(7U) | GCLK_GENCTRL_GENEN_Msk;
 
-    while((GCLK_REGS->GCLK_STATUS & GCLK_STATUS_SYNCBUSY_Msk) == GCLK_STATUS_SYNCBUSY_Msk)
+    while((GCLK_REGS->GCLK_SYNCBUSY & GCLK_SYNCBUSY_GENCTRL0_Msk) == GCLK_SYNCBUSY_GENCTRL0_Msk)
     {
         /* wait for the Generator 0 synchronization */
     }
 }
 
-
-void CLOCK_Initialize( void )
+void CLOCK_Initialize (void)
 {
-    /* Function to Initialize the Oscillators */
-    SYSCTRL_Initialize();
+
+    /* Function to Initialize the 32KHz Oscillators */
+    OSC32KCTRL_Initialize();
+
+    /*Initialize Backup Divider*/
+    MCLK_REGS->MCLK_BUPDIV = MCLK_BUPDIV_BUPDIV(0x08U);
+
+    /*Initialize low Power Divider*/
+    MCLK_REGS->MCLK_LPDIV = MCLK_LPDIV_LPDIV(0x01U);
 
     DFLL_Initialize();
     GCLK0_Initialize();
 
 
 
-    /* Configure the APBC Bridge Clocks */
-    PM_REGS->PM_APBCMASK = 0x100U;
 
 
-    /* Disable RC oscillator */
-    SYSCTRL_REGS->SYSCTRL_OSC8M = 0x0U;
+    /*Disable internal RC oscillator*/
+    OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = 0U;
 }

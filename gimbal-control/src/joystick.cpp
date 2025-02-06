@@ -10,10 +10,10 @@ static void (*callback)(int16_t x, int16_t y);
 void joystick::update(void (*cb)(int16_t, int16_t)) {
 	callback = cb;
 
-	adc::getX([](uint16_t x) {
+	adc::measureX([](uint16_t x) {
 		values[0] = x;
 
-		adc::getY([](uint16_t y) {
+		adc::measureY([](uint16_t y) {
 			values[1] = y;
 
 			for (uint8_t i {0}; i < 2; ++i) {

@@ -107,6 +107,7 @@ PERIPHERAL_FUNCTION_E = 0x4,
 PERIPHERAL_FUNCTION_F = 0x5,
 PERIPHERAL_FUNCTION_G = 0x6,
 PERIPHERAL_FUNCTION_H = 0x7,
+PERIPHERAL_FUNCTION_I = 0x8,
 
 }PERIPHERAL_FUNCTION;
 
@@ -131,8 +132,17 @@ PERIPHERAL_FUNCTION_H = 0x7,
 
 typedef enum
 {
+    /* PA00 pin */
+    PORT_PIN_PA00 = 0U,
+
+    /* PA01 pin */
+    PORT_PIN_PA01 = 1U,
+
     /* PA02 pin */
     PORT_PIN_PA02 = 2U,
+
+    /* PA03 pin */
+    PORT_PIN_PA03 = 3U,
 
     /* PA04 pin */
     PORT_PIN_PA04 = 4U,
@@ -140,11 +150,23 @@ typedef enum
     /* PA05 pin */
     PORT_PIN_PA05 = 5U,
 
+    /* PA06 pin */
+    PORT_PIN_PA06 = 6U,
+
+    /* PA07 pin */
+    PORT_PIN_PA07 = 7U,
+
     /* PA08 pin */
     PORT_PIN_PA08 = 8U,
 
     /* PA09 pin */
     PORT_PIN_PA09 = 9U,
+
+    /* PA10 pin */
+    PORT_PIN_PA10 = 10U,
+
+    /* PA11 pin */
+    PORT_PIN_PA11 = 11U,
 
     /* PA14 pin */
     PORT_PIN_PA14 = 14U,
@@ -152,14 +174,32 @@ typedef enum
     /* PA15 pin */
     PORT_PIN_PA15 = 15U,
 
+    /* PA16 pin */
+    PORT_PIN_PA16 = 16U,
+
+    /* PA17 pin */
+    PORT_PIN_PA17 = 17U,
+
+    /* PA18 pin */
+    PORT_PIN_PA18 = 18U,
+
+    /* PA19 pin */
+    PORT_PIN_PA19 = 19U,
+
+    /* PA22 pin */
+    PORT_PIN_PA22 = 22U,
+
+    /* PA23 pin */
+    PORT_PIN_PA23 = 23U,
+
     /* PA24 pin */
     PORT_PIN_PA24 = 24U,
 
     /* PA25 pin */
     PORT_PIN_PA25 = 25U,
 
-    /* PA28 pin */
-    PORT_PIN_PA28 = 28U,
+    /* PA27 pin */
+    PORT_PIN_PA27 = 27U,
 
     /* PA30 pin */
     PORT_PIN_PA30 = 30U,

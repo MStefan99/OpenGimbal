@@ -1,35 +1,23 @@
 #include "main.hpp"
 
-#include "joystick.hpp"
+static DisplayState displayState {DisplayState::GimbalMode};
+static PowerMode    powerMode {PowerMode::Sleep};
+static GimbalMode   gimbalMode {GimbalMode::Follow};
 
-/* Pinouts
- *
- * PA02 - Joystick analog input 1
- * PA04 - Joystick analog input 2
- *
- * PA05 - Supply, enables joystick and backlight
- *
- * PA08 - UART
- *
- * PA14 - LED 3
- * PA15 - LED 4
- *
- * PA24 - Button 1
- * PA25 - Button 2
- *
- * PA30 - LED 1 (shared with SWCLK)
- * PA31 - LED 2 (shared with SWDIO)
- *
- */
+constexpr static float attFactor {2048 / F_PI};
+constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
+constexpr static float ATT_LSB {10430.0f};
+constexpr float        sqrt2 = sqrtf(2);
 
+static float yawCurrent {0};
+static float pitchCurrent {0};
+static float rollCurrent {0};
 
-volatile DisplayState displayState {DisplayState::Off};
-PowerMode             powerMode {PowerMode::Sleep};
-GimbalMode            gimbalMode {GimbalMode::Follow};
+static float yawOffset {0};
+static float pitchOffset {0};
+static float rollOffset {0};
 
-int16_t yawOffset {0};
-int16_t pitchOffset {0};
-int16_t rollOffset {0};
+static float motorAngles[3] {0};
 
 int16_t yawReset {0};
 int16_t rollReset {0};
@@ -42,87 +30,119 @@ volatile uint32_t eventTime {0};
 volatile bool     buttonPressed {false};
 volatile bool     leftButton {true};
 
-int16_t joystickX {0};
-int16_t joystickY {0};
-
-int16_t normalize(int16_t difference) {
-	difference %= 4096;
-
-	if (difference > halfRevolution) {
-		return difference - fullRevolution;
-	} else if (difference < -halfRevolution) {
-		return difference + fullRevolution;
-	} else {
-		return difference;
+float normalize(float difference) {
+	if (difference > F_PI) {
+		difference -= F_2_PI;
+	} else if (difference < -F_PI) {
+		difference += F_2_PI;
 	}
+	return difference;
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {}
+
+Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
+	float a = eulerAngles[0][0];
+	float b = util::clamp(eulerAngles[1][0], -F_PI_3, F_PI_3);
+	float g = eulerAngles[2][0];
+
+	float cosA = std::cos(a);
+	float sinB = std::sin(b);
+	float cosB = std::cos(b);
+	float sinG = std::sin(g);
+
+	float cos2A = cosA * cosA;
+	float sin2B = sinB * sinB;
+	float cos2B = cosB * cosB;
+	float sin2G = sinG * sinG;
+
+	float sinM2 = sqrt2 * sinB;
+
+	auto signG {util::sign(util::abs(g) - F_PI_2)};
+
+	return {
+	  {-2
+	   * atan2f(
+	       (sqrt2 * (sqrt2 * sinB - util::sign(a) * sqrtf(2 - 2 * cos2A * cos2B - 2 * sin2B))),
+	       (2 * (sqrtf(1 - 2 * sin2B) + cosA * cosB))
+	   )},
+	  {asinf(sinM2)},
+	  {F_PI_4
+	   + signG * 2
+	         * atan2f(
+	             (std::sqrt(2 - 2 * cos2B * sin2G - 2 * sin2B) + signG * 1),
+	             (sqrtf(1 - 2 * sin2B) - sqrt2 * cosB * sinG)
+	         )}
+	};
 }
 
 void setLEDs(uint32_t brightnesses) {
 	for (uint8_t i {0}; i < 4; ++i) {
-		pwm::setBrightness(i, brightnesses);
+		pwm::setBrightness(i, brightnesses << 8u);
 		brightnesses >>= 8u;
 	}
 }
 
 void showMode() {
-	if (displayState == DisplayState::Off) {
+	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep) {
 		setLEDs(0);
 	} else {
 		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
 	}
 }
 
-void sendOffsets(bool sendYaw = true, bool sendPitch = true, bool sendRoll = true) {
-	auto yawCommand {
-	  SetVariableCommand {Command::Variable::YawOffset, yawOffset}
-	};
-	auto pitchCommand {
-	  SetVariableCommand {Command::Variable::PitchOffset, pitchOffset}
-	};
-	auto rollCommand {
-	  SetVariableCommand {Command::Variable::RollOffset, rollOffset}
-	};
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processButtons(bool left, bool pressed) {
+	if (powerMode == PowerMode::Sleep) {
+		powerMode = PowerMode::Idle;
+	}
 
-	if (sendYaw) {
-		uart::send(yawCommand.getBuffer(), yawCommand.getLength());
+	if (!pressed && util::getTime() - eventTime < MAX_PRESS_WAIT_TIME) {
+		++shortPresses;
 	}
-	if (sendPitch) {
-		uart::send(pitchCommand.getBuffer(), pitchCommand.getLength());
-	}
-	if (sendRoll) {
-		uart::send(rollCommand.getBuffer(), rollCommand.getLength());
+
+	eventTime = util::getTime();
+	buttonPressed = pressed;
+	leftButton = left;
+
+	if (powerMode == PowerMode::Idle) {
+		if (!buttonPressed) {
+			showMode();
+		} else {
+			setLEDs(0xffffffff);
+		}
+	} else if (displayState == DisplayState::GimbalMode) {
+		if (!buttonPressed) {
+			showMode();
+		} else {
+			setLEDs(0);
+		}
 	}
 }
 
 bool triggerAction() {
-	bool isOff {displayState == DisplayState::Off};
+	bool isOff {powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep};
 
 	if (buttonPressed) {  // buttonPressed being true means this is a long press
 		if (shortPresses == 1) {
-			uint8_t led = (util::getTime() - (eventTime + MAX_PRESS_WAIT_TIME)) / LONG_PRESS_STEP_TIME;
-			pwm::setBrightness(led - 1, isOff ? 0xff : 0);
+			uint8_t led = (util::getTime() - (eventTime + MAX_SHORT_PRESS_TIME)) / LONG_PRESS_STEP_TIME;
+			pwm::setBrightness(led - 1, isOff ? 0xffff : 0);
 
 			if (!led) {
 				setLEDs(isOff ? 0 : 0xffffffff);
-			} else if (led >= 4) {
+			} else if (led > 3) {
 				if (isOff) {
 					displayState = DisplayState::GimbalMode;
 					powerMode = PowerMode::Active;
-					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 5u;
+					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
-					sendOffsets();
 				} else {
-					displayState = DisplayState::Off;
 					powerMode = PowerMode::Sleep;
-					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 5u;
+					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
 				}
 				showMode();
-
-				auto command {
-				  SetVariableCommand {Command::Variable::PowerMode, static_cast<uint8_t>(powerMode)}
-				};
-				uart::send(command.getBuffer(), command.getLength());
 
 				return true;
 			}
@@ -130,33 +150,34 @@ bool triggerAction() {
 			return true;
 		}
 	} else if (shortPresses == 1 && (!leftButton || isOff)) {
-		setLEDs(0);
-		auto command {GetVariableCommand {Command::Variable::BatteryVoltage}};
-		uart::send(command.getBuffer(), command.getLength());
+		adc::measureBattery([](uint16_t value) {
+			if (powerMode == PowerMode::Sleep) {
+				powerMode = PowerMode::Idle;
+			}
+
+			setLEDs(0);
+			displayState = DisplayState::BatteryLevel;
+			stateChangeTime = util::getTime();
+			voltageBars = value / (4096 / 8) + 1;
+		});
 	} else if (!isOff) {
 		if (leftButton) {
 			if (shortPresses == 1) {
 				yawOffset = yawReset;
 				pitchOffset = 0;
 				rollOffset = rollReset;
-
-				sendOffsets(true, true, true);
 			} else if (shortPresses == 2) {
 				rollReset += quarterRevolution;
 				if (rollReset > halfRevolution) {
 					rollReset = 0;
 				}
 				rollOffset = rollReset;
-
-				sendOffsets(false, false, true);
 			} else if (shortPresses == 3) {
 				yawReset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
 				if (yawReset > halfRevolution + 2) {
 					yawReset = 0;
 				}
 				yawOffset = yawReset;
-
-				sendOffsets(true, false, false);
 			}
 		} else {
 			if (shortPresses == 2) {
@@ -166,27 +187,6 @@ bool triggerAction() {
 					gimbalMode = static_cast<GimbalMode>(static_cast<uint8_t>(gimbalMode) + 1);
 				}
 				showMode();
-
-				Command::GimbalMode mode;
-				switch (gimbalMode) {
-					case GimbalMode::Horizon:
-					default:
-						mode = Command::GimbalMode::Horizon;
-						break;
-					case GimbalMode::Follow:
-						mode = Command::GimbalMode::Follow;
-						break;
-					case GimbalMode::FPV:
-						mode = Command::GimbalMode::FPV;
-						break;
-					case GimbalMode::Tilt:
-						mode = Command::GimbalMode::Follow;
-				}
-
-				auto command {
-				  SetVariableCommand {Command::Variable::GimbalMode, static_cast<uint8_t>(mode)}
-				};
-				uart::send(command.getBuffer(), command.getLength());
 			}
 		}
 	}
@@ -194,122 +194,177 @@ bool triggerAction() {
 	return !buttonPressed;
 }
 
-// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
-	displayState = DisplayState::BatteryLevel;
-	stateChangeTime = util::getTime();
-	voltageBars = buffer.buffer[2] / (256 / 8) + 1;
-}
-
-// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processButtons(bool left, bool pressed) {
-	if (!pressed && util::getTime() - eventTime < MAX_PRESS_WAIT_TIME) {
-		++shortPresses;
-	}
-
-	eventTime = util::getTime();
-	buttonPressed = pressed;
-	leftButton = left;
-
-	switch (displayState) {
-		case (DisplayState::Off): {
-			if (shortPresses || !buttonPressed) {
-				showMode();
-				break;
-			} else {
-				setLEDs(0xffffffff);
-			}
-			break;
-		}
-		case (DisplayState::GimbalMode): {
-			if (!buttonPressed) {
-				showMode();
-				break;
-			} else {
-				setLEDs(0);
-			}
-			break;
-		}
-		default:
-			break;
-	}
-}
-
-#if DV_OUT
-struct DVData {
-	uint8_t  header {0x03};
-	uint16_t dt {};
-	int16_t  joystickX {};
-	int16_t  joystickY {};
-	uint8_t  footer {0xfc};
-} __attribute__((packed));
-#endif
-
-static void sleep() {
-	SCB->SCR = SCB_SCR_SEVONPEND_Msk | SCB_SCR_SLEEPDEEP_Msk;
-	__WFI();
-	SCB->SCR = SCB_SCR_SEVONPEND_Msk;
+void sleep() {  // TODO: disable IMU
+	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
+	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
+	do {
+		__WFI();
+	} while (powerMode == PowerMode::Sleep);
+	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
+	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
 
 int main() {
 	util::init();
 	buttons::init();
-	pwm::init();
-	uart::init();
 	adc::init();
+	pwm::init();
+	i2c::init();
+	LSM6DSO32::init();
+	//	uart::init();
+	usb::init();
 
-	uart::setCallback(processResponse);
+	uart::setMotorCallback(processMotorResponse);
 	buttons::setCallback(processButtons);
 
-	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 5u;
+	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
+
+	Mahony mahony {};
 
 	while (1) {
-#if DV_OUT
-		auto startMs = util::getTime();
-		auto startUs = SysTick->VAL;
-#endif
+		switch (powerMode) {
+			case (PowerMode::Startup): {
+				// TODO: check motor state
 
-		if (displayState == DisplayState::GimbalMode) {
-			joystick::update([](int16_t x, int16_t y) {
-				int16_t dx = x / 25;
-				int16_t dy = y / 25;
+				motor::move();
+				motor::tone(motor::all, 247);
+				util::sleep(205);
 
-				bool sendYaw {false};
-				bool sendRoll {false};
-
-				if (gimbalMode != GimbalMode::Tilt) {
-					yawOffset -= dx;
-					sendYaw = true;
-				} else {
-					rollOffset -= dx;
-					sendRoll = true;
+				for (uint8_t i {15}; i > 4; i -= 5) {
+					motor::tone(motor::all, 294);
+					motor::move(motor::all, 0, i);
+					util::sleep(205);
+					motor::tone(motor::all, 392);
+					motor::move(motor::all, 0, i);
+					util::sleep(205);
 				}
-				pitchOffset += dy;
+				motor::tone();
 
-				sendOffsets(sendYaw, true, sendRoll);
-			});
-		}
+				powerMode = PowerMode::Active;
+				break;
+			}
+			case (PowerMode::Active): {
+				LSM6DSO32::update();
+				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), 0.01f);
 
-		if (buttonPressed && util::getTime() - eventTime > MAX_LONG_PRESS_TIME) {
-			shortPresses = 0;
-			buttonPressed = false;
-			showMode();
+				joystick::update([](int16_t x, int16_t y) {
+					int16_t dx = x / 25;
+					int16_t dy = y / 25;
+
+					if (gimbalMode != GimbalMode::Tilt) {
+						yawOffset -= dx;
+					} else {
+						rollOffset -= dx;
+					}
+					pitchOffset += dy;
+				});
+
+				Quaternion handleOrientation {mahony.getQuat()};
+				auto       handleAngles {handleOrientation.toEuler()};
+
+				for (uint8_t i {0}; i < 3; ++i) {
+					data::usbSensorsResponse.accelerations[i] = LSM6DSO32::getRawAccelerations()[2 - i][0];
+					data::usbSensorsResponse.angularRates[i] = LSM6DSO32::getRawAngularRates()[2 - i][0];
+				}
+
+				data::usbStatusResponse.pitch = handleAngles[1][0] * ATT_LSB;
+				data::usbStatusResponse.roll = handleAngles[2][0] * ATT_LSB;
+
+				float yawTarget {handleAngles[0][0] + yawOffset};
+
+				float sy {sinf(yawOffset)};
+				float cy {cosf(yawOffset)};
+
+				float pitchTarget {
+				  (gimbalMode == GimbalMode::Horizon ? 0 : cy * handleAngles[1][0] - sy * handleAngles[2][0]) + pitchOffset
+				};
+				float rollTarget {
+				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - rollOffset
+				};
+
+				yawCurrent +=
+				    util::clamp(normalize(yawTarget - yawCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+				yawCurrent = normalize(yawCurrent);
+
+				pitchCurrent +=
+				    util::clamp(normalize(pitchTarget - pitchCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+
+				rollCurrent +=
+				    util::clamp(normalize(rollTarget - rollCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+
+				Quaternion cameraOrientation {Quaternion::fromEuler(yawCurrent, pitchCurrent, rollCurrent)};
+				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
+
+				auto rotationAngles {gimbalRotation.toEuler()};
+				auto calculatedAngles {calculateAngles(rotationAngles)};
+
+				for (uint8_t i {0}; i < 3; ++i) {
+					if (!std::isnan(calculatedAngles[i][0])) {
+						motorAngles[i] = calculatedAngles[i][0];
+					}
+				}
+
+				for (uint8_t i {0}; i < 3; ++i) {
+					int16_t position = motorAngles[i] * attFactor;
+					if (position < 0) {
+						position += 4096;
+					}
+
+					motor::move(i + 1, position);
+				}
+
+				util::sleep(10);
+				break;
+			}
+			case (PowerMode::Shutdown): {
+				motor::move();
+				motor::tone(motor::all, 294);
+				util::sleep(205);
+				motor::tone(motor::all, 247);
+				util::sleep(205);
+				motor::tone();
+				util::sleep(10);  // TODO: remove, send while in sleep mode
+
+				powerMode = PowerMode::Sleep;
+				break;
+			}
+			case (PowerMode::Idle):
+			default: {
+				// motor::sleep(); // Sleep only needed once
+				__WFI();
+				break;
+			}
+			case (PowerMode::Sleep): {
+				motor::sleep();
+				sleep();
+				break;
+			}
 		}
 
 		if (displayState == DisplayState::BatteryLevel) {
 			uint8_t step = (util::getTime() - stateChangeTime) / VOLTAGE_DISPLAY_TIME;
 			uint8_t leds = voltageBars / 2;
 
-			if (step >= leds) {
-				// The calculation steps + leds + 1 is just to ensure the same timing for all LEDs
-				pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2 ? 255 : 0);
-			} else {
-				pwm::setBrightness(step, leds ? 255 : 0);
-			}
 
 			if (step > 15 || buttonPressed) {
-				displayState = powerMode == PowerMode::Active ? DisplayState::GimbalMode : DisplayState::Off;
+				displayState = DisplayState::GimbalMode;
 				showMode();
+				if (powerMode == PowerMode::Idle) {
+					powerMode = PowerMode::Sleep;
+				}
+			} else if (step >= leds) {
+				// The calculation steps + leds + 1 is just to ensure the same timing for all LEDs
+				pwm::setBrightness(leds, voltageBars % 2 && (step + leds + 1) % 2 ? 0xffff : 0);
+			} else {
+				pwm::setBrightness(step, leds ? 0xffff : 0);
+			}
+		}
+
+		if (buttonPressed && util::getTime() - eventTime > MAX_LONG_PRESS_TIME) {
+			shortPresses = 0;
+			showMode();
+			if (powerMode == PowerMode::Idle) {
+				powerMode = PowerMode::Sleep;
 			}
 		}
 
@@ -317,23 +372,9 @@ int main() {
 		    || (shortPresses && util::getTime() - eventTime > MAX_PRESS_WAIT_TIME)) {
 			if (triggerAction()) {
 				shortPresses = 0;
-				buttonPressed = false;
 			}
 		}
-
-#if DV_OUT
-		DVData data {};
-
-		data.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 2;
-		data.joystickX = joystickX;
-		data.joystickY = joystickY;
-		uart::send(reinterpret_cast<uint8_t*>(&data), sizeof(data));
-#endif
-
-		if (displayState == DisplayState::Off && !shortPresses && !buttonPressed) {
-			sleep();
-		} else {
-			util::sleep(50);
-		}
 	}
+
+	return 1;
 }

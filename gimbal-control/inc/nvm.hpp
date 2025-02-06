@@ -42,7 +42,7 @@ namespace nvm {
 		extern uint8_t        rowCopy[FLASH_ROW_SIZE];  // Copy of the row
 		extern const uint8_t* modifiedRow;              // Original address of the data
 
-		struct Rows {
+		struct __attribute__((packed)) Rows {
 			union {
 				Options options {};
 				uint8_t pad[FLASH_ROW_SIZE];

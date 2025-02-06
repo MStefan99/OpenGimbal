@@ -11,37 +11,74 @@ extern "C" {
 }
 
 void util::init() {
-	// Oscillator setup
-	SYSCTRL_REGS->SYSCTRL_OSC8M = (SYSCTRL_REGS->SYSCTRL_OSC8M & (SYSCTRL_OSC8M_FRANGE_Msk | SYSCTRL_OSC8M_CALIB_Msk))
-	                            | SYSCTRL_OSC8M_ENABLE(1)    // Enable OSC8M
-	                            | SYSCTRL_OSC8M_RUNSTDBY(1)  // Enable in standby
-	                            | SYSCTRL_OSC8M_ONDEMAND(1)  // Enable only when requested
-	                            | SYSCTRL_OSC8M_PRESC_2;     // Divide by 4
+	uint32_t calibration = *((uint32_t*)0x00806020);
 
-	// NVM setup
-	NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1);  // Change NVM writes to manual
+	// Supply setup
+	SUPC_REGS->SUPC_VREG = SUPC_VREG_ENABLE(1);  // Enable regulator
+	while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
-	// GCLK setup
-	GCLK_REGS->GCLK_GENCTRL = GCLK_GENCTRL_ID(1)          // GCLK 1
-	                        | GCLK_GENCTRL_SRC_OSCULP32K  // Select OSCULP32K as a clock source
-	                        | GCLK_GENCTRL_DIVSEL_DIV2    // Select division mode 2^(x+1)
-	                        | GCLK_GENCTRL_GENEN(1);      // Enable clock
-	GCLK_REGS->GCLK_GENDIV = GCLK_GENDIV_ID(1)            // GCLK 1
-	                       | GCLK_GENDIV_DIV(6);          // Divide by 128 (2^(6+1))
+	// Performance setup
+	PM_REGS->PM_STDBYCFG = PM_STDBYCFG_DPGPD0(1)            // Enable dynamic power gating for PD0
+	                     | PM_STDBYCFG_DPGPD1(1);           // Enable dynamic power gating for PD1
+	NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1)     // Use NVM in manual write mode
+	                            | NVMCTRL_CTRLB_RWS(2);     // Use 2 wait states for NVM
+	PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2;                 // Enter PL2
+	while (!(PM_REGS->PM_INTFLAG & PM_INTFLAG_PLRDY_Msk));  // Wait for the transition to complete
 
-	// APB clock setup
-	PM_REGS->PM_APBCMASK = PM_APBCMASK_SERCOM1(1)  // Enable APB SERCOM1 clock
-	                     | PM_APBCMASK_TC1(1)      // Enable APB TC1 clock
-	                     | PM_APBCMASK_TC2(1)      // Enable APB TC2 clock
-	                     | PM_APBCMASK_ADC(1);     // Enable APB ADC clock
+	// Clock setup
+	// Enable DFLL
+	OSCCTRL_REGS->OSCCTRL_DFLLVAL = OSCCTRL_DFLLVAL_COARSE(calibration >> 26u)  // Load calibration value
+	                              | OSCCTRL_DFLLVAL_FINE(512);  // Middle value for FINE (0-1023) is a good starting point
+	OSCCTRL_REGS->OSCCTRL_DFLLCTRL = OSCCTRL_DFLLCTRL_ENABLE(1)    // Enable DFLL48M
+	                               | OSCCTRL_DFLLCTRL_ONDEMAND(1)  // Only run when requested
+	                               | OSCCTRL_DFLLCTRL_MODE(0);     // Run in open-loop mode
+
+	// Switch the CPU over to DFLL
+	GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 0
+	                           | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
+
+	while (!(OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk));  // Wait for DFLL to start
+
+	// Enable OSC16M
+	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)    // Enable OSC16M
+	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)  // Only run when requested
+	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;     // Set frequency to 16MHz
+
+	// Enable generic clocks
+	GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 1
+	                           | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
+
+	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)     // Enable GCLK 2
+	                           | GCLK_GENCTRL_SRC_OSC16M   // Set OSC16M as a source
+	                           | GCLK_GENCTRL_DIVSEL_DIV2  // Set division mode (2^(x+1))
+	                           | GCLK_GENCTRL_DIV(4);      // Divide by 32 (2^(4+1))
+
+	GCLK_REGS->GCLK_GENCTRL[3] = GCLK_GENCTRL_GENEN(1)        // Enable GCLK 2
+	                           | GCLK_GENCTRL_SRC_OSCULP32K;  // Set OSCULP32K as a source
 
 	// SysTick setup
-	SysTick_Config(2000);
+	SysTick_Config(48000);
 
 	// NVIC setup
 	__DMB();
 	__enable_irq();
 	NVIC_EnableIRQ(SysTick_IRQn);
+}
+
+// Fast inverse square root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+float util::invSqrt(float x) {
+	float halfx = 0.5f * x;
+
+	union {
+		float f;
+		long  i;
+	} conv = {x};
+
+	conv.i = 0x5f3759df - (conv.i >> 1);
+	conv.f *= 1.5f - (halfx * conv.f * conv.f);
+	conv.f *= 1.5f - (halfx * conv.f * conv.f);
+	return conv.f;
 }
 
 uint32_t util::getTime() {

@@ -11,10 +11,10 @@
 
 #include "device.h"
 
-
 constexpr float F_2_PI {6.283185307179586476925286766559};
 constexpr float F_PI {3.1415926535897932384626433832795};
 constexpr float F_PI_2 {1.5707963267948966192313216916398};
+constexpr float F_PI_3 {1.0471975511965977461542144610932};
 constexpr float F_PI_4 {0.78539816339744830961566084581988};
 constexpr float F_PI_8 {0.39269908169872415480783042290994};
 constexpr float F_DEG_TO_RAD {0.017453292519943295769236907684886};
@@ -80,6 +80,11 @@ namespace util {
 	}
 
 	template <class T>
+	int8_t sign(T a) {
+		return a > 0 ? 1 : a < 0 ? -1 : 0;
+	}
+
+	template <class T>
 	T min(T a, T b) {
 		return (a < b) ? a : b;
 	}
@@ -109,6 +114,8 @@ namespace util {
 			return val;
 		}
 	}
+
+	float invSqrt(float a);
 }  // namespace util
 
 #endif /* UTIL_HPP */

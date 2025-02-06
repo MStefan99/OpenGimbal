@@ -16,7 +16,6 @@
 
 *******************************************************************************/
 
-// DOM-IGNORE-BEGIN
 /*******************************************************************************
 * Copyright (C) 2019 Microchip Technology Inc. and its subsidiaries.
 *
@@ -39,9 +38,8 @@
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
-// DOM-IGNORE-END
 
-#ifndef PLIB_CLOCK_H  // Guards against multiple inclusion
+#ifndef PLIB_CLOCK_H
 #define PLIB_CLOCK_H
 
 // *****************************************************************************
@@ -49,39 +47,20 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
+/* This section lists the other files that are included in this file.
+*/
 #include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus // Provide C++ Compatibility
-
-    extern "C" {
-
+extern "C" {
 #endif
-// DOM-IGNORE-END
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Data Types
-// *****************************************************************************
-// *****************************************************************************
+void CLOCK_Initialize (void);
 
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Interface Routines
-// *****************************************************************************
-// *****************************************************************************
-
-void CLOCK_Initialize( void );
 
 #ifdef __cplusplus // Provide C++ Compatibility
-
-    }
-
+}
 #endif
 
 #endif /* PLIB_CLOCK_H */
-

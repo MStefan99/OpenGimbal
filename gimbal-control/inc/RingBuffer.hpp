@@ -5,19 +5,14 @@
 #ifndef RING_BUFFER_HPP
 #define RING_BUFFER_HPP
 
+#include <cstdint>
 #include <new>
-
-#include "device.h"
 
 /*
  * If objects in the buffer are plain data objects and don't need to be constructed/destructed,
  * this option can save memory
  */
 #define PLAIN_DATA true
-/*
- * If objects in the buffer don't need to be copy-constructed, disabling this will improve performance
- */
-#define INIT_DATA  false
 
 template <class T, class size_type, size_type C>
 class RingBuffer {
@@ -120,9 +115,7 @@ void RingBuffer<T, size_type, C>::push_back(const_reference value) {
 		pop_front();
 	}
 
-#if INIT_DATA
 	new (&_elements[_back]) T(value);  // Use placement new for construction
-#endif
 	_back = (_back + 1) % _capacity;
 	++_size;
 }
@@ -135,9 +128,7 @@ void RingBuffer<T, size_type, C>::push_front(const_reference value) {
 	}
 
 	_front = (_front + _capacity - 1) % _capacity;
-#if INIT_DATA
 	new (&_elements[_front]) T(value);  // Use placement new for construction
-#endif
 	++_size;
 }
 

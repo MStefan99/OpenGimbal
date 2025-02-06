@@ -10,8 +10,6 @@
     "lint:companion": "cd ./companion && npm run lint",
     "fmt:control": "cd ./gimbal-control && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
     "lint:control": "cd ./gimbal-control && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
-    "fmt:main": "cd ./gimbal-main && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
-    "lint:main": "cd ./gimbal-main && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
     "fmt:motor": "cd ./gimbal-motor && clang-format -i *.cpp *.hpp src/*.cpp inc/*.hpp",
     "lint:motor": "cd ./gimbal-motor && clang-format --dry-run --Werror *.cpp *.hpp src/*.cpp inc/*.hpp",
     "prepare": "husky"

@@ -82,25 +82,34 @@ typedef struct H3DeviceVectorsTag
   pfn_handler_t pfnSysTick_Handler;                 /* -1 System Tick Timer */
 
   /* Peripheral handlers */
-  pfn_handler_t pfnPM_Handler;                      /* 0 Power Manager */
-  pfn_handler_t pfnSYSCTRL_Handler;                 /* 1 System Controller */
-  pfn_handler_t pfnWDT_Handler;                     /* 2 Watchdog Timer */
-  pfn_handler_t pfnRTC_Handler;                     /* 3 Real Time Counter */
-  pfn_handler_t pfnEIC_Handler;                     /* 4 External Interrupt Controller */
-  pfn_handler_t pfnNVMCTRL_Handler;                 /* 5 Non-Volatile Memory Controller */
-  pfn_handler_t pfnDMAC_Handler;                    /* 6 Direct Memory Controller */
-  pfn_handler_t pfnReserved7;
-  pfn_handler_t pfnEVSYS_Handler;                   /* 8 Event Systems */
-  pfn_handler_t pfnSERCOM0_Handler;                 /* 9 Serial Communication Interface 0 */
-  pfn_handler_t pfnSERCOM1_Handler;                 /* 10 Serial Communication Interface 1 */
-  pfn_handler_t pfnReserved11;
-  pfn_handler_t pfnReserved12;
-  pfn_handler_t pfnTC1_Handler;                     /* 13 Timer/Counter 1 */
-  pfn_handler_t pfnTC2_Handler;                     /* 14 Timer/Counter 2 */
-  pfn_handler_t pfnADC_Handler;                     /* 15 Analog-to-Digital Converter */
-  pfn_handler_t pfnReserved16;
-  pfn_handler_t pfnReserved17;
-  pfn_handler_t pfnPTC_Handler;                     /* 18 Peripheral Touch Controller */
+  pfn_handler_t pfnSYSTEM_Handler;                  /* 0 System peripherals shared interrupt */
+  pfn_handler_t pfnWDT_Handler;                     /* 1 Watchdog Timer */
+  pfn_handler_t pfnRTC_Handler;                     /* 2 Real Time Counter */
+  pfn_handler_t pfnEIC_Handler;                     /* 3 External Interrupt Controller */
+  pfn_handler_t pfnNVMCTRL_Handler;                 /* 4 Non-Volatile Memory Controller */
+  pfn_handler_t pfnDMAC_Handler;                    /* 5 Direct Memory Controller */
+  pfn_handler_t pfnUSB_Handler;                     /* 6 Universal Serial Bus */
+  pfn_handler_t pfnEVSYS_Handler;                   /* 7 Event Systems */
+  pfn_handler_t pfnSERCOM0_Handler;                 /* 8 Serial Communication Interface 0 */
+  pfn_handler_t pfnSERCOM1_Handler;                 /* 9 Serial Communication Interface 1 */
+  pfn_handler_t pfnSERCOM2_Handler;                 /* 10 Serial Communication Interface 2 */
+  pfn_handler_t pfnSERCOM3_Handler;                 /* 11 Serial Communication Interface 3 */
+  pfn_handler_t pfnSERCOM4_Handler;                 /* 12 Serial Communication Interface 4 */
+  pfn_handler_t pfnSERCOM5_Handler;                 /* 13 Serial Communication Interface 5 */
+  pfn_handler_t pfnTCC0_Handler;                    /* 14 Timer/Counter for Control Applications 0 */
+  pfn_handler_t pfnTCC1_Handler;                    /* 15 Timer/Counter for Control Applications 1 */
+  pfn_handler_t pfnTCC2_Handler;                    /* 16 Timer/Counter for Control Applications 2 */
+  pfn_handler_t pfnTC0_Handler;                     /* 17 Timer/Counter 0 */
+  pfn_handler_t pfnTC1_Handler;                     /* 18 Timer/Counter 1 */
+  pfn_handler_t pfnReserved19;
+  pfn_handler_t pfnReserved20;
+  pfn_handler_t pfnTC4_Handler;                     /* 21 Timer/Counter 4 */
+  pfn_handler_t pfnADC_Handler;                     /* 22 Analog-to-Digital Converter */
+  pfn_handler_t pfnAC_Handler;                      /* 23 Analog Comparators */
+  pfn_handler_t pfnDAC_Handler;                     /* 24 Digital-to-Analog Converter */
+  pfn_handler_t pfnPTC_Handler;                     /* 25 Peripheral Touch Controller */
+  pfn_handler_t pfnAES_Handler;                     /* 26 Advanced Encryption Standard */
+  pfn_handler_t pfnTRNG_Handler;                    /* 27 True Random Number Generator */
 }H3DeviceVectors;
 
 #endif //DEVICE_VECTORS_H
