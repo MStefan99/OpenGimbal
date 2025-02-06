@@ -13,10 +13,12 @@
 namespace adc {
 	void init();
 
-	void measureBattery(void (*cb)(uint16_t value) = nullptr);
+	void measureTemperature(void (*cb)(uint16_t value));
 
-	void getX(void (*cb)(uint16_t value));
-	void getY(void (*cb)(uint16_t value));
+	void measureBattery(void (*cb)(uint16_t value));
+
+	void measureX(void (*cb)(uint16_t value));
+	void measureY(void (*cb)(uint16_t value));
 }
 
 #endif /* ADC_HPP */

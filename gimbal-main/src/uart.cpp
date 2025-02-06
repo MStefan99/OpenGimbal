@@ -6,11 +6,6 @@ static uart::DefaultCallback::buffer_type   motorInBuffer {};
 static uart::DefaultCallback::callback_type motorCallback {nullptr};
 static uint32_t                             motorReceiveTime {0};
 
-static uart::DefaultQueue                   controlOutQueue {};
-static uart::DefaultCallback::buffer_type   controlInBuffer {};
-static uart::DefaultCallback::callback_type controlCallback {nullptr};
-static uint32_t                             controlReceiveTime {0};
-
 static void initSERCOM(sercom_registers_t* regs) {
 	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1) | SERCOM_USART_INT_CTRLB_COLDEN(1)
 	                             | SERCOM_USART_INT_CTRLB_PMODE_ODD | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT
@@ -89,18 +84,14 @@ static void SERCOM_Handler(
 }
 
 extern "C" {
-	void SERCOM1_Handler() {
-		SERCOM_Handler(SERCOM1_REGS, controlOutQueue, controlInBuffer, controlCallback, controlReceiveTime);
-	}
-
-	void SERCOM2_Handler() {
-		SERCOM_Handler(SERCOM2_REGS, motorOutQueue, motorInBuffer, motorCallback, motorReceiveTime);
+	void SERCOM3_Handler() {
+		SERCOM_Handler(SERCOM3_REGS, motorOutQueue, motorInBuffer, motorCallback, motorReceiveTime);
 	}
 }
 
 void uart::init() {
 	// Clock setup
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM1 clock
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM1 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// Pin setup
@@ -108,20 +99,20 @@ void uart::init() {
 	PORT_REGS->GROUP[0].PORT_PMUX[8] = PORT_PMUX_PMUXE(MUX_PA16C_SERCOM1_PAD0);  // Mux pin 16 to SERCOM1
 
 	// SERCOM setup
-	initSERCOM(SERCOM1_REGS);
-	NVIC_EnableIRQ(SERCOM1_IRQn);
+	initSERCOM(SERCOM3_REGS);
+	NVIC_EnableIRQ(SERCOM3_IRQn);
 }
 
 uint8_t uart::print(const char* buf) {
-	if (controlOutQueue.full()) {
+	if (motorOutQueue.full()) {
 		return 0;
 	}
 	uint8_t len {0};
 	for (; buf[len] && len < 32; ++len);
 
-	controlOutQueue.push_back({{}, 0, len});
-	util::copy(controlOutQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
-	startTransfer(SERCOM1_REGS, controlOutQueue);
+	motorOutQueue.push_back({{}, 0, len});
+	util::copy(motorOutQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+	startTransfer(SERCOM3_REGS, motorOutQueue);
 	return len;
 }
 
@@ -132,7 +123,7 @@ void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
 
 	motorOutQueue.push_back({{}, 0, len});
 	util::copy(motorOutQueue.back().buffer, buf, len);
-	startTransfer(SERCOM2_REGS, motorOutQueue);
+	startTransfer(SERCOM3_REGS, motorOutQueue);
 }
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {

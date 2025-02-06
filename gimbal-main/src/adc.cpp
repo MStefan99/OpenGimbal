@@ -45,8 +45,7 @@ void adc::init() {
 	                     | SUPC_VREF_SEL_1V0;     // Set 1.0V as a reference
 
 	// ADC setup
-	ADC_REGS->ADC_CTRLB = ADC_CTRLB_PRESCALER_DIV2;      // Set prescaler to 2
-	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;  // Set ADC reference voltage
+	ADC_REGS->ADC_CTRLB = ADC_CTRLB_PRESCALER_DIV2;  // Set prescaler to 2
 	ADC_REGS->ADC_CALIB = ADC_CALIB_BIASREFBUF(
 	                          (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_ADC_BIASREFBUF_Msk)
 	                          >> FUSES_OTP5_WORD_0_ADC_BIASREFBUF_Pos
@@ -66,27 +65,40 @@ void adc::init() {
 	NVIC_EnableIRQ(ADC_IRQn);
 }
 
+void adc::measureTemperature(void (*cb)(uint16_t)) {
+	batteryCallback = cb;
+
+	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTREF;    // Set ADC reference voltage
+	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
+	                        | ADC_INPUTCTRL_MUXPOS_TEMP;  // Set temperature sensor as positive input
+
+	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+}
+
 void adc::measureBattery(void (*cb)(uint16_t)) {
 	batteryCallback = cb;
 
+	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;   // Set ADC reference voltage
 	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
 	                        | ADC_INPUTCTRL_MUXPOS_AIN6;  // Set battery pin as positive input
 
 	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
 }
 
-void adc::getX(void (*cb)(uint16_t)) {
+void adc::measureX(void (*cb)(uint16_t)) {
 	xCallback = cb;
 
+	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;   // Set ADC reference voltage
 	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
 	                        | ADC_INPUTCTRL_MUXPOS_AIN0;  // Set X axis pin as positive input
 
 	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
 }
 
-void adc::getY(void (*cb)(uint16_t)) {
+void adc::measureY(void (*cb)(uint16_t)) {
 	yCallback = cb;
 
+	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;   // Set ADC reference voltage
 	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
 	                        | ADC_INPUTCTRL_MUXPOS_AIN1;  // Set Y axis pin as positive input
 

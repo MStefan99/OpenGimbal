@@ -39,7 +39,7 @@ void util::init() {
 
 	while (!(OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk));  // Wait for DFLL to start
 
-	// Disable OSC16M
+	// Enable OSC16M
 	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)    // Enable OSC16M
 	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)  // Only run when requested
 	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;     // Set frequency to 16MHz
@@ -49,9 +49,12 @@ void util::init() {
 	                           | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
 
 	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)     // Enable GCLK 2
-	                           | GCLK_GENCTRL_SRC_OSC16M   // Set DFLL48M as a source
+	                           | GCLK_GENCTRL_SRC_OSC16M   // Set OSC16M as a source
 	                           | GCLK_GENCTRL_DIVSEL_DIV2  // Set division mode (2^(x+1))
 	                           | GCLK_GENCTRL_DIV(4);      // Divide by 32 (2^(4+1))
+
+	GCLK_REGS->GCLK_GENCTRL[3] = GCLK_GENCTRL_GENEN(1)        // Enable GCLK 2
+	                           | GCLK_GENCTRL_SRC_OSCULP32K;  // Set OSCULP32K as a source
 
 	// SysTick setup
 	SysTick_Config(48000);
