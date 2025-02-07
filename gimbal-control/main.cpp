@@ -7,7 +7,8 @@ static GimbalMode   gimbalMode {GimbalMode::Follow};
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
 constexpr static float ATT_LSB {10430.0f};
-constexpr float        sqrt2 = sqrtf(2);
+constexpr static float controlBoardAngle {-30.0f * F_DEG_TO_RAD};
+constexpr static float sqrt2 = sqrtf(2);
 
 static float yawCurrent {0};
 static float pitchCurrent {0};
@@ -85,7 +86,7 @@ void setLEDs(uint32_t brightnesses) {
 }
 
 void showMode() {
-	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep) {
+	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep || powerMode == PowerMode::Shutdown) {
 		setLEDs(0);
 	} else {
 		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
@@ -267,6 +268,7 @@ int main() {
 				});
 
 				Quaternion handleOrientation {mahony.getQuat()};
+				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
 				auto       handleAngles {handleOrientation.toEuler()};
 
 				for (uint8_t i {0}; i < 3; ++i) {
