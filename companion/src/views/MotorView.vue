@@ -165,7 +165,7 @@ async function enumerate(): Promise<void> {
 }
 
 async function adjustOffset(motor: Motor): Promise<void> {
-	await motor.adjustOffset();
+	await motor.adjustOffset(positions.value[motor.address - 1]);
 	await delay(10);
 
 	if (torques.value[motor.address - 1] > 0) {

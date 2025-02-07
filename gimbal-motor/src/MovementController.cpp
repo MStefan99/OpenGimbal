@@ -41,6 +41,7 @@ void MovementController::setTarget(int32_t newTarget) {
 }
 
 void MovementController::setOffset(int32_t newOffset) {
+	_interpolator.offset(newOffset - _offset);
 	_offset = newOffset;
 }
 
@@ -92,6 +93,11 @@ int32_t MovementController::Interpolator::extrapolate(int32_t target) const {
 	}
 
 	return _actual + change;
+}
+
+void MovementController::Interpolator::offset(int32_t offset) {
+	_prev += offset;
+	_actual += offset;
 }
 
 void MovementController::Interpolator::applyTarget(uint32_t dt, int32_t target) {

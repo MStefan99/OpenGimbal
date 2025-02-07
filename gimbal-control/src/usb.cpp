@@ -43,8 +43,8 @@ static usb_device_endpoint1_request EP1REQ;
 static uint8_t* defaultData {nullptr};
 static uint8_t  defaultLen {0};
 
-extern "C" {
 
+extern "C" {
 	void USB_Handler() {
 		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_EORST_Msk) {  // Process USB reset
 			USB_REGS->DEVICE.USB_INTFLAG = USB_DEVICE_INTFLAG_EORST(1);       // Clear pending interrupt

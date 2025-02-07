@@ -10,6 +10,8 @@ static Mode               mode {Mode::Sleep};
 static uint8_t            calibrationMode = nvm::options->polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
 
+static bool offsetAdjusted {false};
+
 float                prevDAngle {0.0f};
 LowPassFilter        torqueFilter {1000, 2};
 static LowPassFilter angleFilter {1000, 1};
@@ -67,6 +69,10 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		case (Command::CommandType::Move): {
 			auto time {util::getTime()};
 			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+			if (offsetAdjusted) {
+				offsetAdjusted = false;
+				prevDAngle = 0.0f;
+			}
 			lastTargetTime = time;
 			maxTorque = torqueLUT.table[buffer.buffer[2] >> 4u];
 			break;
@@ -84,6 +90,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		case (Command::CommandType::AdjustOffset): {
 			movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			uint16_t offset = movementController.getOffset();
+			offsetAdjusted = true;
 			nvm::edit(&nvm::options->zeroOffset, offset);
 			nvm::write();
 			break;

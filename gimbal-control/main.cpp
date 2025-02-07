@@ -134,11 +134,11 @@ bool triggerAction() {
 			} else if (led > 3) {
 				if (isOff) {
 					displayState = DisplayState::GimbalMode;
-					powerMode = PowerMode::Active;
+					powerMode = PowerMode::Startup;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
 				} else {
-					powerMode = PowerMode::Sleep;
+					powerMode = PowerMode::Shutdown;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
 				}
