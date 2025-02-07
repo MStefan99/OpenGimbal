@@ -158,7 +158,14 @@ bool triggerAction() {
 			setLEDs(0);
 			displayState = DisplayState::BatteryLevel;
 			stateChangeTime = util::getTime();
-			voltageBars = value / (4096 / 8) + 1;
+			voltageBars = util::scale(
+			                  util::clamp(value, MIN_VOLTAGE, MAX_VOLTAGE),
+			                  MIN_VOLTAGE,
+			                  MAX_VOLTAGE,
+			                  static_cast<uint16_t>(0),
+			                  static_cast<uint16_t>(65535)
+			              ) / (65535 / 8)
+			            + 1;
 		});
 	} else if (!isOff) {
 		if (leftButton) {
@@ -211,7 +218,7 @@ int main() {
 	pwm::init();
 	i2c::init();
 	LSM6DSO32::init();
-	//	uart::init();
+	uart::init();
 	usb::init();
 
 	uart::setMotorCallback(processMotorResponse);

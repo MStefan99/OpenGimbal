@@ -77,6 +77,8 @@ static void SERCOM_Handler(
 			}
 			prevByteTime = util::getTime();
 		}
+	} else {
+		regs->USART_INT.SERCOM_STATUS = SERCOM_USART_INT_STATUS_FERR(1);
 	}
 
 	(void)regs->USART_INT.SERCOM_DATA;  // Clear the RXC interrupt flag

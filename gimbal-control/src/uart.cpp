@@ -77,6 +77,8 @@ static void SERCOM_Handler(
 			}
 			prevByteTime = util::getTime();
 		}
+	} else {
+		regs->USART_INT.SERCOM_STATUS = SERCOM_USART_INT_STATUS_FERR(1);
 	}
 
 	(void)regs->USART_INT.SERCOM_DATA;  // Clear the RXC interrupt flag
@@ -91,12 +93,16 @@ extern "C" {
 
 void uart::init() {
 	// Clock setup
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM1 clock
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM3 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// Pin setup
-	PORT_REGS->GROUP[0].PORT_PINCFG[16] = PORT_PINCFG_PMUXEN(1);                 // Enable mux on pin 16
-	PORT_REGS->GROUP[0].PORT_PMUX[8] = PORT_PMUX_PMUXE(MUX_PA16C_SERCOM1_PAD0);  // Mux pin 16 to SERCOM1
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u | 0x1 << 1u)  // Select pins
+	                                  | PORT_WRCONFIG_PMUXEN(1)                       // Enable multiplexing
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA16D_SERCOM3_PAD0)    // Multiplex to SERCOM
+	                                  | PORT_WRCONFIG_WRPMUX(1)                       // Write pin multiplex settings
+	                                  | PORT_WRCONFIG_WRPINCFG(1)                     // Write pin config settings
+	                                  | PORT_WRCONFIG_HWSEL(1);                       // Select pin range
 
 	// SERCOM setup
 	initSERCOM(SERCOM3_REGS);
