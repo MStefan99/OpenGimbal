@@ -12,7 +12,7 @@
  * If objects in the buffer are plain data objects and don't need to be constructed/destructed,
  * this option can save memory
  */
-#define PLAIN_DATA true
+#define PLAIN_DATA 1
 
 template <class T, class size_type, size_type C>
 class RingBuffer {

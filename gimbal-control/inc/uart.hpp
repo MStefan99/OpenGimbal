@@ -14,6 +14,8 @@
 #include "uart.hpp"
 #include "util.hpp"
 
+#define UART_HALF_DUPLEX 1
+
 namespace uart {
 	template <class size_type, size_type C>
 	struct Buffer {
