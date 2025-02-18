@@ -47,7 +47,6 @@
         <itemPath>../inc/usb.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/pwm.hpp</itemPath>
-        <itemPath>../inc/uart_radio.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -222,7 +221,6 @@
         <itemPath>../src/usb_descriptors.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>
         <itemPath>../src/pwm.cpp</itemPath>
-        <itemPath>../src/uart_radio.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>

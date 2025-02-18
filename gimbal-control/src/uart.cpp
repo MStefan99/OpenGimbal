@@ -6,10 +6,15 @@ static uart::DefaultCallback::buffer_type   motorInBuffer {};
 static uart::DefaultCallback::callback_type motorCallback {nullptr};
 static uint32_t                             motorReceiveTime {0};
 
-constexpr static float    baudRate {115200};
 constexpr static uint32_t clockFrequency {48000000};
+constexpr static float    baudRate {115200};
 
 static void initSERCOM(sercom_registers_t* regs) {
+	if (regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk) {
+		regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_ENABLE(0);
+		while (regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk);
+	}
+
 	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1)  // Enable receiver
 #if !UART_HALF_DUPLEX
 	                             | SERCOM_USART_INT_CTRLB_TXEN(1)  // Enable transmitter
@@ -23,7 +28,7 @@ static void initSERCOM(sercom_registers_t* regs) {
 	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB               // Send LSB first
 	                             | SERCOM_USART_INT_CTRLA_CMODE_ASYNC
 	                             | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC          // Set clock mode
-	                             | SERCOM_USART_INT_CTRLA_FORM_USART_FRAME_WITH_PARITY  // Enable parity
+	                             | SERCOM_USART_INT_CTRLA_FORM_USART_FRAME_WITH_PARITY  // Enable parity if needed
 	                             | SERCOM_USART_INT_CTRLA_RXPO_PAD0                     // Set receive pin
 	                             | SERCOM_USART_INT_CTRLA_TXPO_PAD0                     // Set transmit pin
 	                             | SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK            // Use internal clock
@@ -44,9 +49,9 @@ static void enableTx(sercom_registers_t* regs) {
 }
 #endif
 
-static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue, bool force = false) {
-	if (motorOutQueue.size()) {
-		if (motorOutQueue.front().remaining) {
+static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue) {
+	if (outQueue.size()) {
+		if (outQueue.front().transferred) {
 			return;  // Another tranfer ongoing
 		}
 	}
@@ -70,18 +75,20 @@ static void SERCOM_Handler(
 ) {
 	if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {  // Not a framing error
 		if (regs->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_TXC_Msk) {  // Transmit complete (outgoing transfer)
-			--outQueue.front().remaining;
-			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
-				outQueue.pop_front();
-				if (outQueue.empty()) {
+			if (outQueue.size()) {
+				--outQueue.front().remaining;
+				if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
+					outQueue.pop_front();
+					if (outQueue.empty()) {
 #if UART_HALF_DUPLEX
-					disableTx(regs);
+						disableTx(regs);
 #endif
+					} else {
+						startTransfer(regs, outQueue);
+					}
 				} else {
-					startTransfer(regs, outQueue, true);
+					regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
 				}
-			} else {
-				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
 			}
 		} else if (regs->USART_INT.SERCOM_INTFLAG
 		           & SERCOM_USART_INT_INTFLAG_RXC_Msk) {                    // Receive complete (incoming transfer)
@@ -95,6 +102,7 @@ static void SERCOM_Handler(
 			}
 			if (!inBuffer.remaining && callback) {  // Received last byte, ready to process
 				callback(inBuffer);
+				inBuffer.transferred = 0;
 			}
 			prevByteTime = util::getTime();
 		}
@@ -114,20 +122,20 @@ extern "C" {
 
 void uart::init() {
 	// Clock setup
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM clock
-	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK as a clock source
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM clock
+	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// Pin setup
-	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 14u | 0x1 << 15u)  // Select pins
-	                                  | PORT_WRCONFIG_PMUXEN(1)                         // Enable multiplexing
-	                                  | PORT_WRCONFIG_PMUX(MUX_PA30D_SERCOM1_PAD2)      // Multiplex to SERCOM
-	                                  | PORT_WRCONFIG_WRPMUX(1)                         // Write pin multiplex settings
-	                                  | PORT_WRCONFIG_WRPINCFG(1)                       // Write pin config settings
-	                                  | PORT_WRCONFIG_HWSEL(1);                         // Select pin range
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u | 0x1 << 1u)  // Select pins
+	                                  | PORT_WRCONFIG_PMUXEN(1)                       // Enable multiplexing
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA16D_SERCOM3_PAD0)    // Multiplex to SERCOM
+	                                  | PORT_WRCONFIG_WRPMUX(1)                       // Write pin multiplex settings
+	                                  | PORT_WRCONFIG_WRPINCFG(1)                     // Write pin config settings
+	                                  | PORT_WRCONFIG_HWSEL(1);                       // Select pin range
 
 	// SERCOM setup
-	initSERCOM(SERCOM1_REGS);
-	NVIC_EnableIRQ(SERCOM1_IRQn);
+	initSERCOM(SERCOM3_REGS);
+	NVIC_EnableIRQ(SERCOM3_IRQn);
 }
 
 uint8_t uart::print(const char* buf) {
@@ -143,16 +151,22 @@ uint8_t uart::print(const char* buf) {
 	return len;
 }
 
-void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
+uint8_t uart::sendToMotors(const uint8_t* buf, uint8_t len) {
 	if (motorOutQueue.full()) {
-		return;
+		return 0;
 	}
+	len = util::min(len, motorOutQueue[0].capacity);
 
 	motorOutQueue.push_back({{}, 0, len});
 	util::copy(motorOutQueue.back().buffer, buf, len);
 	startTransfer(SERCOM3_REGS, motorOutQueue);
+	return len;
 }
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
 	motorCallback = cb;
+}
+
+void uart::clear() {
+	motorOutQueue.clear();
 }

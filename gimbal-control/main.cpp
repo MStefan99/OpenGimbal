@@ -267,7 +267,6 @@ int main() {
 					pitchOffset += dy;
 				});
 
-				Quaternion handleOrientation {mahony.getQuat()};
 				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
 				auto       handleAngles {handleOrientation.toEuler()};
 
@@ -344,6 +343,10 @@ int main() {
 				break;
 			}
 			case (PowerMode::Sleep): {
+				if (usb::isActive()) {
+					powerMode = PowerMode::Idle;
+					break;
+				}
 				motor::sleep();
 				sleep();
 				break;

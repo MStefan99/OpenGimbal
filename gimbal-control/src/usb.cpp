@@ -218,6 +218,10 @@ void usb::init() {
 	USB_REGS->DEVICE.USB_INTENSET = USB_DEVICE_INTENSET_EORST(1);                   // Enable end-of-reset interrupt
 }
 
+bool usb::isActive() {
+	return USB_REGS->DEVICE.USB_FSMSTATUS != USB_FSMSTATUS_FSMSTATE_OFF;
+}
+
 void usb::writeDefault(uint8_t* data, uint8_t len) {
 	defaultData = data;
 	defaultLen = len;
