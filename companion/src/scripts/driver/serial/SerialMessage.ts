@@ -19,13 +19,11 @@ export class SerialMessage extends Message {
 			this.buffer = Uint8Array.from({length: (view.getUint8(0) >> 4) + 1}, (v, i) =>
 				view.getUint8(i)
 			);
-			this.view = new DataView(this.buffer.buffer);
 		} else {
 			srcAddr = Math.floor(clamp(srcAddr, 0, 14));
 			destAddr = Math.floor(clamp(destAddr, 0, 15));
 
 			super(new Uint8Array(2 + cmdData.length));
-			this.view = new DataView(this.buffer.buffer);
 			this.view.setUint8(0, ((this.buffer.byteLength - 1) << 4) | destAddr);
 			this.view.setUint8(1, (srcAddr << 4) | cmdType);
 			this.buffer.set(cmdData, 2);
@@ -52,7 +50,7 @@ export class SerialMessage extends Message {
 				.join(' ');
 		} else {
 			return (
-				`Command ${this.view.getUint8(1) & 0xf}` +
+				`Message ${this.view.getUint8(1) & 0xf}` +
 				`\n  Source address: ${this.view.getUint8(1) >> 4}` +
 				`\n  Destination address: ${this.view.getUint8(0) & 0xf}`
 			);

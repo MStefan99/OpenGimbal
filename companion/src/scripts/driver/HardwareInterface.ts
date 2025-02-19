@@ -1,9 +1,9 @@
 import {Message} from './Message';
 
 export interface IHardwareInterface {
-	send(command: Message): Promise<void>;
+	send(message: Message): Promise<void>;
 
-	request(command: Message): Promise<Message>;
+	request(message: Message): Promise<Message>;
 
 	close(): Promise<void>;
 }

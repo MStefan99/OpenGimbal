@@ -5,7 +5,7 @@
 		nav
 			RouterLink(:to="{name: 'motors'}") Motors
 			RouterLink(:to="{name: 'monitor'}") Monitor
-		label#device-status.connected(v-if="connectedSerialDevices.length" for="device-toggle") Connected
+		label#device-status.connected(v-if="connectedDevice" for="device-toggle") Connected
 		label#device-status(v-else for="device-toggle") Not connected
 		input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")
 	Teleport(to="body")
@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import DeviceSelector from './DeviceSelector.vue';
-import {connectedSerialDevices} from '../scripts/driver/serial/serialDriver';
+import {connectedDevice} from '../scripts/driver/driver';
 import {ref} from 'vue';
 
 const deviceSelectorOpen = ref<boolean>(false);

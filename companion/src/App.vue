@@ -1,7 +1,7 @@
 <template lang="pug">
 NavBar
 main
-	RouterView(v-if="activeSerialDevice")
+	RouterView(v-if="connectedDevice")
 	.no-device(v-else)
 		p.mb-4 Start by clicking here ↑
 		p Connect a device to start using OpenGimbal Companion
@@ -14,8 +14,8 @@ footer
 
 <script setup lang="ts">
 import NavBar from './components/NavBar.vue';
-import {activeSerialDevice} from './scripts/driver/serial/serialDriver';
 import PopupContainer from './components/PopupContainer.vue';
+import {connectedDevice} from './scripts/driver/driver';
 import {crashCourse} from './scripts/analytics';
 import {PopupColor, alert, prompt} from './scripts/popups';
 

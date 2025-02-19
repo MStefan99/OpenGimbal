@@ -1,15 +1,15 @@
-'use strict';
-
 import {reactive, ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
 import {IMotorManager, MotorManager} from '../MotorManager';
 import {SerialInterface} from './SerialInterface';
 import {SerialParser} from './SerialParser';
 
-export const connectedSerialDevices = reactive<IMotorManager[]>([]);
-export const activeSerialDevice = ref<IMotorManager | null>(null);
+export const connectedSerialDevice = ref<IMotorManager | null>(null);
 
-export async function connectSerialDevice(demo: boolean = false): Promise<IMotorManager | null> {
+export async function connectSerialDevice(
+	demo: boolean = false,
+	verbose: boolean = false
+): Promise<IMotorManager | null> {
 	if (demo) {
 		throw new Error('Not implemented');
 
@@ -30,9 +30,9 @@ export async function connectSerialDevice(demo: boolean = false): Promise<IMotor
 					parity: 'odd'
 				})
 				.then(() => {
-					const manager = new MotorManager(new SerialInterface(port, new SerialParser()));
-					connectedSerialDevices.push(manager);
-					activeSerialDevice.value = manager;
+					const manager = new MotorManager(new SerialInterface(port, new SerialParser(), verbose));
+					connectedSerialDevice.value = manager;
+
 					resolve(manager);
 				})
 				.catch((err) => {
@@ -54,17 +54,7 @@ export async function connectSerialDevice(demo: boolean = false): Promise<IMotor
 export function disconnectSerialDevice(device: IMotorManager): void {
 	device.close();
 
-	const idx = connectedSerialDevices.indexOf(device);
-	connectedSerialDevices.splice(idx, 1);
-
-	if (device === activeSerialDevice.value) {
-		if (connectedSerialDevices.length) {
-			activeSerialDevice.value =
-				connectedSerialDevices[idx > connectedSerialDevices.length - 1 ? idx - 1 : idx];
-		} else {
-			activeSerialDevice.value = null;
-		}
-	}
+	connectedSerialDevice.value = null;
 }
 
 // TODO: close on disconnect

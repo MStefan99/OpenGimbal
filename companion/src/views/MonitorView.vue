@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref} from 'vue';
-import {activeSerialDevice} from '../scripts/driver/serial/serialDriver';
+import {connectedSerialDevice} from '../scripts/driver/serial/serialDriver';
 import {SerialParser} from '../scripts/driver/serial/SerialParser';
 import {MotorCommand, motorCommandNames} from '../scripts/driver/serial/MotorCommand';
 import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
@@ -78,8 +78,8 @@ function formatTime(time: number): string {
 	return (time / 1000).toFixed(1) + ' sec ago';
 }
 
-onMounted(() => activeSerialDevice.value.addEventListener('data', onData));
-onUnmounted(() => activeSerialDevice.value?.removeEventListener('data', onData));
+onMounted(() => connectedSerialDevice.value.addEventListener('data', onData));
+onUnmounted(() => connectedSerialDevice.value?.removeEventListener('data', onData));
 </script>
 
 <style scoped></style>

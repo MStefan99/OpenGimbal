@@ -4,18 +4,25 @@ import {IUSBParser} from './USBParser';
 
 export interface IUSBInterface extends IHardwareInterface {
 	get productName(): string;
+
 	get manufacturerName(): string;
 
 	get usbVersionMajor(): number;
+
 	get usbVersionMinor(): number;
+
 	get usbVersionSubminor(): number;
 
 	get deviceVersionMajor(): number;
+
 	get deviceVersionMinor(): number;
+
 	get deviceVersionSubminor(): number;
 
-	send(command: USBMessage): Promise<void>;
-	request(command: USBMessage): Promise<USBMessage>;
+	send(message: USBMessage): Promise<void>;
+
+	request(message: USBMessage): Promise<USBMessage>;
+
 	close(): Promise<void>;
 }
 
@@ -63,18 +70,27 @@ export class USBInterface implements IHardwareInterface {
 		return this._usbDevice.deviceVersionSubminor;
 	}
 
-	async send(command: USBMessage): Promise<void> {
+	async send(message: USBMessage): Promise<void> {
+		this._verbose && console.log('Sending', message.toString());
+
 		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, command.buffer))
+			.then(() => this._usbDevice.transferOut(1, message.buffer))
 			.catch((err) => Promise.reject(err))
 			.then(() => Promise.resolve())) as Promise<void>;
 	}
 
-	async request(command: USBMessage): Promise<USBMessage> {
+	async request(message: USBMessage): Promise<USBMessage> {
+		this._verbose && console.log('Sending', message.toString());
+
 		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, command.buffer))
+			.then(() => this._usbDevice.transferOut(1, message.buffer))
 			.then(() => this._usbDevice.transferIn(1, 0xff))
-			.then((r) => this._parser.parse(new Uint8Array(r.data.buffer))[0])) as Promise<USBMessage>;
+			.then((r) => {
+				const message = this._parser.parse(new Uint8Array(r.data.buffer))[0];
+				this._verbose && console.log('Received', message.toString());
+
+				return message;
+			})) as Promise<USBMessage>;
 	}
 
 	async close(): Promise<void> {

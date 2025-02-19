@@ -1,5 +1,3 @@
-'use strict';
-
 import {reactive, ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
 import {Gimbal, IGimbal} from '../Gimbal';
@@ -7,10 +5,12 @@ import {USBInterface} from './USBInterface';
 import {USBParser} from './USBParser';
 import {USBSerialEncapsulator} from './USBSerialEncapsulator';
 
-export const connectedUSBDevices = reactive<IGimbal[]>([]);
-export const activeUSBDevice = ref<IGimbal | null>(null);
+export const connectedUSBDevice = ref<IGimbal | null>(null);
 
-export async function connectUSBDevice(demo: boolean = false): Promise<IGimbal | null> {
+export async function connectUSBDevice(
+	demo: boolean = false,
+	verbose: boolean = false
+): Promise<IGimbal | null> {
 	if (demo) {
 		throw new Error('Not implemented');
 
@@ -32,11 +32,11 @@ export async function connectUSBDevice(demo: boolean = false): Promise<IGimbal |
 				.then(() => usbDevice.selectConfiguration(1))
 				.then(() => usbDevice.claimInterface(0))
 				.then(() => {
-					const usbInterface = new USBInterface(usbDevice, new USBParser());
+					const usbInterface = new USBInterface(usbDevice, new USBParser(), verbose);
 					const device = new Gimbal(usbInterface, new USBSerialEncapsulator(usbInterface));
-					connectedUSBDevices.push(device);
-					activeUSBDevice.value = device;
-					return device;
+					connectedUSBDevice.value = device;
+
+					resolve(device);
 				})
 				.catch((err) => {
 					if (err instanceof DOMException) {
@@ -57,17 +57,7 @@ export async function connectUSBDevice(demo: boolean = false): Promise<IGimbal |
 export function disconnectUSBDevice(device: IGimbal): void {
 	device.close();
 
-	const idx = connectedUSBDevices.indexOf(device);
-	connectedUSBDevices.splice(idx, 1);
-
-	if (device === activeUSBDevice.value) {
-		if (connectedUSBDevices.length) {
-			activeUSBDevice.value =
-				connectedUSBDevices[idx > connectedUSBDevices.length - 1 ? idx - 1 : idx];
-		} else {
-			activeUSBDevice.value = null;
-		}
-	}
+	connectedUSBDevice.value = null;
 }
 
 // TODO: fix

@@ -42,7 +42,7 @@ export class MotorResponse extends SerialMessage {
 				.join(' ');
 		} else {
 			return (
-				`${motorResponseNames[(this.view.getUint8(1) & 0xf) as MotorResponseType]} command` +
+				`${motorResponseNames[(this.view.getUint8(1) & 0xf) as MotorResponseType]} response` +
 				`\n  Source address: ${this.view.getUint8(1) >> 4}` +
 				`\n  Destination address: ${this.view.getUint8(0) & 0xf}`
 			);

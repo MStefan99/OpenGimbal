@@ -2,8 +2,9 @@ export abstract class Message {
 	buffer: Uint8Array;
 	view: DataView;
 
-	constructor(buffer: Uint8Array) {
+	protected constructor(buffer: Uint8Array) {
 		this.buffer = buffer;
+		this.view = new DataView(buffer.buffer);
 	}
 
 	abstract get length(): number;
