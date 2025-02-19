@@ -116,14 +116,15 @@
 
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
-import {CalibrationBits, Motor} from '../scripts/driver/Motor';
+import {CalibrationBits} from '../scripts/driver/Motor';
+import type {IMotor} from '../scripts/driver/Motor';
 import {activeSerialDevice} from '../scripts/driver/serial/serialDriver';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
 import {delay} from '../scripts/util';
 import StatusIndicator from '../components/StatusIndicator.vue';
 
-const motors = ref<Motor[]>([]);
+const motors = ref<IMotor[]>([]);
 const enumerating = ref<boolean>(false);
 const calibrationModes = ref<CalibrationBits[][]>(
 	new Array(15).fill([]).map<CalibrationBits[]>(() => [])
@@ -166,7 +167,7 @@ async function enumerate(): Promise<void> {
 	enumerating.value = false;
 }
 
-async function adjustOffset(motor: Motor): Promise<void> {
+async function adjustOffset(motor: IMotor): Promise<void> {
 	await motor.adjustOffset(positions.value[motor.address - 1]);
 	await delay(10);
 
@@ -179,7 +180,7 @@ async function adjustOffset(motor: Motor): Promise<void> {
 	}
 }
 
-async function checkCalibrationMode(motor: Motor): Promise<void> {
+async function checkCalibrationMode(motor: IMotor): Promise<void> {
 	const modes = calibrationModes.value[motor.address - 1];
 	if (
 		modes.some((v) => v === CalibrationBits.Pole) &&
@@ -189,7 +190,7 @@ async function checkCalibrationMode(motor: Motor): Promise<void> {
 	}
 }
 
-async function calibrate(motor: Motor): Promise<void> {
+async function calibrate(motor: IMotor): Promise<void> {
 	const mode = new BitwiseRegister<CalibrationBits>();
 
 	for (const calibrationMode of calibrationModes.value[motor.address - 1]) {

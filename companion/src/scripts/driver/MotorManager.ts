@@ -1,7 +1,22 @@
-import {CalibrationBits, Motor} from './Motor';
-import {MotorResponse} from './serial/MotorResponse';
+import {CalibrationBits, IMotor, Motor} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
-import {HardwareInterface} from './HardwareInterface';
+import {ISerialInterface} from './serial/SerialInterface';
+
+export interface IMotorManager extends EventTarget {
+	get motors(): IMotor[];
+
+	get active(): IMotor[];
+
+	get all(): IMotor;
+
+	motor(address?: IMotor['address']): IMotor;
+
+	enumerate(): Promise<IMotor[]>;
+
+	getInitialCalibration(address?: IMotor['address']): BitwiseRegister<CalibrationBits>;
+
+	close(): Promise<void>;
+}
 
 export type MotorEntry = {
 	motor: Motor;
@@ -9,16 +24,16 @@ export type MotorEntry = {
 	initialCalibration?: BitwiseRegister<CalibrationBits>;
 };
 
-export class MotorManager extends EventTarget {
-	readonly _hardwareInterface: HardwareInterface;
+export class MotorManager extends EventTarget implements IMotorManager {
+	readonly _hardwareInterface: ISerialInterface;
 	readonly _motorEntries: MotorEntry[];
 
-	constructor(hardwareInterface: HardwareInterface) {
+	constructor(serialInterface: ISerialInterface) {
 		super();
 
-		this._hardwareInterface = hardwareInterface;
+		this._hardwareInterface = serialInterface;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
-			motor: new Motor(hardwareInterface, i + 1),
+			motor: new Motor(serialInterface, i + 1),
 			active: false
 		}));
 	}
@@ -53,9 +68,13 @@ export class MotorManager extends EventTarget {
 		return this.active;
 	}
 
-	getInitialCalibration(address: Motor['address']): BitwiseRegister<CalibrationBits> {
+	getInitialCalibration(address: Motor['address'] = 1): BitwiseRegister<CalibrationBits> {
 		return (
 			this._motorEntries[address - 1].initialCalibration ?? new BitwiseRegister<CalibrationBits>()
 		);
+	}
+
+	close(): Promise<void> {
+		return this._hardwareInterface.close();
 	}
 }

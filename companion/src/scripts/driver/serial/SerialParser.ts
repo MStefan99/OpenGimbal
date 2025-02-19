@@ -12,9 +12,13 @@ import {
 	ReturnVariableResponse
 } from './MotorResponse';
 import {SerialMessage} from './SerialMessage';
-import {Parser} from '../Parser';
+import {IParser} from '../Parser';
 
-export class SerialParser extends Parser {
+export interface ISerialParser extends IParser {
+	parse(data: Uint8Array): Array<SerialMessage>;
+}
+
+export class SerialParser implements ISerialParser {
 	_incomingBuffer = new Uint8Array(20);
 	_incomingView = new DataView(this._incomingBuffer.buffer);
 	_bytesReceived = 0;

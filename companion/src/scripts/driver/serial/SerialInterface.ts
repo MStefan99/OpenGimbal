@@ -1,27 +1,31 @@
-import {HardwareInterface} from '../HardwareInterface';
+import {IHardwareInterface} from '../HardwareInterface';
 import {SerialMessage} from './SerialMessage';
-import {GetVariableCommand, MotorVariableID} from './MotorCommand';
 import {MotorResponse} from './MotorResponse';
-import {SerialParser} from './SerialParser';
+import {ISerialParser} from './SerialParser';
 
-export class SerialInterface extends HardwareInterface {
-	_port: SerialPort;
-	_parser: SerialParser;
-	readonly _verbose: boolean;
+export interface ISerialInterface extends IHardwareInterface {
+	send(message: SerialMessage): Promise<void>;
 
-	constructor(port: SerialPort, parser: SerialParser, verbose: boolean = false) {
-		super(parser, verbose);
+	request(message: SerialMessage): Promise<SerialMessage>;
 
+	close(): Promise<void>;
+}
+
+export class SerialInterface implements ISerialInterface {
+	private _port: SerialPort;
+	private _parser: ISerialParser;
+	private readonly _verbose: boolean;
+
+	constructor(port: SerialPort, parser: ISerialParser, verbose: boolean = false) {
 		this._port = port;
-
 		this._parser = parser;
 		this._verbose = verbose;
 	}
 
-	async send(command: SerialMessage): Promise<void> {
+	async send(message: SerialMessage): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
-			const buffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
-			this._verbose && console.log('Sending', command.toString(), '\n', command);
+			const buffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
+			this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 			const writer = this._port.writable.getWriter();
 			writer
@@ -34,10 +38,10 @@ export class SerialInterface extends HardwareInterface {
 		});
 	}
 
-	async request<T extends MotorResponse>(command: GetVariableCommand): Promise<T> {
-		return new Promise<T>((resolve, reject) => {
-			const writeBuffer = new Uint8Array(command.length).fill(0).map((v, i) => command.buffer[i]);
-			this._verbose && console.log('Sending', command.toString(), '\n', command);
+	async request(message: SerialMessage): Promise<SerialMessage> {
+		return new Promise((resolve, reject) => {
+			const writeBuffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
+			this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 			if (this._port.readable.locked) {
 				console.warn('Serial readable stream locked');
@@ -60,7 +64,7 @@ export class SerialInterface extends HardwareInterface {
 						reader
 							.cancel()
 							.then(() =>
-								reject(new Error(`Timed out waiting for a response to ${command.toString()}`))
+								reject(new Error(`Timed out waiting for a response to ${message.toString()}`))
 							);
 					}, 20);
 
@@ -80,7 +84,7 @@ export class SerialInterface extends HardwareInterface {
 								this._verbose && responses.forEach((r) => console.log('Received', r.toString(), r));
 
 								await reader.cancel();
-								resolve(responses[0] as T);
+								resolve(responses[0]);
 								return;
 							} else {
 								readBytes = 0;

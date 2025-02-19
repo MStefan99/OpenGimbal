@@ -2,14 +2,15 @@
 
 import {reactive, ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
-import {Gimbal} from '../Gimbal';
+import {Gimbal, IGimbal} from '../Gimbal';
 import {USBInterface} from './USBInterface';
 import {USBParser} from './USBParser';
+import {USBSerialEncapsulator} from './USBSerialEncapsulator';
 
-export const connectedDevices = reactive<Gimbal[]>([]);
-export const activeDevice = ref<Gimbal | null>(null);
+export const connectedUSBDevices = reactive<IGimbal[]>([]);
+export const activeUSBDevice = ref<IGimbal | null>(null);
 
-export async function connectDevice(demo?: true): Promise<Gimbal | null> {
+export async function connectUSBDevice(demo: boolean = false): Promise<IGimbal | null> {
 	if (demo) {
 		throw new Error('Not implemented');
 
@@ -31,9 +32,10 @@ export async function connectDevice(demo?: true): Promise<Gimbal | null> {
 				.then(() => usbDevice.selectConfiguration(1))
 				.then(() => usbDevice.claimInterface(0))
 				.then(() => {
-					const device = new Gimbal(new USBInterface(usbDevice, new USBParser()));
-					connectedDevices.push(device);
-					activeDevice.value = device;
+					const usbInterface = new USBInterface(usbDevice, new USBParser());
+					const device = new Gimbal(usbInterface, new USBSerialEncapsulator(usbInterface));
+					connectedUSBDevices.push(device);
+					activeUSBDevice.value = device;
 					return device;
 				})
 				.catch((err) => {
@@ -52,17 +54,18 @@ export async function connectDevice(demo?: true): Promise<Gimbal | null> {
 	}
 }
 
-export function disconnectDevice(device: Gimbal): void {
-	device._hardwareInterface.close();
+export function disconnectUSBDevice(device: IGimbal): void {
+	device.close();
 
-	const idx = connectedDevices.indexOf(device);
-	connectedDevices.splice(idx, 1);
+	const idx = connectedUSBDevices.indexOf(device);
+	connectedUSBDevices.splice(idx, 1);
 
-	if (device === activeDevice.value) {
-		if (connectedDevices.length) {
-			activeDevice.value = connectedDevices[idx > connectedDevices.length - 1 ? idx - 1 : idx];
+	if (device === activeUSBDevice.value) {
+		if (connectedUSBDevices.length) {
+			activeUSBDevice.value =
+				connectedUSBDevices[idx > connectedUSBDevices.length - 1 ? idx - 1 : idx];
 		} else {
-			activeDevice.value = null;
+			activeUSBDevice.value = null;
 		}
 	}
 }

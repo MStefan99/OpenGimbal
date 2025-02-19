@@ -105,7 +105,8 @@ button,
 input,
 textarea,
 button,
-.btn {
+.btn,
+input[type='radio'] + label {
 	@apply rounded-xl shadow;
 	border: 0.1rem solid var(--color-accent);
 	color: var(--color-foreground);
@@ -138,7 +139,8 @@ textarea.w-full {
 input[type='button'],
 input[type='submit'],
 button,
-.btn {
+.btn,
+input[type='radio'] + label {
 	color: var(--color-accent);
 	user-select: none;
 }

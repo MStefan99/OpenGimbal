@@ -2,14 +2,14 @@
 
 import {reactive, ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
-import {MotorManager} from '../MotorManager';
+import {IMotorManager, MotorManager} from '../MotorManager';
 import {SerialInterface} from './SerialInterface';
 import {SerialParser} from './SerialParser';
 
-export const connectedSerialDevices = reactive<MotorManager[]>([]);
-export const activeSerialDevice = ref<MotorManager | null>(null);
+export const connectedSerialDevices = reactive<IMotorManager[]>([]);
+export const activeSerialDevice = ref<IMotorManager | null>(null);
 
-export async function connectSerialDevice(demo?: true): Promise<MotorManager | null> {
+export async function connectSerialDevice(demo: boolean = false): Promise<IMotorManager | null> {
 	if (demo) {
 		throw new Error('Not implemented');
 
@@ -51,8 +51,8 @@ export async function connectSerialDevice(demo?: true): Promise<MotorManager | n
 	}
 }
 
-export function disconnectSerialDevice(device: MotorManager): void {
-	device._hardwareInterface.close();
+export function disconnectSerialDevice(device: IMotorManager): void {
+	device.close();
 
 	const idx = connectedSerialDevices.indexOf(device);
 	connectedSerialDevices.splice(idx, 1);

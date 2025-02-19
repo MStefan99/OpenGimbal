@@ -1,13 +1,9 @@
-import {SerialMessage} from './serial/SerialMessage';
-import {Parser} from './Parser';
-import {MotorResponse} from './serial/MotorResponse';
+import {Message} from './Message';
 
-export abstract class HardwareInterface {
-	constructor(parser: Parser, verbose: boolean) {}
+export interface IHardwareInterface {
+	send(command: Message): Promise<void>;
 
-	abstract send(command: SerialMessage): Promise<void>;
+	request(command: Message): Promise<Message>;
 
-	abstract request<T extends MotorResponse>(command: SerialMessage): Promise<T>;
-
-	abstract close(): Promise<void>;
+	close(): Promise<void>;
 }
