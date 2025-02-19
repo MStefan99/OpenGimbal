@@ -1,7 +1,7 @@
-import {Command} from './Command';
+import {SerialMessage} from './SerialMessage';
 import {MotorVariableID} from './MotorCommand';
-import {BitwiseRegister} from './BitwiseRegister';
-import {CalibrationBits} from './Motor';
+import {BitwiseRegister} from '../BitwiseRegister';
+import {CalibrationBits} from '../Motor';
 
 export enum MotorResponseType {
 	ReturnVariable = 0xf
@@ -25,7 +25,7 @@ export const getVariableResponse: Record<
 	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
 };
 
-export class MotorResponse extends Command {
+export class MotorResponse extends SerialMessage {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
 	}

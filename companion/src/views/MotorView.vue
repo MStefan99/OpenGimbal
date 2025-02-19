@@ -117,7 +117,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {CalibrationBits, Motor} from '../scripts/driver/Motor';
-import {activeDevice} from '../scripts/driver/driver';
+import {activeSerialDevice} from '../scripts/driver/serial/serialDriver';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
 import {delay} from '../scripts/util';
@@ -143,8 +143,8 @@ async function enumerate(): Promise<void> {
 	enumerating.value = true;
 	motors.value = [];
 
-	motors.value = await activeDevice.value.enumerate();
-	motors.value.length && motors.value.push(activeDevice.value.all);
+	motors.value = await activeSerialDevice.value.enumerate();
+	motors.value.length && motors.value.push(activeSerialDevice.value.all);
 
 	positions.value = new Array(15).fill(0);
 	torques.value = new Array(15).fill(0);
@@ -155,8 +155,10 @@ async function enumerate(): Promise<void> {
 	hapticDurations.value = new Array(15).fill(5);
 	calibrations.value = new Array(15);
 
-	for (const motor of activeDevice.value.active) {
-		calibrations.value[motor.address - 1] = activeDevice.value.getInitialCalibration(motor.address);
+	for (const motor of activeSerialDevice.value.active) {
+		calibrations.value[motor.address - 1] = activeSerialDevice.value.getInitialCalibration(
+			motor.address
+		);
 		offsets.value[motor.address - 1] = await motor.getOffset();
 		ranges.value[motor.address - 1] = await motor.getRange();
 	}

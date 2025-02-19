@@ -21,6 +21,7 @@
 		"@eslint/eslintrc": "^3.2.0",
 		"@eslint/js": "^9.18.0",
 		"@prettier/plugin-pug": "^3.2.0",
+		"@types/w3c-web-usb": "^1.0.10",
 		"@types/w3c-web-serial": "^1.0.7",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"@vue/eslint-config-typescript": "^14.2.0",

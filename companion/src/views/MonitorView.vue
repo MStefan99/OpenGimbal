@@ -16,10 +16,10 @@
 
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref} from 'vue';
-import {activeDevice} from '../scripts/driver/driver';
-import {Parser} from '../scripts/driver/parser';
-import {MotorCommand, motorCommandNames} from '../scripts/driver/MotorCommand';
-import {MotorResponse} from '../scripts/driver/MotorResponse';
+import {activeSerialDevice} from '../scripts/driver/serial/serialDriver';
+import {SerialParser} from '../scripts/driver/serial/SerialParser';
+import {MotorCommand, motorCommandNames} from '../scripts/driver/serial/MotorCommand';
+import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
 import RangeSlider from '../components/RangeSlider.vue';
 
 type CommandEntry = {
@@ -31,7 +31,7 @@ type CommandEntry = {
 let lastID: number = 0;
 let lastUpdate: number = 0;
 const commandEntries = ref<CommandEntry[]>([]);
-const parser = new Parser();
+const parser = new SerialParser();
 const slowMode = ref<boolean>(true);
 const historySize = ref<number>(20);
 
@@ -78,8 +78,8 @@ function formatTime(time: number): string {
 	return (time / 1000).toFixed(1) + ' sec ago';
 }
 
-onMounted(() => activeDevice.value.addEventListener('data', onData));
-onUnmounted(() => activeDevice.value?.removeEventListener('data', onData));
+onMounted(() => activeSerialDevice.value.addEventListener('data', onData));
+onUnmounted(() => activeSerialDevice.value?.removeEventListener('data', onData));
 </script>
 
 <style scoped></style>

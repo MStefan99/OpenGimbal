@@ -1,7 +1,7 @@
-import {clamp, mod} from '../util';
-import {BitwiseRegister} from './BitwiseRegister';
-import {Command} from './Command';
-import {CalibrationBits} from './Motor';
+import {clamp, mod} from '../../util';
+import {BitwiseRegister} from '../BitwiseRegister';
+import {SerialMessage} from './SerialMessage';
+import {CalibrationBits} from '../Motor';
 
 export enum MotorCommandType {
 	Sleep = 0x0,
@@ -57,7 +57,7 @@ export const getVariableCommand: Record<
 	}
 };
 
-export class MotorCommand extends Command {
+export class MotorCommand extends SerialMessage {
 	get type(): MotorCommandType {
 		return this.view.getUint8(1) & 0xf;
 	}

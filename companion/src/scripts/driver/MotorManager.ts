@@ -1,6 +1,7 @@
 import {CalibrationBits, Motor} from './Motor';
-import {MotorResponse} from './MotorResponse';
+import {MotorResponse} from './serial/MotorResponse';
 import {BitwiseRegister} from './BitwiseRegister';
+import {HardwareInterface} from './HardwareInterface';
 
 export type MotorEntry = {
 	motor: Motor;
@@ -9,16 +10,15 @@ export type MotorEntry = {
 };
 
 export class MotorManager extends EventTarget {
-	readonly port: SerialPort;
+	readonly _hardwareInterface: HardwareInterface;
 	readonly _motorEntries: MotorEntry[];
-	_reader: ReadableStreamDefaultReader;
 
-	constructor(port: SerialPort, debug?: boolean) {
+	constructor(hardwareInterface: HardwareInterface) {
 		super();
 
-		this.port = port;
+		this._hardwareInterface = hardwareInterface;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
-			motor: new Motor(port, i + 1, debug),
+			motor: new Motor(hardwareInterface, i + 1),
 			active: false
 		}));
 	}
@@ -32,23 +32,11 @@ export class MotorManager extends EventTarget {
 	}
 
 	get all(): Motor {
-		return new Motor(this.port, 15);
+		return new Motor(this._hardwareInterface, 15);
 	}
 
 	motor(address: Motor['address'] = 1): Motor {
 		return this.motors.find((e) => e.address === address);
-	}
-
-	async parse(data: Uint8Array): Promise<MotorResponse[]> {
-		this.dispatchEvent(new CustomEvent('data', {detail: data}));
-
-		const responses = new Array<MotorResponse>();
-		for (const motor of this.motors) {
-			responses.concat(await motor.parse(data));
-		}
-
-		this.dispatchEvent(new CustomEvent('response', {detail: responses}));
-		return responses;
 	}
 
 	async enumerate(): Promise<Motor[]> {

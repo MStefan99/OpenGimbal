@@ -1,17 +1,17 @@
 <template lang="pug">
 .popup-wrapper(@click.self="$emit('close')")
 	.device-selector
-		span.bold.block(v-if="connectedDevices.length") Connected devices
+		span.bold.block(v-if="connectedSerialDevices.length") Connected devices
 		span.bold.block(v-else) No devices connected
-		.device(v-for="(device, i) of connectedDevices" :key="i")
+		.device(v-for="(device, i) of connectedSerialDevices" :key="i")
 			span.cursor-pointer(@click="viewedDevice = device") Serial device
 			.flex.flex-row.flex-wrap.gap-4.grow
-				button.green-outline.grow(v-if="device === activeDevice" disabled) Active device
+				button.green-outline.grow(v-if="device === activeSerialDevice" disabled) Active device
 				button.green.grow(v-else @click="activeDevice = device") Set active
-				button.red.grow(@click="disconnectDevice(device)") Disconnect
+				button.red.grow(@click="disconnectSerialDevice(device)") Disconnect
 		span.bold.block.my-2 Connect
 		button.accent.bold.w-full(v-if="'usb' in navigator" @click="connect()")
-			| {{connectedDevices.length ? 'Connect another' : 'Connect'}}
+			| {{connectedSerialDevices.length ? 'Connect another' : 'Connect'}}
 		button.bold.accent-outline.w-full.mt-2(@click="connect(true)") Connect demo device
 		button.close.red-outline.w-full.mt-2(@click="$emit('close')") Close
 		.text-red.mt-4(v-if="!('usb' in navigator)")
@@ -28,11 +28,11 @@
 import {ref} from 'vue';
 import {alert, PopupColor} from '../scripts/popups';
 import {
-	connectDevice,
-	disconnectDevice,
-	connectedDevices,
-	activeDevice
-} from '../scripts/driver/driver';
+	connectSerialDevice,
+	disconnectSerialDevice,
+	connectedSerialDevices,
+	activeSerialDevice
+} from '../scripts/driver/serial/serialDriver';
 import DeviceViewer from './DeviceViewer.vue';
 import {MotorManager} from '../scripts/driver/MotorManager';
 
@@ -40,7 +40,7 @@ defineEmits<{(e: 'close'): void}>();
 const viewedDevice = ref<MotorManager | null>(null);
 
 function connect(demo?: true): void {
-	connectDevice(demo).catch(() =>
+	connectSerialDevice(demo).catch(() =>
 		alert('Failed to connect', PopupColor.Red, 'An error occurred while trying to connect device')
 	);
 }
