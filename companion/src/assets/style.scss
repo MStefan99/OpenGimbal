@@ -146,24 +146,28 @@ input[type='radio'] + label {
 }
 
 button:not([disabled]):not(:active),
-.btn:not([disabled]):not(:active) {
+.btn:not([disabled]):not(:active),
+input[type='radio']:not([disabled]):not(:active) + label {
 	@apply cursor-pointer;
 	//background-color: var(--color-background);
 }
 
 button:not([disabled]):active,
-.btn:not([disabled]):active {
+.btn:not([disabled]):active,
+input[type='radio']:not([disabled]):active + label {
 	@apply shadow-inner;
 }
 
 button:not([disabled]):hover,
-.btn:not([disabled]):hover {
+.btn:not([disabled]):hover,
+input[type='radio']:not([disabled]):hover + label {
 	background-color: var(--color-accent);
 	color: var(--color-background);
 }
 
 button[disabled],
-.btn[disabled] {
+.btn[disabled],
+input[type='radio'][disabled] + label {
 	@apply text-muted bg-light border-muted cursor-not-allowed;
 }
 

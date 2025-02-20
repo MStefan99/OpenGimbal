@@ -11,9 +11,20 @@
 			span.bold.block No devices connected
 			span.bold.block.my-2 Connect
 			form
-				input#usb-radio(type="radio" name="type" value="usb" v-model="type" checked)
+				input#usb-radio(
+					type="radio"
+					name="type"
+					value="usb"
+					v-model="type"
+					:checked="'usb' in navigator"
+					:disabled="!('usb' in navigator)")
 				label(for="usb-radio") USB
-				input#serial-radio(type="radio" name="type" v-model="type" value="serial")
+				input#serial-radio(
+					type="radio"
+					name="type"
+					v-model="type"
+					value="serial"
+					:disabled="!('serial' in navigator)")
 				label(for="serial-radio") Serial
 			button.accent.bold.w-full.mt-2(v-if="'usb' in navigator" @click="connect()") Connect
 			button.bold.accent-outline.w-full.mt-2(@click="connect(true)") Connect demo device
@@ -24,6 +35,12 @@
 					Please open this page securely (over HTTPS) to connect your device.
 				p(v-else).
 					It looks like your browser does not support USB devices. Please try another browser.
+			.text-red.mt-4(v-if="!('serial' in navigator)")
+				p(v-if="!window.isSecureContext").
+					This page cannot access serial devices because it is using an insecure connection.
+					Please open this page securely (over HTTPS) to connect your device.
+				p(v-else).
+					It looks like your browser does not support serial devices. Please try another browser.
 	Transition
 		DeviceViewer(v-if="viewedDevice" :device="viewedDevice" @close="viewedDevice = null")
 </template>
