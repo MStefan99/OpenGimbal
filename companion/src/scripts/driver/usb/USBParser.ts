@@ -1,26 +1,45 @@
-import {IParser} from '../Parser';
-import {USBMessage} from './USBMessage';
 import {GimbalCommand, GimbalCommandType, MotorPassthroughCommand} from './GimbalCommand';
+import {GimbalResponse, GimbalResponseType, MotorPassthroughResponse} from './GimbalResponse';
 
-export interface IUSBParser extends IParser {
-	parse(data: Uint8Array): Array<USBMessage>;
+export interface IUSBParser {
+	parseCommand(data: Uint8Array): Array<GimbalCommand>;
+	parseResponse(data: Uint8Array): Array<GimbalResponse>;
 }
 
 export class USBParser implements IUSBParser {
-	parse(data: Uint8Array): Array<USBMessage> {
-		const responses = new Array<USBMessage>();
+	parseCommand(data: Uint8Array): Array<GimbalCommand> {
+		const commands = new Array<GimbalCommand>();
+
+		if (!data.length) {
+			return commands;
+		}
+
+		const command = new GimbalCommand(data);
+
+		if (command.type === GimbalCommandType.MotorPassthrough) {
+			const passthroughCommand = new MotorPassthroughCommand(data);
+			commands.push(passthroughCommand);
+		} else {
+			commands.push(command);
+		}
+
+		return commands;
+	}
+
+	parseResponse(data: Uint8Array): Array<GimbalResponse> {
+		const responses = new Array<GimbalResponse>();
 
 		if (!data.length) {
 			return responses;
 		}
 
-		const genericCommand = new GimbalCommand(data);
+		const response = new GimbalResponse(data);
 
-		if (genericCommand.type === GimbalCommandType.MotorPassthrough) {
-			const passthroughCommand = new MotorPassthroughCommand(data);
-			responses.push(passthroughCommand);
+		if (response.type === GimbalResponseType.MotorPassthrough) {
+			const passthroughResponse = new MotorPassthroughResponse(data);
+			responses.push(passthroughResponse);
 		} else {
-			responses.push(genericCommand);
+			responses.push(response);
 		}
 
 		return responses;

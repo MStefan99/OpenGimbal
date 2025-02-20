@@ -16,7 +16,6 @@
 #include "nvm.hpp"
 
 namespace usb {
-
 	enum class REQ_DIRECTION : uint8_t {
 		HOST_TO_DEVICE = 0x00,
 		DEVICE_TO_HOST = 0x01
@@ -183,13 +182,19 @@ namespace usb {
 	extern usb_descriptor_bos           DESCRIPTOR_BOS;
 	extern usb_descriptor_ms_os_20      DESCRIPTOR_MS_OS_20;
 
+	typedef struct __attribute__((packed)) {
+		uint8_t bRequest;
+		uint8_t bData[127];
+	} usb_device_endpoint1_request;
+
+	using callback_type = void (*)(const usb_device_endpoint1_request&, uint16_t len);
 
 	void init();
 	bool isActive();
 
 	void writeDefault(uint8_t* data, uint8_t len);
 	void write(uint8_t* data, uint8_t len);
-	void read(uint8_t* data, uint8_t len);
+	void setCallback(callback_type cb);
 }  // namespace usb
 
 #endif /* USB_HPP */

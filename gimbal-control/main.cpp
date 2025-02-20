@@ -7,7 +7,6 @@ static GimbalMode   gimbalMode {GimbalMode::Follow};
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
 constexpr static float ATT_LSB {10430.0f};
-constexpr static float controlBoardAngle {-30.0f * F_DEG_TO_RAD};
 constexpr static float sqrt2 = sqrtf(2);
 
 static float yawCurrent {0};
@@ -31,6 +30,9 @@ volatile uint32_t eventTime {0};
 volatile bool     buttonPressed {false};
 volatile bool     leftButton {true};
 
+volatile bool     usbPassthroughRequested {false};
+volatile uint32_t usbPassthroughTime {0};
+
 float normalize(float difference) {
 	if (difference > F_PI) {
 		difference -= F_2_PI;
@@ -41,7 +43,41 @@ float normalize(float difference) {
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {}
+void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
+	usbPassthroughRequested = false;
+
+	uint8_t buf[20];
+	buf[0] = static_cast<uint8_t>(data::ResponseType::MotorPassthrough);
+	util::copy(buf + 1, buffer.buffer, buffer.transferred);
+
+	usb::write(buf, buffer.transferred + 1);
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_t len) {
+	switch (static_cast<data::CommandType>(request.bRequest)) {
+		case (data::CommandType::GetVariable): {
+			switch (request.bData[0]) {
+				case static_cast<uint8_t>(data::VariableID::Status):
+					usb::write(reinterpret_cast<uint8_t*>(&data::usbStatusResponse), sizeof(data::USBStatusResponse));
+					break;
+				case static_cast<uint8_t>(data::VariableID::Sensors):
+					usb::write(reinterpret_cast<uint8_t*>(&data::usbSensorsResponse), sizeof(data::USBSensorsResponse));
+					break;
+				default:
+					usb::write(nullptr, 0);
+					break;
+			}
+			break;
+			case (data::CommandType::MotorPassthrough): {
+				usbPassthroughRequested = true;
+				usbPassthroughTime = util::getTime();
+				uart::sendToMotors(request.bData, len - 1);
+				break;
+			}
+		}
+	}
+}
 
 Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngles) {
 	float a = eulerAngles[0][0];
@@ -224,6 +260,7 @@ int main() {
 
 	uart::setMotorCallback(processMotorResponse);
 	buttons::setCallback(processButtons);
+	usb::setCallback(processUSBCommand);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
 
@@ -345,12 +382,19 @@ int main() {
 			case (PowerMode::Sleep): {
 				if (usb::isActive()) {
 					powerMode = PowerMode::Idle;
+					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					break;
 				}
 				motor::sleep();
 				sleep();
 				break;
 			}
+		}
+
+		if (usb::isActive() && usbPassthroughRequested && util::getTime() - usbPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
+			uint8_t buf[1] {static_cast<uint8_t>(data::ResponseType::MotorPassthrough)};
+
+			usb::write(buf, sizeof(buf));
 		}
 
 		if (displayState == DisplayState::BatteryLevel) {

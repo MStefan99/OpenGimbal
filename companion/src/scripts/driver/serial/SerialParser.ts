@@ -35,29 +35,27 @@ export class SerialParser implements ISerialParser {
 
 			this._incomingView.setUint8(this._bytesReceived++, byte);
 			if (--this._bytesRemaining === 0) {
+				const buffer = new Uint8Array(this._bytesReceived)
+					.fill(0)
+					.map((v, i) => this._incomingBuffer[i]);
+
 				if ((this._incomingView.getUint8(0) & 0xf) !== 0) {
-					const genericCommand = new MotorCommand(this._incomingBuffer);
+					const genericCommand = new MotorCommand(buffer);
+					const command = getMotorCommand[genericCommand.type](buffer);
 
-					if (genericCommand.type.toString() in getMotorCommand) {
-						const command = getMotorCommand[genericCommand.type](this._incomingBuffer);
-
-						if (command instanceof SetVariableCommand) {
-							responses.push(getVariableCommand[command.variableID](this._incomingBuffer));
-						} else {
-							responses.push(command);
-						}
+					if (command instanceof SetVariableCommand) {
+						responses.push(getVariableCommand[command.variableID](buffer));
+					} else {
+						responses.push(command);
 					}
 				} else {
-					const genericResponse = new MotorResponse(this._incomingBuffer);
+					const genericResponse = new MotorResponse(buffer);
+					const response = getMotorResponse[genericResponse.type](buffer);
 
-					if (genericResponse.type.toString() in getMotorResponse) {
-						const response = getMotorResponse[genericResponse.type](this._incomingBuffer);
-
-						if (response instanceof ReturnVariableResponse) {
-							responses.push(getVariableResponse[response.variableID](this._incomingBuffer));
-						} else {
-							responses.push(response);
-						}
+					if (response instanceof ReturnVariableResponse) {
+						responses.push(getVariableResponse[response.variableID](buffer));
+					} else {
+						responses.push(response);
 					}
 				}
 			}

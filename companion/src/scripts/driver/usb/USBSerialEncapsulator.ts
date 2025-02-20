@@ -4,6 +4,7 @@ import {USBInterface} from './USBInterface';
 import {ISerialInterface} from '../serial/SerialInterface';
 import {GimbalCommandType} from './GimbalCommand';
 import {USBParser} from './USBParser';
+import {SerialParser} from '../serial/SerialParser';
 
 export function encapsulateSerialMessage(message: SerialMessage): USBMessage {
 	const buffer = new Uint8Array(message.buffer.byteLength + 1);
@@ -12,17 +13,21 @@ export function encapsulateSerialMessage(message: SerialMessage): USBMessage {
 	view.setUint8(0, GimbalCommandType.MotorPassthrough);
 	buffer.set(message.buffer, 1);
 
-	return new USBParser().parse(buffer)[0];
+	return new USBParser().parseCommand(buffer)[0];
 }
 
-export function exposeSerialCommand(message: USBMessage): SerialMessage {
+export function exposeSerialMessage(message: USBMessage): SerialMessage | null {
+	if (message.buffer.byteLength <= 1) {
+		return null;
+	}
+
 	if (message.view.getUint8(0) !== GimbalCommandType.MotorPassthrough) {
 		throw new Error('Invalid message type');
 	}
 
-	return new SerialMessage(
+	return new SerialParser().parse(
 		new Uint8Array(message.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
-	);
+	)[0];
 }
 
 export class USBSerialEncapsulator implements ISerialInterface {
@@ -37,7 +42,7 @@ export class USBSerialEncapsulator implements ISerialInterface {
 	}
 
 	async request(message: SerialMessage): Promise<SerialMessage> {
-		return exposeSerialCommand(await this._usbInterface.request(encapsulateSerialMessage(message)));
+		return exposeSerialMessage(await this._usbInterface.request(encapsulateSerialMessage(message)));
 	}
 
 	close(): Promise<void> {

@@ -41,10 +41,16 @@ const viewedDevice = ref<MotorManager | Gimbal | null>(null);
 const type = ref<'usb' | 'serial'>('usb');
 
 function connect(demo?: boolean): void {
-	connectDevice(type.value, demo).catch(() => {
-		alert('Failed to connect', PopupColor.Red, 'An error occurred while trying to connect device');
-		emit('close');
-	});
+	connectDevice(type.value, demo)
+		.then(() => emit('close'))
+		.catch(() => {
+			alert(
+				'Failed to connect',
+				PopupColor.Red,
+				'An error occurred while trying to connect device'
+			);
+			emit('close');
+		});
 }
 </script>
 

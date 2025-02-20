@@ -2,21 +2,24 @@ import {USBMessage} from './USBMessage';
 import {MotorCommand} from '../serial/MotorCommand';
 import {exposeSerialMessage} from './USBSerialEncapsulator';
 import {SerialParser} from '../serial/SerialParser';
+import {MotorResponse} from '../serial/MotorResponse';
 
-export enum GimbalCommandType {
+export enum GimbalResponseType {
 	MotorPassthrough = 0xf
 }
 
-export const gimbalCommandNames: Record<GimbalCommandType, string> = {
-	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
+export const gimbalCommandNames: Record<GimbalResponseType, string> = {
+	[GimbalResponseType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const getGimbalCommand: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
-	[GimbalCommandType.MotorPassthrough]: (buffer: Uint8Array) => new MotorPassthroughCommand(buffer)
-};
+export const getGimbalResponse: Record<GimbalResponseType, (buffer: Uint8Array) => GimbalResponse> =
+	{
+		[GimbalResponseType.MotorPassthrough]: (buffer: Uint8Array) =>
+			new MotorPassthroughResponse(buffer)
+	};
 
-export class GimbalCommand extends USBMessage {
-	get type(): GimbalCommandType {
+export class GimbalResponse extends USBMessage {
+	get type(): GimbalResponseType {
 		return this.view.getUint8(0);
 	}
 
@@ -27,12 +30,12 @@ export class GimbalCommand extends USBMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${gimbalCommandNames[(this.view.getUint8(1) & 0xf) as GimbalCommandType]} command`;
+			return `${gimbalCommandNames[(this.view.getUint8(1) & 0xf) as GimbalResponseType]} command`;
 		}
 	}
 }
 
-export class MotorPassthroughCommand extends GimbalCommand {
+export class MotorPassthroughResponse extends GimbalResponse {
 	constructor(buffer: Uint8Array);
 	constructor(motorCommand: MotorCommand);
 
@@ -44,13 +47,13 @@ export class MotorPassthroughCommand extends GimbalCommand {
 		}
 	}
 
-	get motorCommand(): MotorCommand | null {
+	get motorResponse(): MotorResponse | null {
 		const message = exposeSerialMessage(this);
 
 		if (message === null) {
 			return null;
-		} else if (!(message instanceof MotorCommand)) {
-			throw new Error('Could not parse motor passthrough command');
+		} else if (!(message instanceof MotorResponse)) {
+			throw new Error('Could not parse motor passthrough response');
 		}
 
 		return message;
@@ -60,7 +63,7 @@ export class MotorPassthroughCommand extends GimbalCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return 'Encapsulated motor command\n' + (this.motorCommand?.toString(type) ?? 'Empty');
+			return 'Encapsulated motor response\n' + (this.motorResponse?.toString(type) ?? 'Empty');
 		}
 	}
 }

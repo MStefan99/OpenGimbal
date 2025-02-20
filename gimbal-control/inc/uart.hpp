@@ -14,16 +14,12 @@
 #include "uart.hpp"
 #include "util.hpp"
 
-#define UART_HALF_DUPLEX 1
-
 namespace uart {
 	template <class size_type, size_type C>
 	struct Buffer {
 		uint8_t   buffer[C] {};
 		size_type transferred {0};
 		size_type remaining {0};
-
-		constexpr static size_type capacity {C};
 	};
 
 	template <class size_type, size_type C>
@@ -38,9 +34,8 @@ namespace uart {
 	void    init();
 	uint8_t print(const char* buf);
 
-	uint8_t sendToMotors(const uint8_t* buf, uint8_t len);
-	void    setMotorCallback(DefaultCallback::callback_type cb);
-	void    clear();
+	void sendToMotors(const uint8_t* buf, uint8_t len);
+	void setMotorCallback(DefaultCallback::callback_type cb);
 }
 
 

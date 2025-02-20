@@ -7,7 +7,7 @@
 		option(value="4096")
 	h2.mb-4.text-xl.font-bold Motors
 	button.mb-4(@click="enumerate()" :disabled="enumerating") Find motors
-	div(v-if="motors.length")
+	.mb-2(v-if="!enumerating && motors.length")
 		label Extended ranges
 		input.ml-2(type="checkbox" v-model="extendedRanges")
 	.flex.flex-wrap.gap-2

@@ -16,11 +16,12 @@ namespace data {
 	enum class CommandType : uint8_t {
 		GetVariable = 0x0,
 		SetVariable = 0x1,
-		Calibration = 0x2
+		MotorPassthrough = 0xf
 	};
 
 	enum class ResponseType : uint8_t {
-		ReturnVariable = 0x0
+		ReturnVariable = 0x0,
+		MotorPassthrough = 0xf
 	};
 
 	enum class VariableID : uint8_t {

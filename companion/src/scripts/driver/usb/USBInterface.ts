@@ -71,7 +71,7 @@ export class USBInterface implements IHardwareInterface {
 	}
 
 	async send(message: USBMessage): Promise<void> {
-		this._verbose && console.log('Sending', message.toString());
+		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 		return (this._transferPromise = this._transferPromise
 			.then(() => this._usbDevice.transferOut(1, message.buffer))
@@ -80,17 +80,18 @@ export class USBInterface implements IHardwareInterface {
 	}
 
 	async request(message: USBMessage): Promise<USBMessage> {
-		this._verbose && console.log('Sending', message.toString());
+		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 		return (this._transferPromise = this._transferPromise
 			.then(() => this._usbDevice.transferOut(1, message.buffer))
 			.then(() => this._usbDevice.transferIn(1, 0xff))
 			.then((r) => {
-				const message = this._parser.parse(new Uint8Array(r.data.buffer))[0];
-				this._verbose && console.log('Received', message.toString());
+				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer))[0];
+				this._verbose && console.log('Received', message.toString(), '\n', message);
 
 				return message;
-			})) as Promise<USBMessage>;
+			})
+			.catch((err) => Promise.reject(err))) as Promise<USBMessage>;
 	}
 
 	async close(): Promise<void> {

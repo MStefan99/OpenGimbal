@@ -48,11 +48,15 @@ enum class PowerMode : uint8_t {
 
 constexpr uint16_t MIN_VOLTAGE {2900};
 constexpr uint16_t MAX_VOLTAGE {3900};
+
 constexpr uint16_t MAX_SHORT_PRESS_TIME {500};
 constexpr uint16_t MAX_LONG_PRESS_TIME {2000};
 constexpr uint16_t MAX_PRESS_WAIT_TIME {600};
 constexpr uint16_t LONG_PRESS_STEP_TIME {250};
 constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
+constexpr uint16_t USB_PASSTHROUGH_TIMEOUT {10};
+
+constexpr float controlBoardAngle {-30.0f * F_DEG_TO_RAD};
 
 constexpr int16_t fullRevolution {4096};
 constexpr int16_t halfRevolution {fullRevolution / 2};

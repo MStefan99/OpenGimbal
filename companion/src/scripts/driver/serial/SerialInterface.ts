@@ -81,7 +81,8 @@ export class SerialInterface implements ISerialInterface {
 
 							const responses = serialMessages.filter((c) => c instanceof MotorResponse);
 							if (responses.length) {
-								this._verbose && responses.forEach((r) => console.log('Received', r.toString(), r));
+								this._verbose &&
+									responses.forEach((r) => console.log('Received', r.toString(), '\n', r));
 
 								await reader.cancel();
 								resolve(responses[0]);

@@ -1,5 +1,7 @@
 #include "usb.hpp"
 
+#include "data.hpp"
+
 using namespace usb;
 
 
@@ -29,12 +31,6 @@ typedef struct __attribute__((packed)) {
 	uint16_t wLength;
 } usb_device_endpoint0_request;
 
-typedef struct __attribute__((packed)) {
-	uint8_t bRequest;
-	uint8_t bValue;
-	uint8_t bData[128];
-} usb_device_endpoint1_request;
-
 usb_descriptor_device_registers_t usb::EPDESCTBL[2];
 
 static usb_device_endpoint0_request EP0REQ;
@@ -42,6 +38,9 @@ static usb_device_endpoint1_request EP1REQ;
 
 static uint8_t* defaultData {nullptr};
 static uint8_t  defaultLen {0};
+
+static uint8_t            outBuffer[64];
+static usb::callback_type callback {};
 
 
 extern "C" {
@@ -161,19 +160,10 @@ static void vendorRequestHandler() {
 
 void endpoint1Handler() {
 	if (USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPINTFLAG & USB_DEVICE_EPINTFLAG_TRCPT0_Msk) {  // OUT transfer
-		if (EP1REQ.bRequest == static_cast<uint8_t>(data::CommandType::GetVariable)) {
-			switch (EP1REQ.bValue) {
-				case static_cast<uint8_t>(data::VariableID::Status):
-					write(reinterpret_cast<uint8_t*>(&data::usbStatusResponse), sizeof(data::USBStatusResponse));
-					break;
-				case static_cast<uint8_t>(data::VariableID::Sensors):
-					write(reinterpret_cast<uint8_t*>(&data::usbSensorsResponse), sizeof(data::USBSensorsResponse));
-					break;
-				default:
-					write(nullptr, 0);
-					break;
-			}
+		if (callback) {
+			callback(EP1REQ, EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_PCKSIZE & USB_DEVICE_PCKSIZE_BYTE_COUNT_Msk);
 		}
+
 		EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_PCKSIZE =
 		    USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(sizeof(EP1REQ)) | USB_DEVICE_PCKSIZE_SIZE(0x3);
 		return;
@@ -232,13 +222,13 @@ void usb::writeDefault(uint8_t* data, uint8_t len) {
 }
 
 void usb::write(uint8_t* data, uint8_t len) {
-	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)data;
+	util::copy(outBuffer, data, len);
+	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)outBuffer;
 	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 	    USB_DEVICE_PCKSIZE_BYTE_COUNT(len) | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPSTATUSSET = USB_DEVICE_EPSTATUS_BK1RDY(1);
 }
 
-void usb::read(uint8_t* data, uint8_t len) {
-	// memcpy(data, outBuf1, MIN(len, sizeof (outBuf1)));
-	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPSTATUSCLR = USB_DEVICE_EPSTATUS_BK0RDY(1);
+void usb::setCallback(usb::callback_type cb) {
+	callback = cb;
 }
