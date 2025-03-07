@@ -1,15 +1,5 @@
 #include "bldc.hpp"
 
-static uint8_t getPin(uint8_t channel) {
-	if (channel < 2) {
-		return channel + 4;
-	} else if (channel < 4) {
-		return channel + 8;
-	} else {
-		return channel + 2;
-	}
-}
-
 struct TrigTable {
 	int8_t table[1024];
 
@@ -56,8 +46,6 @@ void bldc::init() {
 	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[TCC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TCC[0:1] clock
 	                                      | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
-	GCLK_REGS->GCLK_PCHCTRL[TCC2_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TCC2 clock
-	                                      | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	uint16_t period {silentPeriod + 1};
 
@@ -69,37 +57,47 @@ void bldc::init() {
 	TCC0_REGS->TCC_CC[1] = period;
 	TCC0_REGS->TCC_CC[2] = 0;
 	TCC0_REGS->TCC_CC[3] = period;
-	TCC0_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1);  // Enable timer
+	TCC0_REGS->TCC_CTRLA = TCC_CTRLA_ENABLE(1);  // Enable timer
 
 	TCC1_REGS->TCC_DBGCTRL = TCC_DBGCTRL_DBGRUN(1);                  // Run while debugging
 	TCC1_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM | TCC_WAVE_POL1(1);  // PWM generation
 	TCC1_REGS->TCC_PER = silentPeriod;
 	TCC1_REGS->TCC_CC[0] = 0;
 	TCC1_REGS->TCC_CC[1] = period;
-	TCC1_REGS->TCC_CTRLA |= TCC_CTRLA_ENABLE(1);  // Enable timer
+	TCC1_REGS->TCC_CTRLA = TCC_CTRLA_ENABLE(1);  // Enable timer
 }
 
 void bldc::enable() {
 	// Pin setup
-	for (uint8_t i {0}; i < 6; ++i) {
-		uint8_t pin {getPin(i)};
-		PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(1);  // Enable mux on pin
-		if (pin & 0x1) {                                               // Odd pin
-			PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] =
-			    (PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] & 0xf) | (i == 3 ? PORT_PMUX_PMUXO_F : PORT_PMUX_PMUXO_E);
-		} else {  // Even pin
-			PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] =
-			    (i == 2 ? PORT_PMUX_PMUXE_F : PORT_PMUX_PMUXE_E) | (PORT_REGS->GROUP[0].PORT_PMUX[pin / 2] & 0xf0);
-		}
-	}
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x3 << 8u)        // Select pins 8 and 9
+	                                  | PORT_WRCONFIG_PMUXEN(1)                 // Enable pin mux
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA08F_TCC1_WO2)  // Mux to TCC1
+	                                  | PORT_WRCONFIG_WRPMUX(1)                 // Write pin mux
+	                                  | PORT_WRCONFIG_WRPINCFG(1);              // Write pin config
+
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x3 << 10u)       // Select pins 10 and 11
+	                                  | PORT_WRCONFIG_PMUXEN(1)                 // Enable pin mux
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA10F_TCC0_WO2)  // Mux to TCC1
+	                                  | PORT_WRCONFIG_WRPMUX(1)                 // Write pin mux
+	                                  | PORT_WRCONFIG_WRPINCFG(1);              // Write pin config
+
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x3 << 14u)       // Select pins 14 and 15
+	                                  | PORT_WRCONFIG_PMUXEN(1)                 // Enable pin mux
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA14F_TCC0_WO4)  // Mux to TCC1
+	                                  | PORT_WRCONFIG_WRPMUX(1)                 // Write pin mux
+	                                  | PORT_WRCONFIG_WRPINCFG(1);              // Write pin config
 }
 
 void bldc::disable() {
 	// Pin setup
-	for (uint8_t i {0}; i < 6; ++i) {
-		uint8_t pin {getPin(i)};
-		PORT_REGS->GROUP[0].PORT_PINCFG[pin] = PORT_PINCFG_PMUXEN(0);  // Enable mux on pin
-	}
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0xf << 8u)  // Select pins 8-11
+	                                  | PORT_WRCONFIG_PMUXEN(0)           // Disable pin mux
+	                                  | PORT_WRCONFIG_WRPINCFG(1);        // Write pin config
+
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x3 << 14u)  // Select pins 14 and 15
+	                                  | PORT_WRCONFIG_PMUXEN(0)            // Disable pin mux
+	                                  | PORT_WRCONFIG_WRPINCFG(1)          // Write pin config
+	                                  | PORT_WRCONFIG_HWSEL(1);            // Select top pins
 }
 
 void bldc::applyTorque(uint16_t angle, uint8_t power) {

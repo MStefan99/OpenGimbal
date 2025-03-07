@@ -184,7 +184,7 @@ uint16_t measureAngle() {
 	dataReady = false;
 	auto startTime {util::getTime()};
 
-	AS5600::getAngle([](bool success, const dma::I2CTransfer& transfer) {
+	AS5600::getAngle([](bool success, const i2c::Transfer& transfer) {
 		rawAngle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
 		dataReady = true;
 	});
@@ -437,15 +437,12 @@ void sleep() {
 int main() {
 	util::init();
 
-	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_HWSEL(1) | PORT_WRCONFIG_PINMASK((0x1 << 14u) | (0x1 << 15u))
-	                                  | PORT_WRCONFIG_PMUXEN(0) | PORT_WRCONFIG_WRPMUX(1) | PORT_WRCONFIG_WRPINCFG(1);
-
 	uart::init();
-	dma::init();
 	i2c::init();
 	AS5600::init();
 	bldc::init();
 	bldc::enable();
+	PORT_REGS->GROUP[0].PORT_DIRSET = PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 
 	uart::setCallback(processCommand);
 
