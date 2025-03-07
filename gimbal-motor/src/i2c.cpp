@@ -63,13 +63,13 @@ extern "C" {
 
 void i2c::init() {
 	// GCLK config
-	GCLK_REGS->GCLK_PCHCTRL[SERCOM0_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM0 clock
+	GCLK_REGS->GCLK_PCHCTRL[SERCOM1_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM1 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// PORT config
-	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK((0x1 << 16u) | (0x1 << 16u)) | PORT_WRCONFIG_PMUXEN(1)
-	                                  | PORT_WRCONFIG_PMUX(MUX_PA04D_SERCOM0_PAD0) | PORT_WRCONFIG_WRPMUX(1)
-	                                  | PORT_WRCONFIG_WRPINCFG(1);
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 | (0x1 << 1u)) | PORT_WRCONFIG_PMUXEN(1)
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA16C_SERCOM1_PAD0) | PORT_WRCONFIG_WRPMUX(1)
+	                                  | PORT_WRCONFIG_WRPINCFG(1) | PORT_WRCONFIG_HWSEL(1);
 
 	// SERCOM config
 	SERCOM_REGS->I2CM.SERCOM_BAUD = SERCOM_I2CM_BAUD_BAUD(30)      // 1.3us
