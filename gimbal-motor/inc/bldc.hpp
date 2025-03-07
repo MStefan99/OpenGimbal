@@ -12,6 +12,7 @@
 
 #include "device.h"
 
+#include "options.hpp"
 #include "util.hpp"
 
 namespace bldc {

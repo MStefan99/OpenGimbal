@@ -1,16 +1,16 @@
 #include "bldc.hpp"
 
 struct TrigTable {
-	int8_t table[1024];
+	uint8_t table[1024];
 
 	constexpr TrigTable():
 	  table() {
 		for (auto i = 0; i < 1024; ++i) {
-			table[i] = std::round(std::sin(i * M_PI / 2048) * 127);
+			table[i] = std::round(std::sin(i * M_PI / 2048) * 127.5f + 127.5f);
 		}
 	}
 
-	constexpr int8_t sin(uint16_t i) const {
+	constexpr uint8_t sin(uint16_t i) const {
 		if (i > 4096) {
 			i %= 4096;
 		}
@@ -22,13 +22,13 @@ struct TrigTable {
 		}
 	}
 
-	constexpr int8_t cos(uint16_t i) const {
+	constexpr uint8_t cos(uint16_t i) const {
 		return sin(i + 1024);
 	}
 
 protected:
 	// i from 0 to 2047
-	inline constexpr int8_t halfSin(uint16_t i) const {
+	inline constexpr uint8_t halfSin(uint16_t i) const {
 		if (i < 1024) {
 			return table[i];
 		} else {
@@ -101,20 +101,17 @@ void bldc::disable() {
 }
 
 void bldc::applyTorque(uint16_t angle, uint8_t power) {
-	int8_t va = trigTable.sin(angle);
-	int8_t vb = trigTable.cos(angle);
-
 	uint16_t period = TCC0_REGS->TCC_PER + 1;
 	uint8_t  factor = MAX_VAL / period + 1;
 	uint16_t inv = period - (static_cast<uint32_t>(period) * power / 255);
 
-	TCC0_REGS->TCC_CCBUF[0] = power * static_cast<uint16_t>(va + 127) / factor;
+	TCC0_REGS->TCC_CCBUF[0] = power * trigTable.sin(angle) / factor;
 	TCC0_REGS->TCC_CCBUF[1] = TCC0_REGS->TCC_CCBUF[0] + inv;
 
-	TCC0_REGS->TCC_CCBUF[2] = power * (((-va + ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
+	TCC0_REGS->TCC_CCBUF[2] = power * trigTable.sin(angle + fullRevolution / 3) / factor;
 	TCC0_REGS->TCC_CCBUF[3] = TCC0_REGS->TCC_CCBUF[2] + inv;
 
-	TCC1_REGS->TCC_CCBUF[0] = power * (((-va - ((SQRT3 * vb) >> 7u)) / 2) + 127) / factor;
+	TCC1_REGS->TCC_CCBUF[0] = power * trigTable.sin(angle - fullRevolution / 3) / factor;
 	TCC1_REGS->TCC_CCBUF[1] = TCC1_REGS->TCC_CCBUF[0] + inv;
 }
 
