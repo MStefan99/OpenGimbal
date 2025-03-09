@@ -56,17 +56,14 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		return;  // Command intended for another device
 	}
 
-	if (mode == Mode::Sleep) {
-		mode = Mode::Drive;  // Exit the sleep mode if we're the target device
-	}
-
 	switch (static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) {  // Switch command type
 		case (Command::CommandType::Sleep): {
-			maxTorque = 0;
 			mode = Mode::Sleep;
+			maxTorque = 0;
 			break;
 		}
 		case (Command::CommandType::Move): {
+			mode = Mode::Drive;
 			auto time {util::getTime()};
 			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			if (offsetAdjusted) {
@@ -424,7 +421,9 @@ bool calibrate() {
 }
 
 void sleep() {
-	bldc::removeTorque();
+	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+	bldc::disable();
+
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -432,17 +431,20 @@ void sleep() {
 	} while (mode == Mode::Sleep);
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
+
+	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+	util::sleep(2);
+	bldc::enable();
+	AS5600::init();
 }
 
 int main() {
 	util::init();
-
 	uart::init();
 	i2c::init();
-	AS5600::init();
 	bldc::init();
-	bldc::enable();
-	PORT_REGS->GROUP[0].PORT_DIRSET = PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+
+	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
 
 	uart::setCallback(processCommand);
 
@@ -450,7 +452,6 @@ int main() {
 		switch (mode) {
 			case (Mode::Sleep): {
 				sleep();
-				util::sleep(1);
 				break;
 			}
 			case (Mode::Calibrate): {

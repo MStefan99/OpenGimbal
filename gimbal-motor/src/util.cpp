@@ -17,8 +17,7 @@ void util::init() {
 	while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
 	// Performance setup
-	PM_REGS->PM_STDBYCFG = PM_STDBYCFG_DPGPD0(1)            // Enable dynamic power gating for PD0
-	                     | PM_STDBYCFG_DPGPD1(1);           // Enable dynamic power gating for PD1
+	PM_REGS->PM_STDBYCFG = PM_STDBYCFG_PDCFG_PD01;          // Enable dynamic power gating for PD1;
 	NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1)     // Use NVM in manual write mode
 	                            | NVMCTRL_CTRLB_RWS(2);     // Use 2 wait states for NVM
 	PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2;                 // Enter PL2
@@ -33,19 +32,21 @@ void util::init() {
 	                               | OSCCTRL_DFLLCTRL_MODE(0);     // Run in open-loop mode
 
 	// Switch the CPU over to DFLL
-	GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 0
-	                           | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
+	GCLK_REGS->GCLK_GENCTRL[0] = GCLK_GENCTRL_GENEN(1)                                     // Enable GCLK 0
+	                           | OSCCTRL_DFLLCTRL_ONDEMAND(1) | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
 
 	while (!(OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk));  // Wait for DFLL to start
 
-	// Disable OSC16M
-	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)    // Enable OSC16M
-	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)  // Only run when requested
-	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;     // Set frequency to 16MHz
+	// Enable OSC16M
+	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)  // Enable OSC16M
+	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)
+	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;  // Set frequency to 16MHz
 
 	// Enable generic clocks
 	GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 1
 	                           | GCLK_GENCTRL_SRC_DFLL48M;  // Set DFLL48M as a source
+	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 2
+	                           | GCLK_GENCTRL_SRC_OSC16M;   // Set OSC16M as a source
 
 	// SysTick setup
 	SysTick_Config(48000);

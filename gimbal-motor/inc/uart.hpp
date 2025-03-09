@@ -16,7 +16,7 @@
 namespace uart {
 	template <class size_type, size_type C>
 	struct Buffer {
-		uint8_t   buffer[C] {};
+		uint8_t   buffer[C] = {0};
 		size_type transferred {0};
 		size_type remaining {0};
 	};
@@ -35,6 +35,9 @@ namespace uart {
 	uint8_t print(const char* buf);
 	void    send(const uint8_t* buf, uint8_t len);
 	void    setCallback(DefaultCallback::callback_type cb);
+
+	void slow();
+	void fast();
 }
 
 
