@@ -4,9 +4,11 @@ import {MotorResponse} from './MotorResponse';
 import {ISerialParser} from './SerialParser';
 
 export interface ISerialInterface extends IHardwareInterface {
-	send(message: SerialMessage): Promise<void>;
+	open(baudRate: number): Promise<void>;
 
-	request(message: SerialMessage): Promise<SerialMessage>;
+	send(message: SerialMessage, baudRate?: number): Promise<void>;
+
+	request(message: SerialMessage, baudRate?: number): Promise<SerialMessage>;
 
 	close(): Promise<void>;
 }
@@ -15,6 +17,8 @@ export class SerialInterface implements ISerialInterface {
 	private _port: SerialPort;
 	private _parser: ISerialParser;
 	private readonly _verbose: boolean;
+	private _currentBaudRate: number;
+	private _isOpen: boolean = false;
 
 	constructor(port: SerialPort, parser: ISerialParser, verbose: boolean = false) {
 		this._port = port;
@@ -22,23 +26,47 @@ export class SerialInterface implements ISerialInterface {
 		this._verbose = verbose;
 	}
 
-	async send(message: SerialMessage): Promise<void> {
+	async open(baudRate: number): Promise<void> {
+		console.log(`Opening ${baudRate}`);
+
+		if (baudRate === this._currentBaudRate) {
+			return;
+		}
+
+		this._verbose && console.log('Opening serial port with baud rate of', baudRate);
+		if (this._isOpen) {
+			await this._port.close();
+		}
+		await this._port.open({
+			baudRate,
+			dataBits: 8,
+			stopBits: 1,
+			parity: 'odd'
+		});
+
+		this._currentBaudRate = baudRate;
+		this._isOpen = true;
+	}
+
+	send(message: SerialMessage, baudRate?: number): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
 
-			const writer = this._port.writable.getWriter();
-			writer
-				.write(buffer)
-				.then(() => {
-					writer.releaseLock();
-					resolve();
-				})
+			Promise.resolve()
+				.then(() => baudRate && this.open(baudRate))
+				.then(() => this._port.writable.getWriter())
+				.then((writer) =>
+					writer.write(buffer).then(() => {
+						writer.releaseLock();
+						resolve();
+					})
+				)
 				.catch(reject);
 		});
 	}
 
-	async request(message: SerialMessage): Promise<SerialMessage> {
+	request(message: SerialMessage, baudRate?: number): Promise<SerialMessage> {
 		return new Promise((resolve, reject) => {
 			const writeBuffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
@@ -49,12 +77,11 @@ export class SerialInterface implements ISerialInterface {
 				return;
 			}
 
-			const writer = this._port.writable.getWriter();
-
-			this._port.readable
-				.cancel() // Discard all previous data we're not interested in
-				.then(() => writer.write(writeBuffer))
-				.then(() => writer.releaseLock())
+			Promise.resolve()
+				.then(() => baudRate && this.open(baudRate))
+				.then(() => this._port.readable.cancel()) // Discard all previous data we're not interested in
+				.then(() => this._port.writable.getWriter())
+				.then((writer) => writer.write(writeBuffer).then(() => writer.releaseLock()))
 				.then(async (): Promise<void> => {
 					const readBuffer = new Uint8Array(16);
 					let readBytes = 0;

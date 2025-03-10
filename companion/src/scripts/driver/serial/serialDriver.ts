@@ -22,15 +22,11 @@ export async function connectSerialDevice(
 		const port = await navigator.serial.requestPort();
 
 		return new Promise((resolve, reject) => {
-			port
-				.open({
-					baudRate: 115200,
-					dataBits: 8,
-					stopBits: 1,
-					parity: 'odd'
-				})
+			const serialInterface = new SerialInterface(port, new SerialParser(), verbose);
+			serialInterface
+				.open(9600)
 				.then(() => {
-					const manager = new MotorManager(new SerialInterface(port, new SerialParser(), verbose));
+					const manager = new MotorManager(serialInterface);
 					connectedSerialDevice.value = manager;
 
 					resolve(manager);
