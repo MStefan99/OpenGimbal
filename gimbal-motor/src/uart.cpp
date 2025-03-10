@@ -1,23 +1,22 @@
 #include "uart.hpp"
 
 
+constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 16000000.0f);
+constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 16000000.0f);
+
 static uart::DefaultQueue                   outQueue {};
 static uart::DefaultCallback::buffer_type   inBuffer {};
 static uart::DefaultCallback::callback_type callback {nullptr};
 static uint32_t                             lastReceiveTime {0};
-
-constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 16000000.0f);
-constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 16000000.0f);
+static uint16_t                             targetBaud {slowBaud};
 
 static void initSERCOM(sercom_registers_t* regs) {
-	regs->USART_INT.SERCOM_CTRLB =
-	    SERCOM_USART_INT_CTRLB_RXEN(1
-	    )  // Enable receiver
-	       //| SERCOM_USART_INT_CTRLB_COLDEN(1)                     // Enable collision detection
-	    | SERCOM_USART_INT_CTRLB_SFDE(1)                                                // Enable start bit detection
-	    | SERCOM_USART_INT_CTRLB_PMODE_ODD                                              // Set odd parity mode
-	    | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT                                           // Set 1 stop bit
-	    | SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;                                          // Set frame to 8 bits
+	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1)                       // Enable receiver
+	                             | SERCOM_USART_INT_CTRLB_COLDEN(1)                     // Enable collision detection
+	                             | SERCOM_USART_INT_CTRLB_SFDE(1)                       // Enable start bit detection
+	                             | SERCOM_USART_INT_CTRLB_PMODE_ODD                     // Set odd parity mode
+	                             | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT                  // Set 1 stop bit
+	                             | SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;                 // Set frame to 8 bits
 	regs->USART_INT.SERCOM_BAUD = slowBaud;                                             // Set baud rate
 	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB                      // Send LSB first
 	                             | SERCOM_USART_INT_CTRLA_CMODE_ASYNC                   // Asynchronous smode
@@ -30,6 +29,16 @@ static void initSERCOM(sercom_registers_t* regs) {
 
 	regs->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1)   // Enable receive complete interrupt
 	                                | SERCOM_USART_INT_INTENSET_TXC(1);  // Enable transmit complete interrupt
+}
+
+static bool busy() {
+	if (outQueue.size()) {
+		if (outQueue.front().transferred) {  // Another transfer in progress
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static void setBaud(sercom_registers_t* regs, uint16_t baudValue) {
@@ -55,10 +64,8 @@ static void enableTx(sercom_registers_t* regs) {
 }
 
 static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue) {
-	if (outQueue.size()) {
-		if (outQueue.front().transferred) {  // Another transfer in progress
-			return;
-		}
+	if (busy()) {
+		return;
 	}
 
 	enableTx(regs);
@@ -73,20 +80,22 @@ static void SERCOM_Handler(
     uint32_t&                            prevByteTime
 ) {
 	if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {  // Not a framing error
-		if (regs->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_TXC_Msk) {  // Outgoing transfer
+		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
 			--outQueue.front().remaining;
 			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
 				outQueue.pop_front();
 				if (outQueue.empty()) {
 					disableTx(regs);
+					setBaud(regs, targetBaud);
 				} else {
 					startTransfer(regs, outQueue);
 				}
 			} else {
 				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
 			}
-		} else if (regs->USART_INT.SERCOM_INTFLAG & SERCOM_USART_INT_INTFLAG_RXC_Msk) {  // Incoming transfer)
-			if (!inBuffer.remaining || util::getTime() - prevByteTime > 1) {  // Received first byte, set up new transfer
+		} else {  // Incoming transfer)
+			if (!inBuffer.remaining
+			    || RTC_REGS->MODE0.RTC_COUNT - prevByteTime > 32) {  // Received first byte, set up new transfer
 				inBuffer.buffer[0] = regs->USART_INT.SERCOM_DATA;
 				inBuffer.remaining = (inBuffer.buffer[0] >> 4u);
 				inBuffer.transferred = 1;
@@ -96,8 +105,9 @@ static void SERCOM_Handler(
 			}
 			if (!inBuffer.remaining && callback) {  // Received last byte, ready to process
 				callback(inBuffer);
+				setBaud(regs, targetBaud);
 			}
-			prevByteTime = util::getTime();
+			prevByteTime = RTC_REGS->MODE0.RTC_COUNT;
 		}
 	} else {
 		regs->USART_INT.SERCOM_STATUS = SERCOM_USART_INT_STATUS_FERR(1);
@@ -156,9 +166,17 @@ void uart::setCallback(uart::DefaultCallback::callback_type cb) {
 }
 
 void uart::slow() {
-	setBaud(SERCOM3_REGS, slowBaud);
+	targetBaud = slowBaud;
+
+	if (!busy()) {
+		setBaud(SERCOM3_REGS, targetBaud);
+	}
 }
 
 void uart::fast() {
-	setBaud(SERCOM3_REGS, fastBaud);
+	targetBaud = fastBaud;
+
+	if (!busy()) {
+		setBaud(SERCOM3_REGS, targetBaud);
+	}
 }

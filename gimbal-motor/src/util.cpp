@@ -48,6 +48,14 @@ void util::init() {
 	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 2
 	                           | GCLK_GENCTRL_SRC_OSC16M;   // Set OSC16M as a source
 
+	// RTC setup
+	OSC32KCTRL_REGS->OSC32KCTRL_RTCCTRL = OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K;
+
+	RTC_REGS->MODE0.RTC_CTRLA = RTC_MODE0_CTRLA_ENABLE(1)      // Enable RTC
+	                          | RTC_MODE0_CTRLA_MODE_COUNT32   // Count in 32-bit mode
+	                          | RTC_MODE0_CTRLA_MATCHCLR(0)    // Do not clear on match
+	                          | RTC_MODE0_CTRLA_COUNTSYNC(1);  // Enable count register sync
+
 	// SysTick setup
 	SysTick_Config(48000);
 
