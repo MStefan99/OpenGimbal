@@ -145,8 +145,8 @@ async function enumerate(): Promise<void> {
 	enumerating.value = true;
 	motors.value = [];
 
-	motors.value = await connectedDevice.value.enumerate();
-	motors.value.length && motors.value.push(connectedDevice.value.all);
+	const detectedMotors = await connectedDevice.value.enumerate();
+	detectedMotors.length && detectedMotors.push(connectedDevice.value.all);
 
 	positions.value = new Array(15).fill(0);
 	torques.value = new Array(15).fill(0);
@@ -165,8 +165,10 @@ async function enumerate(): Promise<void> {
 			offsets.value[motor.address - 1] = await motor.getOffset();
 			ranges.value[motor.address - 1] = await motor.getRange();
 		}
-	} catch {
+		motors.value = detectedMotors;
+	} catch (err) {
 		motors.value = [];
+		console.error(err);
 		alert(
 			'Communication error',
 			PopupColor.Red,

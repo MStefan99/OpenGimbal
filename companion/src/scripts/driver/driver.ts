@@ -14,9 +14,9 @@ export async function connectDevice(
 		throw new Error('Not implemented');
 	} else {
 		if (type === 'serial') {
-			return (connectedDevice.value = await connectSerialDevice(demo, true));
+			return (connectedDevice.value = await connectSerialDevice(demo, import.meta.env.DEV));
 		} else {
-			return (connectedDevice.value = await connectUSBDevice(demo, true));
+			return (connectedDevice.value = await connectUSBDevice(demo, import.meta.env.DEV));
 		}
 	}
 }
