@@ -423,7 +423,7 @@ bool calibrate() {
 void sleep() {
 	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 	uart::slow();
-	bldc::disable();
+	bldc::removeTorque();
 
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
@@ -435,7 +435,6 @@ void sleep() {
 
 	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 	uart::fast();
-	bldc::enable();
 	AS5600::init();
 }
 
@@ -444,6 +443,7 @@ int main() {
 	uart::init();
 	i2c::init();
 	bldc::init();
+	bldc::enable();
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
 

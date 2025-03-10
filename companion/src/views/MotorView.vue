@@ -116,13 +116,14 @@
 
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
-import {CalibrationBits} from '../scripts/driver/Motor';
 import type {IMotor} from '../scripts/driver/Motor';
+import {CalibrationBits} from '../scripts/driver/Motor';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
 import {delay} from '../scripts/util';
 import StatusIndicator from '../components/StatusIndicator.vue';
 import {connectedDevice} from '../scripts/driver/driver';
+import {alert, PopupColor} from '../scripts/popups';
 
 const motors = ref<IMotor[]>([]);
 const enumerating = ref<boolean>(false);
@@ -156,12 +157,21 @@ async function enumerate(): Promise<void> {
 	hapticDurations.value = new Array(15).fill(5);
 	calibrations.value = new Array(15);
 
-	for (const motor of connectedDevice.value.active) {
-		calibrations.value[motor.address - 1] = connectedDevice.value.getInitialCalibration(
-			motor.address
+	try {
+		for (const motor of connectedDevice.value.active) {
+			calibrations.value[motor.address - 1] = connectedDevice.value.getInitialCalibration(
+				motor.address
+			);
+			offsets.value[motor.address - 1] = await motor.getOffset();
+			ranges.value[motor.address - 1] = await motor.getRange();
+		}
+	} catch {
+		motors.value = [];
+		alert(
+			'Communication error',
+			PopupColor.Red,
+			'An issue occurred during communication, please try again'
 		);
-		offsets.value[motor.address - 1] = await motor.getOffset();
-		ranges.value[motor.address - 1] = await motor.getRange();
 	}
 
 	enumerating.value = false;

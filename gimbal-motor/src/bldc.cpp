@@ -117,8 +117,9 @@ void bldc::applyTorque(uint16_t angle, uint8_t power) {
 
 void bldc::removeTorque() {
 	TCC0_REGS->TCC_CC[0] = TCC0_REGS->TCC_CC[2] = TCC1_REGS->TCC_CC[0] = 0;
-
 	TCC0_REGS->TCC_CC[1] = TCC0_REGS->TCC_CC[3] = TCC1_REGS->TCC_CC[1] = silentPeriod + 1;
+
+	TCC0_REGS->TCC_CTRLBSET = TCC1_REGS->TCC_CTRLBSET = TCC_CTRLBSET_CMD_RETRIGGER;
 }
 
 void bldc::tone(uint16_t frequency) {
