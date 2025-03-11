@@ -209,7 +209,8 @@ void usb::init() {
 }
 
 bool usb::isActive() {
-	return USB_REGS->DEVICE.USB_FSMSTATUS != USB_FSMSTATUS_FSMSTATE_OFF;
+	return USB_REGS->DEVICE.USB_FSMSTATUS != USB_FSMSTATUS_FSMSTATE_OFF
+	    && USB_REGS->DEVICE.USB_FSMSTATUS != USB_FSMSTATUS_FSMSTATE_SUSPEND;
 }
 
 void usb::writeDefault(uint8_t* data, uint8_t len) {

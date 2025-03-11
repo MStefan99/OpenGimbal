@@ -1,23 +1,56 @@
 #include "uart.hpp"
 
 
+constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 16000000.0f);
+constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 16000000.0f);
+
 static uart::DefaultQueue                   motorOutQueue {};
 static uart::DefaultCallback::buffer_type   motorInBuffer {};
 static uart::DefaultCallback::callback_type motorCallback {nullptr};
 static uint32_t                             motorReceiveTime {0};
+static uint32_t                             targetBaud {slowBaud};
 
 static void initSERCOM(sercom_registers_t* regs) {
-	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1) | SERCOM_USART_INT_CTRLB_COLDEN(1)
-	                             | SERCOM_USART_INT_CTRLB_PMODE_ODD | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT
-	                             | SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;
-	regs->USART_INT.SERCOM_BAUD = 63020;  // 115200 baud
-	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB | SERCOM_USART_INT_CTRLA_RUNSTDBY(1)
-	                             | SERCOM_USART_INT_CTRLA_CMODE_ASYNC | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC
-	                             | SERCOM_USART_INT_CTRLA_FORM_USART_FRAME_WITH_PARITY | SERCOM_USART_INT_CTRLA_RXPO_PAD0
-	                             | SERCOM_USART_INT_CTRLA_TXPO_PAD0 | SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK
-	                             | SERCOM_USART_INT_CTRLA_ENABLE(1);
+	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1)                       // Enable receiver
+	                             | SERCOM_USART_INT_CTRLB_COLDEN(1)                     // Enable collision detection
+	                             | SERCOM_USART_INT_CTRLB_SFDE(1)                       // Enable start bit detection
+	                             | SERCOM_USART_INT_CTRLB_PMODE_ODD                     // Set odd parity mode
+	                             | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT                  // Set 1 stop bit
+	                             | SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;                 // Set frame to 8 bits
+	regs->USART_INT.SERCOM_BAUD = slowBaud;                                             // Set baud rate
+	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB                      // Send LSB first
+	                             | SERCOM_USART_INT_CTRLA_CMODE_ASYNC                   // Asynchronous smode
+	                             | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC          // 16x oversampling
+	                             | SERCOM_USART_INT_CTRLA_FORM_USART_FRAME_WITH_PARITY  // Enable parity
+	                             | SERCOM_USART_INT_CTRLA_RXPO_PAD0                     // Receive on pad 0
+	                             | SERCOM_USART_INT_CTRLA_TXPO_PAD0                     // Transmit on pad 0
+	                             | SERCOM_USART_INT_CTRLA_MODE_USART_INT_CLK            // Use internal clock
+	                             | SERCOM_USART_INT_CTRLA_ENABLE(1);                    // Enable USART
 
-	regs->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1) | SERCOM_USART_INT_INTENSET_TXC(1);
+	regs->USART_INT.SERCOM_INTENSET = SERCOM_USART_INT_INTENSET_RXC(1)   // Enable receive complete interrupt
+	                                | SERCOM_USART_INT_INTENSET_TXC(1);  // Enable transmit complete interrupt
+}
+
+static bool busy() {
+	if (motorOutQueue.size()) {
+		if (motorOutQueue.front().transferred) {  // Another transfer in progress
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void setBaud(sercom_registers_t* regs, uint16_t baudValue) {
+	if (regs->USART_INT.SERCOM_BAUD == baudValue) {
+		return;
+	}
+
+	regs->USART_INT.SERCOM_CTRLA &= ~SERCOM_USART_INT_CTRLA_ENABLE(1);
+	while (regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk);
+	regs->USART_INT.SERCOM_BAUD = baudValue;
+	regs->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE(1);
+	while (!(regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk));
 }
 
 static void disableTx(sercom_registers_t* regs) {
@@ -30,12 +63,8 @@ static void enableTx(sercom_registers_t* regs) {
 	while (regs->USART_INT.SERCOM_SYNCBUSY & SERCOM_USART_INT_SYNCBUSY_CTRLB_Msk);
 }
 
-static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue, bool force = false) {
-	if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk && !force) {  // SERCOM busy
-		return;
-	}
-
-	if (outQueue.empty()) {  // No pending transactions
+static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue) {
+	if (busy()) {
 		return;
 	}
 
@@ -51,14 +80,15 @@ static void SERCOM_Handler(
     uint32_t&                            prevByteTime
 ) {
 	if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {  // Not a framing error
-		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Transmitter enabled (outgoing transfer)
+		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
 			--outQueue.front().remaining;
 			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
 				outQueue.pop_front();
 				if (outQueue.empty()) {
 					disableTx(regs);
+					setBaud(regs, targetBaud);
 				} else {
-					startTransfer(regs, outQueue, true);
+					startTransfer(regs, outQueue);
 				}
 			} else {
 				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
@@ -74,6 +104,7 @@ static void SERCOM_Handler(
 			}
 			if (!inBuffer.remaining && callback) {  // Received last byte, ready to process
 				callback(inBuffer);
+				setBaud(regs, targetBaud);
 			}
 			prevByteTime = util::getTime();
 		}
@@ -134,4 +165,20 @@ void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
 	motorCallback = cb;
+}
+
+void uart::slow() {
+	targetBaud = slowBaud;
+
+	if (!busy()) {
+		setBaud(SERCOM3_REGS, targetBaud);
+	}
+}
+
+void uart::fast() {
+	targetBaud = fastBaud;
+
+	if (!busy()) {
+		setBaud(SERCOM3_REGS, targetBaud);
+	}
 }

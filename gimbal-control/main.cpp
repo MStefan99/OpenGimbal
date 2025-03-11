@@ -76,6 +76,8 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 				break;
 			}
 		}
+		default:
+			break;
 	}
 }
 

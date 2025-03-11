@@ -3,7 +3,7 @@
 void pwm::init() {
 	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[TCC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable clock
-	                                      | GCLK_PCHCTRL_GEN_GCLK0;  // Set GCLK0 as a clock source
+	                                      | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 8u | 0x1 << 9u)    // Select pins
 	                                  | PORT_WRCONFIG_PMUXEN(1)                         // Enable multiplexing
@@ -18,8 +18,7 @@ void pwm::init() {
 
 	TCC0_REGS->TCC_WAVE = TCC_WAVE_WAVEGEN_NPWM;  // Use NPWM mode
 	TCC0_REGS->TCC_PER = 65536;
-	TCC0_REGS->TCC_CTRLA = TCC_CTRLA_ENABLE(1)        // Enable TC
-	                     | TCC_CTRLA_PRESCALER_DIV1;  // Divide clock by 1
+	TCC0_REGS->TCC_CTRLA = TCC_CTRLA_ENABLE(1);  // Enable TC
 }
 
 void pwm::setDuty(uint8_t channel, uint16_t duty) {

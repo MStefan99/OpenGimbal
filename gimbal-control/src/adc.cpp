@@ -51,7 +51,7 @@ void adc::init() {
 	                                  | PORT_WRCONFIG_WRPINCFG(1);  // Write pin config settings
 
 	// ADC setup
-	// ADC_REGS->ADC_CTRLB = ADC_CTRLB_PRESCALER_DIV2;  // Set prescaler to 2
+	ADC_REGS->ADC_CTRLB = ADC_CTRLB_PRESCALER_DIV32;  // Set prescaler
 	ADC_REGS->ADC_CALIB = ADC_CALIB_BIASREFBUF(
 	                          (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_ADC_BIASREFBUF_Msk)
 	                          >> FUSES_OTP5_WORD_0_ADC_BIASREFBUF_Pos
