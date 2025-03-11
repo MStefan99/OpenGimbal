@@ -69,6 +69,7 @@ static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue
 	}
 
 	enableTx(regs);
+	++outQueue.front().transferred;
 	regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
 }
 
@@ -91,7 +92,7 @@ static void SERCOM_Handler(
 					startTransfer(regs, outQueue);
 				}
 			} else {
-				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
+				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[outQueue.front().transferred++];
 			}
 		} else {  // Incoming transfer)
 			if (!inBuffer.remaining

@@ -1,8 +1,8 @@
 #include "uart.hpp"
 
 
-constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 16000000.0f);
-constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 16000000.0f);
+constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 48000000.0f);
+constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 48000000.0f);
 
 static uart::DefaultQueue                   motorOutQueue {};
 static uart::DefaultCallback::buffer_type   motorInBuffer {};
@@ -69,6 +69,7 @@ static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue
 	}
 
 	enableTx(regs);
+	++outQueue.front().transferred;
 	regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
 }
 
@@ -91,7 +92,7 @@ static void SERCOM_Handler(
 					startTransfer(regs, outQueue);
 				}
 			} else {
-				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[++outQueue.front().transferred];
+				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[outQueue.front().transferred++];
 			}
 		} else {                                                            // Transmitter disabled (incoming transfer)
 			if (!inBuffer.remaining || util::getTime() - prevByteTime > 1) {  // Received first byte, set up new transfer

@@ -18,8 +18,6 @@ void util::init() {
 	while (!(SUPC_REGS->SUPC_STATUS & SUPC_INTFLAG_VREGRDY_Msk));
 
 	// Performance setup
-	PM_REGS->PM_STDBYCFG = PM_STDBYCFG_DPGPD0(1)            // Enable dynamic power gating for PD0
-	                     | PM_STDBYCFG_DPGPD1(1);           // Enable dynamic power gating for PD1
 	NVMCTRL_REGS->NVMCTRL_CTRLB = NVMCTRL_CTRLB_MANW(1)     // Use NVM in manual write mode
 	                            | NVMCTRL_CTRLB_RWS(2);     // Use 2 wait states for NVM
 	PM_REGS->PM_PLCFG = PM_PLCFG_PLSEL_PL2;                 // Enter PL2
@@ -50,6 +48,9 @@ void util::init() {
 
 	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)     // Enable GCLK 2
 	                           | GCLK_GENCTRL_SRC_OSC16M;  // Set OSC16M as a source
+
+	GCLK_REGS->GCLK_GENCTRL[3] = GCLK_GENCTRL_GENEN(1)        // Enable GCLK 2
+	                           | GCLK_GENCTRL_SRC_OSCULP32K;  // Set OSC16M as a source
 
 	// SysTick setup
 	SysTick_Config(48000);
