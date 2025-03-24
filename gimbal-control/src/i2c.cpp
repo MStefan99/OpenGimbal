@@ -79,10 +79,11 @@ void i2c::init() {
 	                               | SERCOM_I2CM_CTRLA_ENABLE(1);
 	SERCOM_REGS->I2CM.SERCOM_INTENSET =
 	    SERCOM_I2CM_INTENSET_MB(1) | SERCOM_I2CM_INTENSET_SB(1) | SERCOM_I2CM_INTENSET_ERROR(1);
-	NVIC_EnableIRQ(SERCOM0_IRQn);
 
 	SERCOM_REGS->I2CM.SERCOM_STATUS |= SERCOM_I2CM_STATUS_BUSSTATE(1);
 	while (!(SERCOM_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_BUSSTATE_Msk));
+
+	NVIC_EnableIRQ(SERCOM0_IRQn);
 }
 
 void i2c::write(uint8_t devAddr, uint8_t regAddr, uint8_t* buf, uint8_t size, void (*cb)(bool, const i2c::Transfer&)) {

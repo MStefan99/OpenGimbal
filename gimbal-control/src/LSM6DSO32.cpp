@@ -11,9 +11,16 @@ static float rateOffsets[3] {0};
 static float accelerations[3] {0};
 static float angularRates[3] {0};
 
-void LSM6DSO32::init() {
+void LSM6DSO32::enable() {
 	uint8_t ctrl1_xl {LSM6DSO32_CTRL1_XL_ODR_XL_104Hz};
 	uint8_t ctrl2_g {LSM6DSO32_CTRL2_G_ODR_G_104Hz | LSM6DSO32_CTRL2_G_FS_G_1000DPS};
+	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL1_XL_ADDR, &ctrl1_xl);
+	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g);
+}
+
+void LSM6DSO32::disable() {
+	uint8_t ctrl1_xl {LSM6DSO32_CTRL1_XL_ODR_XL_POWER_DOWN};
+	uint8_t ctrl2_g {LSM6DSO32_CTRL2_G_ODR_G_POWER_DOWN};
 	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL1_XL_ADDR, &ctrl1_xl);
 	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g);
 }

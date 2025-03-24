@@ -17,7 +17,9 @@
 
 namespace LSM6DSO32 {
 	// I2C needs to be initialized first
-	void init();
+	void enable();
+	void disable();
+
 	void update();
 
 	Vector3<int16_t, uint8_t> getRawAccelerations();

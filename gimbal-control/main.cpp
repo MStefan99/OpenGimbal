@@ -176,10 +176,12 @@ bool triggerAction() {
 					powerMode = PowerMode::Startup;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
+					LSM6DSO32::enable();
 				} else {
 					powerMode = PowerMode::Shutdown;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
+					LSM6DSO32::disable();
 				}
 				showMode();
 
@@ -256,7 +258,6 @@ int main() {
 	adc::init();
 	pwm::init();
 	i2c::init();
-	LSM6DSO32::init();
 	uart::init();
 	usb::init();
 
