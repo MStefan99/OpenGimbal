@@ -89,7 +89,7 @@ export class USBInterface implements IHardwareInterface {
 			.then(() => this._usbDevice.transferOut(1, message.buffer))
 			.then(() => this._usbDevice.transferIn(1, 0xff))
 			.then((r) => {
-				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer))[0];
+				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer));
 				this._verbose && console.log('Received', message.toString(), '\n', message);
 
 				return message;

@@ -17,7 +17,9 @@ export enum MotorCommandType {
 export enum MotorVariableID {
 	Calibration = 0x0,
 	Offset = 0x1,
-	Range = 0x2,
+	Position = 0x2,
+	Power = 0x3,
+	Speed = 0x4,
 	Error = 0xf
 }
 
@@ -32,7 +34,7 @@ export const motorCommandNames: Record<MotorCommandType, string> = {
 	[MotorCommandType.SetVariable]: 'Set variable'
 };
 
-export const getMotorCommand: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
+export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
 	[MotorCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
 	[MotorCommandType.Move]: (buffer: Uint8Array) => new MoveCommand(buffer),
 	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
@@ -43,15 +45,15 @@ export const getMotorCommand: Record<MotorCommandType, (buffer: Uint8Array) => M
 	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
 };
 
-export const getVariableCommand: Record<
-	MotorVariableID,
-	(buffer: Uint8Array) => SetVariableCommand
+export const variableCommands: Partial<
+	Record<MotorVariableID, (buffer: Uint8Array) => SetVariableCommand>
 > = {
 	[MotorVariableID.Calibration]: () => {
 		throw new Error('Calibration is a read-only variable');
 	},
 	[MotorVariableID.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
-	[MotorVariableID.Range]: (buffer: Uint8Array) => new SetRangeVariableCommand(buffer),
+	[MotorVariableID.Power]: (buffer: Uint8Array) => new SetPowerVariableCommand(buffer),
+	[MotorVariableID.Speed]: (buffer: Uint8Array) => new SetSpeedVariableCommand(buffer),
 	[MotorVariableID.Error]: () => {
 		throw new Error('Error is a read-only variable');
 	}
@@ -302,7 +304,7 @@ export class GetVariableCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID]}`;
+			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
 		}
 	}
 }
@@ -350,7 +352,7 @@ export class SetVariableCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID]}`;
+			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
 		}
 	}
 }
@@ -380,7 +382,7 @@ export class SetOffsetVariableCommand extends SetVariableCommand {
 	}
 }
 
-export class SetRangeVariableCommand extends SetVariableCommand {
+export class SetPowerVariableCommand extends SetVariableCommand {
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number, range: number);
 
@@ -388,19 +390,44 @@ export class SetRangeVariableCommand extends SetVariableCommand {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr, destAddr, MotorVariableID.Range, range, 2);
+			super(srcAddr, destAddr, MotorVariableID.Power, range, 1);
 		}
 	}
 
-	get range(): number {
-		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
+	get power(): number {
+		return this.view.getUint8(3);
 	}
 
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Range: ${this.range}`;
+			return super.toString() + `\n  Average power: ${this.power}`;
+		}
+	}
+}
+
+export class SetSpeedVariableCommand extends SetVariableCommand {
+	constructor(buffer: Uint8Array);
+	constructor(srcAddr: number, destAddr: number, range: number);
+
+	constructor(srcAddr: number | Uint8Array, destAddr?: number, range?: number) {
+		if (srcAddr instanceof Uint8Array) {
+			super(srcAddr);
+		} else {
+			super(srcAddr, destAddr, MotorVariableID.Power, range, 2);
+		}
+	}
+
+	get speed(): number {
+		return this.view.getUint8(3);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Maximum speed: ${this.speed}`;
 		}
 	}
 }

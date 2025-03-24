@@ -2,7 +2,7 @@ import {CalibrationBits, IMotor, Motor} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './serial/SerialInterface';
 
-export interface IMotorManager extends EventTarget {
+export interface IMotorManager {
 	get motors(): IMotor[];
 
 	get active(): IMotor[];
@@ -24,13 +24,11 @@ export type MotorEntry = {
 	initialCalibration?: BitwiseRegister<CalibrationBits>;
 };
 
-export class MotorManager extends EventTarget implements IMotorManager {
+export class MotorManager implements IMotorManager {
 	readonly _hardwareInterface: ISerialInterface;
 	readonly _motorEntries: MotorEntry[];
 
 	constructor(serialInterface: ISerialInterface) {
-		super();
-
 		this._hardwareInterface = serialInterface;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
 			motor: new Motor(serialInterface, i + 1),

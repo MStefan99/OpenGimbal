@@ -2,46 +2,37 @@ import {GimbalCommand, GimbalCommandType, MotorPassthroughCommand} from './Gimba
 import {GimbalResponse, GimbalResponseType, MotorPassthroughResponse} from './GimbalResponse';
 
 export interface IUSBParser {
-	parseCommand(data: Uint8Array): Array<GimbalCommand>;
-	parseResponse(data: Uint8Array): Array<GimbalResponse>;
+	parseCommand(data: Uint8Array): GimbalCommand | null;
+
+	parseResponse(data: Uint8Array): GimbalResponse | null;
 }
 
 export class USBParser implements IUSBParser {
-	parseCommand(data: Uint8Array): Array<GimbalCommand> {
-		const commands = new Array<GimbalCommand>();
-
+	parseCommand(data: Uint8Array): GimbalCommand | null {
 		if (!data.length) {
-			return commands;
+			return null;
 		}
 
 		const command = new GimbalCommand(data);
 
 		if (command.type === GimbalCommandType.MotorPassthrough) {
-			const passthroughCommand = new MotorPassthroughCommand(data);
-			commands.push(passthroughCommand);
+			return new MotorPassthroughCommand(data);
 		} else {
-			commands.push(command);
+			return command;
 		}
-
-		return commands;
 	}
 
-	parseResponse(data: Uint8Array): Array<GimbalResponse> {
-		const responses = new Array<GimbalResponse>();
-
+	parseResponse(data: Uint8Array): GimbalResponse | null {
 		if (!data.length) {
-			return responses;
+			return null;
 		}
 
 		const response = new GimbalResponse(data);
 
 		if (response.type === GimbalResponseType.MotorPassthrough) {
-			const passthroughResponse = new MotorPassthroughResponse(data);
-			responses.push(passthroughResponse);
+			return new MotorPassthroughResponse(data);
 		} else {
-			responses.push(response);
+			return response;
 		}
-
-		return responses;
 	}
 }

@@ -1,48 +1,16 @@
 #include "MovementController.hpp"
 
-void MovementController::setRange(uint16_t range) {
-	_range = range;
-}
-
 void MovementController::setTarget(int32_t newTarget) {
-	newTarget = util::mod(newTarget + _offset, static_cast<int32_t>(4096));
-	int32_t newDeflection = _deflection + newTarget - _target;
-	int32_t newDesiredDeflection = newDeflection;
-
-	// Calculating resulting positions
-	if (newDesiredDeflection < _desiredDeflection && _desiredDeflection - newDesiredDeflection > 2048) {
-		newDeflection += 4096;
-		newDesiredDeflection += 4096;
-	} else if (newDesiredDeflection > _desiredDeflection && newDesiredDeflection - _desiredDeflection > 2048) {
-		newDeflection -= 4096;
-		newDesiredDeflection -= 4096;
-	}
-
-	if (newDesiredDeflection - newDeflection > 4095) {
-		newDesiredDeflection -= 4096;
-	} else if (newDesiredDeflection - newDeflection < -4095) {
-		newDesiredDeflection += 4096;
-	}
-
-	// Limiting the new values
-	if (_range) {
-		if (newDeflection > _range) {
-			newDeflection = _range;
-			newTarget = util::mod(newDeflection, static_cast<int32_t>(4096));
-		} else if (newDeflection < -_range) {
-			newDeflection = -_range;
-			newTarget = util::mod(newDeflection, static_cast<int32_t>(4096));
-		}
-	}
-
-	_target = newTarget;
-	_deflection = newDeflection;
-	_desiredDeflection = newDesiredDeflection;
+	_target = util::mod(newTarget + _offset, static_cast<int32_t>(4096));
 }
 
 void MovementController::setOffset(int32_t newOffset) {
 	_interpolator.offset(newOffset - _offset);
 	_offset = newOffset;
+}
+
+void MovementController::setMaxSpeed(uint8_t maxSpeed) {
+	_interpolator._maxSpeed = maxSpeed;
 }
 
 void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPosition) {
@@ -53,10 +21,6 @@ void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPos
 	setOffset(adjustedOffset);
 }
 
-uint16_t MovementController::getRange() const {
-	return _range;
-}
-
 int32_t MovementController::getOffset() const {
 	return _offset;
 }
@@ -65,12 +29,8 @@ uint16_t MovementController::getTarget() const {
 	return _target;
 }
 
-int32_t MovementController::getDeflection() const {
-	return _deflection;
-}
-
-int32_t MovementController::getDesiredDeflection() const {
-	return _desiredDeflection;
+uint8_t MovementController::getMaxSpeed() const {
+	return _interpolator._maxSpeed;
 }
 
 MovementController::Interpolator::Interpolator(int32_t offset):
@@ -111,6 +71,10 @@ void MovementController::Interpolator::applyTarget(uint32_t dt, int32_t target) 
 		_actual += 4096;
 		_extrapolated += 4096;
 		change = target - _actual;
+	}
+
+	if (_maxSpeed > 0 && util::abs(change / dt) > _maxSpeed / 32) {
+		dt = util::abs(change / _maxSpeed * 32);
 	}
 
 	_actual = target;

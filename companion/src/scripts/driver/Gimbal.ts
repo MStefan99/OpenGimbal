@@ -54,24 +54,4 @@ export class Gimbal implements IGimbal {
 	close(): Promise<void> {
 		return this._hardwareInterface.close();
 	}
-
-	addEventListener(
-		type: string,
-		callback: EventListenerOrEventListenerObject | null,
-		options?: AddEventListenerOptions | boolean
-	): void {
-		this.motorManager.addEventListener(type, callback, options);
-	}
-
-	dispatchEvent(event: Event): boolean {
-		return this.motorManager.dispatchEvent(event);
-	}
-
-	removeEventListener(
-		type: string,
-		callback: EventListenerOrEventListenerObject | null,
-		options?: EventListenerOptions | boolean
-	): void {
-		this.motorManager.removeEventListener(type, callback, options);
-	}
 }

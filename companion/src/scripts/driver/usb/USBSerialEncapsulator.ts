@@ -13,7 +13,7 @@ export function encapsulateSerialMessage(message: SerialMessage): USBMessage {
 	view.setUint8(0, GimbalCommandType.MotorPassthrough);
 	buffer.set(message.buffer, 1);
 
-	return new USBParser().parseCommand(buffer)[0];
+	return new USBParser().parseCommand(buffer);
 }
 
 export function exposeSerialMessage(message: USBMessage): SerialMessage | null {
@@ -27,7 +27,7 @@ export function exposeSerialMessage(message: USBMessage): SerialMessage | null {
 
 	return new SerialParser().parse(
 		new Uint8Array(message.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
-	)[0];
+	);
 }
 
 export class USBSerialEncapsulator implements ISerialInterface {

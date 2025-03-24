@@ -1,12 +1,11 @@
 import {SerialMessage} from './serial/SerialMessage';
 import {BitwiseRegister} from './BitwiseRegister';
 import {
-	getMotorResponse,
-	getVariableResponse,
+	motorResponses,
+	variableResponses,
 	MotorResponse,
 	ReturnCalibrationVariableResponse,
 	ReturnOffsetVariableResponse,
-	ReturnRangeVariableResponse,
 	ReturnVariableResponse
 } from './serial/MotorResponse';
 import {
@@ -17,9 +16,9 @@ import {
 	AdjustOffsetCommand,
 	MoveCommand,
 	SetOffsetVariableCommand,
-	SetRangeVariableCommand,
 	SleepCommand,
-	ToneCommand
+	ToneCommand,
+	MotorCommand
 } from './serial/MotorCommand';
 import {IHardwareInterface} from './HardwareInterface';
 import {ISerialInterface} from './serial/SerialInterface';
@@ -33,6 +32,10 @@ export interface IMotor {
 	get address(): number;
 
 	toString(): string;
+
+	send(command: MotorCommand): Promise<void>;
+
+	request(command: MotorCommand): Promise<MotorResponse | null>;
 
 	sleep(): Promise<void>;
 
@@ -51,8 +54,7 @@ export interface IMotor {
 
 	haptic(intensity: number, duration?: number): Promise<void>;
 
-	/* This is a tricky one
-	 * This command adjusts the offset in a way that current position will be equal to the specified offset
+	/* This command adjusts the offset in a way that current position will be equal to the specified offset
 	 * A useful application for this command would be to disable the motor, ask the user to move it into a known position
 	 * (say, vertical) and then set the offset to a known value. This would make that offset (position)
 	 * correspond to a known physical position
@@ -72,11 +74,7 @@ export interface IMotor {
 
 	getOffset(): Promise<number>;
 
-	getRange(): Promise<number>;
-
-	setOffsetVariable(offset: number): Promise<void>;
-
-	setRangeVariable(range: number): Promise<void>;
+	setOffset(offset: number): Promise<void>;
 }
 
 export class Motor implements IMotor {
@@ -95,6 +93,14 @@ export class Motor implements IMotor {
 
 	toString(): string {
 		return `Motor ${this._address}`;
+	}
+
+	send(command: MotorCommand): Promise<void> {
+		return this._hardwareInterface.send(command);
+	}
+
+	request(command: MotorCommand): Promise<MotorResponse> {
+		return this._hardwareInterface.request(command) as Promise<MotorResponse>;
 	}
 
 	disable(): Promise<void> {
@@ -189,28 +195,9 @@ export class Motor implements IMotor {
 		);
 	}
 
-	getRange(): Promise<number> {
-		return new Promise<number>((resolve, reject) =>
-			this._hardwareInterface
-				.request(
-					new GetVariableCommand(0, this._address, MotorVariableID.Range),
-					this._isSleeping ? 9600 : 115200
-				)
-				.then((res) => resolve((res as ReturnRangeVariableResponse).range))
-				.catch((err) => reject(err))
-		);
-	}
-
-	setOffsetVariable(offset: number): Promise<void> {
+	setOffset(offset: number): Promise<void> {
 		return this._hardwareInterface.send(
 			new SetOffsetVariableCommand(0, this._address, offset),
-			this._isSleeping ? 9600 : 115200
-		);
-	}
-
-	setRangeVariable(range: number): Promise<void> {
-		return this._hardwareInterface.send(
-			new SetRangeVariableCommand(0, this._address, range),
 			this._isSleeping ? 9600 : 115200
 		);
 	}

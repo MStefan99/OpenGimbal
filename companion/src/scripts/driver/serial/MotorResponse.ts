@@ -11,17 +11,19 @@ export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'
 };
 
-export const getMotorResponse: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
+export const motorResponses: Record<MotorResponseType, (buffer: Uint8Array) => MotorResponse> = {
 	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
 };
 
-export const getVariableResponse: Record<
+export const variableResponses: Record<
 	MotorVariableID,
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {
 	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
 	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
-	[MotorVariableID.Range]: (buffer) => new ReturnRangeVariableResponse(buffer),
+	[MotorVariableID.Position]: (buffer) => new ReturnPositionVariableResponse(buffer),
+	[MotorVariableID.Power]: (buffer) => new ReturnPowerVariableResponse(buffer),
+	[MotorVariableID.Speed]: (buffer) => new ReturnSpeedVariableResponse(buffer),
 	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
 };
 
@@ -63,7 +65,7 @@ export class ReturnVariableResponse extends MotorResponse {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID]}`;
+			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
 		}
 	}
 }
@@ -113,12 +115,12 @@ export class ReturnOffsetVariableResponse extends ReturnVariableResponse {
 	}
 }
 
-export class ReturnRangeVariableResponse extends ReturnVariableResponse {
+export class ReturnPositionVariableResponse extends ReturnVariableResponse {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
 	}
 
-	get range(): number {
+	get position(): number {
 		return (this.view.getUint8(3) << 8) | this.view.getUint8(4);
 	}
 
@@ -126,7 +128,43 @@ export class ReturnRangeVariableResponse extends ReturnVariableResponse {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Range: ${this.range}`;
+			return super.toString() + `\n  Position: ${this.position}`;
+		}
+	}
+}
+
+export class ReturnPowerVariableResponse extends ReturnVariableResponse {
+	constructor(buffer: Uint8Array) {
+		super(buffer);
+	}
+
+	get power(): number {
+		return this.view.getUint8(3);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Power: ${this.power}`;
+		}
+	}
+}
+
+export class ReturnSpeedVariableResponse extends ReturnVariableResponse {
+	constructor(buffer: Uint8Array) {
+		super(buffer);
+	}
+
+	get speed(): number {
+		return this.view.getUint8(3);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Speed: ${this.speed}`;
 		}
 	}
 }

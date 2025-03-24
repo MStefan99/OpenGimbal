@@ -13,7 +13,7 @@ static uint32_t           lastTargetTime {0};
 static bool offsetAdjusted {false};
 
 float                prevDAngle {0.0f};
-LowPassFilter        torqueFilter {1000, 2};
+static LowPassFilter torqueFilter {1000, 2};
 static LowPassFilter angleFilter {1000, 1};
 static bool          dataReady {false};
 
@@ -36,18 +36,6 @@ struct TorqueLUT {
 };
 
 constexpr static auto torqueLUT = TorqueLUT();
-
-#if DV_OUT
-struct Data {
-	uint8_t  header {0x03};
-	uint16_t dt {};
-	float    x {};
-	float    v {};
-	float    a {};
-	float    u {};
-	uint8_t  footer {0xfc};
-} __attribute__((packed));
-#endif
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
@@ -122,16 +110,6 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					uart::send(response.getBuffer(), response.getLength());
 					break;
 				}
-				case (Command::Variable::Range): {
-					auto response = ReturnVariableResponse(
-					    deviceAddress,
-					    buffer.buffer[1] >> 8u,
-					    Command::Variable::Range,
-					    movementController.getRange()
-					);
-					uart::send(response.getBuffer(), response.getLength());
-					break;
-				}
 				case (Command::Variable::Position): {
 					auto response = ReturnVariableResponse(
 					    deviceAddress,
@@ -145,6 +123,17 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					uart::send(response.getBuffer(), response.getLength());
 					break;
 				}
+				case (Command::Variable::Speed): {
+					auto response = ReturnVariableResponse(
+					    deviceAddress,
+					    buffer.buffer[1] >> 8u,
+					    Command::Variable::Speed,
+					    movementController.getMaxSpeed()
+					);
+					uart::send(response.getBuffer(), response.getLength());
+				}
+				default:
+					break;
 			}
 			break;
 		}
@@ -157,11 +146,11 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					nvm::write();
 					break;
 				}
-				case (Command::Variable::Range): {
-					movementController.setRange((buffer.buffer[3] << 8u) | buffer.buffer[4]);
-					nvm::edit(&nvm::options->range, movementController.getRange());
+				case (Command::Variable::Speed): {
+					uint8_t maxSpeed = buffer.buffer[3];
+					movementController.setMaxSpeed(maxSpeed);
+					nvm::edit(&nvm::options->maxSpeed, maxSpeed);
 					nvm::write();
-					break;
 				}
 				default:
 					break;
@@ -219,11 +208,6 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
 }
 
 void moveToTarget(uint16_t target) {
-#if DV_OUT
-	auto startUs {SysTick->VAL};
-	auto startMs {util::getTime()};
-#endif
-
 	// Calculating difference between current and target angle
 	auto angle {measureAngle()};
 	angleFilter.process(angle);
@@ -240,18 +224,6 @@ void moveToTarget(uint16_t target) {
 	);
 
 	applyTorque(angle, absTorque, torque > 0);
-
-#if DV_OUT
-	if (util::getTime() % 5 < 1) {
-		Data nvm {};
-
-		nvm.dt = (util::getTime() - startMs) * 1000 + (startUs - SysTick->VAL) / 48;
-		nvm.x = dAngle;
-		nvm.v = velocity;
-		nvm.u = util::sign(torque) * absTorque;
-		uart::send(reinterpret_cast<uint8_t*>(&nvm), sizeof(nvm));
-	}
-#endif
 }
 
 void unwind(int16_t offset) {

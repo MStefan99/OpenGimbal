@@ -55,14 +55,6 @@
 				button.block.mb-2(@click="toneFrequencies[motor.address - 1] = 25000; motor.silent()") Silent
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Setup
-				p Range
-				RangeSlider.mb-2(
-					:min="0"
-					:max="extendedRanges ? 65535 : 2048"
-					:scale="2048"
-					listID="ranges"
-					v-model="ranges[motor.address - 1]"
-					@update:model-value="(p) => motor.setRangeVariable(p)")
 				p Offset
 				RangeSlider.mb-2(
 					:min="0"
@@ -135,7 +127,6 @@ const extendedRanges = ref<boolean>(false);
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
 const offsets = ref<number[]>([]);
-const ranges = ref<number[]>([]);
 const toneFrequencies = ref<number[]>([]);
 const hapticIntensities = ref<number[]>([]);
 const hapticDurations = ref<number[]>([]);
@@ -151,7 +142,6 @@ async function enumerate(): Promise<void> {
 	positions.value = new Array(15).fill(0);
 	torques.value = new Array(15).fill(0);
 	offsets.value = new Array(15);
-	ranges.value = new Array(15);
 	toneFrequencies.value = new Array(15).fill(25000);
 	hapticIntensities.value = new Array(15).fill(255);
 	hapticDurations.value = new Array(15).fill(5);
@@ -163,7 +153,6 @@ async function enumerate(): Promise<void> {
 				motor.address
 			);
 			offsets.value[motor.address - 1] = await motor.getOffset();
-			ranges.value[motor.address - 1] = await motor.getRange();
 		}
 		motors.value = detectedMotors;
 	} catch (err) {

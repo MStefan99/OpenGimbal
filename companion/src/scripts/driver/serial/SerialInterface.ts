@@ -115,15 +115,14 @@ export class SerialInterface implements ISerialInterface {
 							}
 							readBuffer.set(value, readBytes);
 							readBytes += value.byteLength;
-							const serialMessages = this._parser.parse(value);
+							const serialMessage = this._parser.parse(value);
 
-							const responses = serialMessages.filter((c) => c instanceof MotorResponse);
-							if (responses.length) {
+							if (serialMessage && serialMessage instanceof MotorResponse) {
 								this._verbose &&
-									responses.forEach((r) => console.log('Received', r.toString(), '\n', r));
+									console.log('Received', serialMessage.toString(), '\n', serialMessage);
 
 								await reader.cancel();
-								resolve(responses[0]);
+								resolve(serialMessage);
 								return;
 							} else {
 								readBytes = 0;

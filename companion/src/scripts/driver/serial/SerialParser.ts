@@ -1,13 +1,13 @@
 import {
-	getMotorCommand,
-	getVariableCommand,
+	motorCommands,
+	variableCommands,
 	MotorCommand,
 	MotorCommandType,
 	SetVariableCommand
 } from './MotorCommand';
 import {
-	getMotorResponse,
-	getVariableResponse,
+	motorResponses,
+	variableResponses,
 	MotorResponse,
 	ReturnVariableResponse
 } from './MotorResponse';
@@ -15,15 +15,14 @@ import {SerialMessage} from './SerialMessage';
 import {IParser} from '../Parser';
 
 export interface ISerialParser extends IParser {
-	parse(data: Uint8Array): Array<SerialMessage>;
+	parse(data: Uint8Array): SerialMessage | null;
 }
 
 export class SerialParser implements ISerialParser {
-	parse(data: Uint8Array): Array<SerialMessage> {
+	parse(data: Uint8Array): SerialMessage | null {
 		let bytesRemaining = 0;
 		let bytesProcessed = 0;
 		const view = new DataView(data.buffer);
-		const responses = new Array<SerialMessage>();
 
 		for (const byte of data) {
 			if (!bytesRemaining) {
@@ -37,26 +36,26 @@ export class SerialParser implements ISerialParser {
 
 				if ((view.getUint8(0) & 0xf) !== 0) {
 					const genericCommand = new MotorCommand(buffer);
-					const command = getMotorCommand[genericCommand.type](buffer);
+					const command = motorCommands[genericCommand.type](buffer);
 
 					if (command instanceof SetVariableCommand) {
-						responses.push(getVariableCommand[command.variableID](buffer));
+						return variableCommands[command.variableID](buffer);
 					} else {
-						responses.push(command);
+						return command;
 					}
 				} else {
 					const genericResponse = new MotorResponse(buffer);
-					const response = getMotorResponse[genericResponse.type](buffer);
+					const response = motorResponses[genericResponse.type](buffer);
 
 					if (response instanceof ReturnVariableResponse) {
-						responses.push(getVariableResponse[response.variableID](buffer));
+						return variableResponses[response.variableID](buffer);
 					} else {
-						responses.push(response);
+						return response;
 					}
 				}
 			}
 		}
 
-		return responses;
+		return null;
 	}
 }

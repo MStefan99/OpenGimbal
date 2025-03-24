@@ -1,6 +1,6 @@
 import {createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw} from 'vue-router';
 import MotorView from '../views/MotorView.vue';
-import MonitorView from '../views/MonitorView.vue';
+import DebugView from '../views/DebugView.vue';
 import {crashCourse} from './analytics';
 
 const routes: Array<RouteRecordRaw> = [
@@ -10,9 +10,9 @@ const routes: Array<RouteRecordRaw> = [
 		component: MotorView
 	},
 	{
-		path: '/monitor',
-		name: 'monitor',
-		component: MonitorView
+		path: '/debug',
+		name: 'debug',
+		component: DebugView
 	},
 	{
 		path: '/:pathname(.*)*',
