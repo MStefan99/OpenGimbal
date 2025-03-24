@@ -67,7 +67,10 @@ export class SerialInterface implements ISerialInterface {
 						resolve();
 					})
 				)
-				.catch(reject);
+				.catch((err) => {
+					console.error('Send failed:', err);
+					reject(err);
+				});
 		});
 	}
 
@@ -131,7 +134,8 @@ export class SerialInterface implements ISerialInterface {
 					}
 				})
 				.catch((err) => {
-					console.error(err);
+					console.error('Send failed:', err);
+					return reject(err);
 				});
 		});
 	}

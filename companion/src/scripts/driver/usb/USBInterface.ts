@@ -75,7 +75,10 @@ export class USBInterface implements IHardwareInterface {
 
 		return (this._transferPromise = this._transferPromise
 			.then(() => this._usbDevice.transferOut(1, message.buffer))
-			.catch((err) => Promise.reject(err))
+			.catch((err) => {
+				console.error('Send failed:', err);
+				return Promise.reject(err);
+			})
 			.then(() => Promise.resolve())) as Promise<void>;
 	}
 
@@ -91,7 +94,10 @@ export class USBInterface implements IHardwareInterface {
 
 				return message;
 			})
-			.catch((err) => Promise.reject(err))) as Promise<USBMessage>;
+			.catch((err) => {
+				console.error('Send failed:', err);
+				return Promise.reject(err);
+			})) as Promise<USBMessage>;
 	}
 
 	async close(): Promise<void> {

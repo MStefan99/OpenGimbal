@@ -19,27 +19,23 @@ export interface ISerialParser extends IParser {
 }
 
 export class SerialParser implements ISerialParser {
-	_incomingBuffer = new Uint8Array(20);
-	_incomingView = new DataView(this._incomingBuffer.buffer);
-	_bytesReceived = 0;
-	_bytesRemaining = 0;
-
 	parse(data: Uint8Array): Array<SerialMessage> {
+		let bytesRemaining = 0;
+		let bytesProcessed = 0;
+		const view = new DataView(data.buffer);
 		const responses = new Array<SerialMessage>();
 
 		for (const byte of data) {
-			if (!this._bytesRemaining) {
-				this._bytesRemaining = (byte >> 4) + 1;
-				this._bytesReceived = 0;
+			if (!bytesRemaining) {
+				bytesRemaining = (byte >> 4) + 1;
+				bytesProcessed = 0;
 			}
 
-			this._incomingView.setUint8(this._bytesReceived++, byte);
-			if (--this._bytesRemaining === 0) {
-				const buffer = new Uint8Array(this._bytesReceived)
-					.fill(0)
-					.map((v, i) => this._incomingBuffer[i]);
+			view.setUint8(bytesProcessed++, byte);
+			if (--bytesRemaining === 0) {
+				const buffer = new Uint8Array(bytesProcessed).fill(0).map((v, i) => data[i]);
 
-				if ((this._incomingView.getUint8(0) & 0xf) !== 0) {
+				if ((view.getUint8(0) & 0xf) !== 0) {
 					const genericCommand = new MotorCommand(buffer);
 					const command = getMotorCommand[genericCommand.type](buffer);
 

@@ -95,7 +95,7 @@ static void SERCOM_Handler(
 				regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[outQueue.front().transferred++];
 			}
 		} else {                                                            // Transmitter disabled (incoming transfer)
-			if (!inBuffer.remaining || util::getTime() - prevByteTime > 1) {  // Received first byte, set up new transfer
+			if (!inBuffer.remaining || util::getTime() - prevByteTime > 3) {  // Received first byte, set up new transfer
 				inBuffer.buffer[0] = regs->USART_INT.SERCOM_DATA;
 				inBuffer.remaining = (inBuffer.buffer[0] >> 4u);
 				inBuffer.transferred = 1;

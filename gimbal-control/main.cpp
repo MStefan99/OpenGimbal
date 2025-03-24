@@ -31,7 +31,7 @@ volatile uint32_t eventTime {0};
 volatile bool     buttonPressed {false};
 volatile bool     leftButton {true};
 
-volatile bool     usbPassthroughRequested {false};
+volatile bool     usbPassthrough {false};
 volatile uint32_t usbPassthroughTime {0};
 
 float normalize(float difference) {
@@ -45,13 +45,15 @@ float normalize(float difference) {
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
-	usbPassthroughRequested = false;
+	if (usbPassthrough) {
+		uint8_t buf[20];
+		buf[0] = static_cast<uint8_t>(data::ResponseType::MotorPassthrough);
+		util::copy(buf + 1, buffer.buffer, buffer.transferred);
 
-	uint8_t buf[20];
-	buf[0] = static_cast<uint8_t>(data::ResponseType::MotorPassthrough);
-	util::copy(buf + 1, buffer.buffer, buffer.transferred);
+		usb::write(buf, buffer.transferred + 1);
 
-	usb::write(buf, buffer.transferred + 1);
+		usbPassthrough = false;
+	}
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
@@ -71,7 +73,7 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			}
 			break;
 			case (data::CommandType::MotorPassthrough): {
-				usbPassthroughRequested = true;
+				usbPassthrough = true;
 				usbPassthroughTime = util::getTime();
 				uart::sendToMotors(request.bData, len - 1);
 				break;
@@ -393,10 +395,11 @@ int main() {
 			}
 		}
 
-		if (usb::isActive() && usbPassthroughRequested && util::getTime() - usbPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
+		if (usb::isActive() && usbPassthrough && util::getTime() - usbPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
 			uint8_t buf[1] {static_cast<uint8_t>(data::ResponseType::MotorPassthrough)};
 
 			usb::write(buf, sizeof(buf));
+			usbPassthrough = false;
 		}
 
 		if (displayState == DisplayState::BatteryLevel) {
