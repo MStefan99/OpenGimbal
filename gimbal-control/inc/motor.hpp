@@ -23,6 +23,8 @@ namespace motor {
 	void adjustOffset(uint8_t address = all, uint16_t targetPosition = 0);
 	void calibrate(uint8_t address = all, uint8_t mode = 3);
 
+	void send(const uint8_t* buf, uint8_t len);
+
 	// TODO: set and get variable
 }
 

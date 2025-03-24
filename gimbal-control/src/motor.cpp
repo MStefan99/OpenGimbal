@@ -96,3 +96,23 @@ void motor::calibrate(uint8_t address, uint8_t mode) {
 	uart::sendToMotors(command.getBuffer(), command.getLength());
 	setSleeping(address, false);
 }
+
+void motor::send(const uint8_t* buf, uint8_t len) {
+	uint8_t address = buf[0] & 0xf;
+
+	if (!address) {  // Check destination address
+		return;
+	}
+
+	uart::sendToMotors(buf, len);
+
+	auto command = static_cast<MotorCommand::CommandType>(buf[1] & 0xf);
+	if (command == MotorCommand::CommandType::Move || command == MotorCommand::CommandType::Haptic
+	    || command == MotorCommand::CommandType::Calibrate) {
+		setSleeping(address, false);
+	} else if (command == MotorCommand::CommandType::Sleep) {
+		setSleeping(address, true);
+	}
+
+	setBaud(address);
+}

@@ -75,7 +75,7 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			case (data::CommandType::MotorPassthrough): {
 				usbPassthrough = true;
 				usbPassthroughTime = util::getTime();
-				uart::sendToMotors(request.bData, len - 1);
+				motor::send(request.bData, len - 1);
 				break;
 			}
 		}
