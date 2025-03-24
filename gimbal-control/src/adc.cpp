@@ -44,7 +44,9 @@ void adc::init() {
 	                          (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_ADC_BIASCOMP_Msk)
 	                          >> FUSES_OTP5_WORD_0_ADC_BIASCOMP_Pos
 	                    );
-	ADC_REGS->ADC_SAMPCTRL = ADC_SAMPCTRL_OFFCOMP(1);    // Enable offset compensation
+	ADC_REGS->ADC_SAMPCTRL = ADC_SAMPCTRL_OFFCOMP(1);                         // Enable offset compensation
+	ADC_REGS->ADC_AVGCTRL = ADC_AVGCTRL_SAMPLENUM_8 | ADC_AVGCTRL_ADJRES(3);  // Enable averaging
+	ADC_REGS->ADC_CTRLC = ADC_CTRLC_RESSEL_16BIT;
 	ADC_REGS->ADC_INTENSET = ADC_INTENSET_RESRDY(1);     // Enable result ready interrupt
 	ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC2;  // Set ADC reference voltage
 	ADC_REGS->ADC_CTRLA =                                // ADC_CTRLA_RUNSTDBY(1)           // Enable in standby mode
