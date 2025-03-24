@@ -70,7 +70,7 @@ static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue
 
 	enableTx(regs);
 	++outQueue.front().transferred;
-	regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
+	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_CMD_RETRIGGER;
 }
 
 static void SERCOM_Handler(
@@ -121,6 +121,14 @@ extern "C" {
 	void SERCOM3_Handler() {
 		SERCOM_Handler(SERCOM3_REGS, motorOutQueue, motorInBuffer, motorCallback, motorReceiveTime);
 	}
+
+	void TC0_Handler() {
+		if (TC0_REGS->COUNT16.TC_INTFLAG & TC_INTFLAG_MC0_Msk) {
+			SERCOM3_REGS->USART_INT.SERCOM_DATA = motorOutQueue.front().buffer[0];
+			TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_CMD_STOP;
+		}
+		TC0_REGS->COUNT16.TC_INTFLAG = TC_INTFLAG_Msk;
+	}
 }
 
 void uart::init() {
@@ -136,9 +144,19 @@ void uart::init() {
 	                                  | PORT_WRCONFIG_WRPINCFG(1)                     // Write pin config settings
 	                                  | PORT_WRCONFIG_HWSEL(1);                       // Select pin range
 
+	GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TC0 clock
+	                                     | GCLK_PCHCTRL_GEN_GCLK2;  // Set GCLK2 as a clock source
+
+	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1);
+	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(1600);
+	TC0_REGS->COUNT16.TC_CTRLA = TC_CTRLA_ENABLE(1) | TC_CTRLA_MODE_COUNT16 | TC_CTRLA_ONDEMAND(1);
+	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_ONESHOT(1) | TC_CTRLBSET_CMD_STOP;
+	while (!(TC0_REGS->COUNT16.TC_SYNCBUSY = TC_SYNCBUSY_CTRLB_Msk));
+
 	// SERCOM setup
 	initSERCOM(SERCOM3_REGS);
 	NVIC_EnableIRQ(SERCOM3_IRQn);
+	NVIC_EnableIRQ(TC0_IRQn);
 }
 
 uint8_t uart::print(const char* buf) {

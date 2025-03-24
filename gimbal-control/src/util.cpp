@@ -49,7 +49,7 @@ void util::init() {
 	GCLK_REGS->GCLK_GENCTRL[2] = GCLK_GENCTRL_GENEN(1)     // Enable GCLK 2
 	                           | GCLK_GENCTRL_SRC_OSC16M;  // Set OSC16M as a source
 
-	GCLK_REGS->GCLK_GENCTRL[3] = GCLK_GENCTRL_GENEN(1)        // Enable GCLK 2
+	GCLK_REGS->GCLK_GENCTRL[3] = GCLK_GENCTRL_GENEN(1)        // Enable GCLK 3
 	                           | GCLK_GENCTRL_SRC_OSCULP32K;  // Set OSCULP32K as a source
 
 	// SysTick setup
