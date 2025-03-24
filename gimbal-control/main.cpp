@@ -7,6 +7,7 @@ static GimbalMode   gimbalMode {GimbalMode::Follow};
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
 constexpr static float ATT_LSB {10430.0f};
+constexpr static float joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
 constexpr static float sqrt2 = sqrtf(2);
 
 static float yawCurrent {0};
@@ -180,6 +181,7 @@ bool triggerAction() {
 				} else {
 					powerMode = PowerMode::Shutdown;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+					joystick::saveValues();
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
 					LSM6DSO32::disable();
 				}
@@ -296,15 +298,12 @@ int main() {
 				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), 0.01f);
 
 				joystick::update([](int16_t x, int16_t y) {
-					int16_t dx = x / 25;
-					int16_t dy = y / 25;
-
 					if (gimbalMode != GimbalMode::Tilt) {
-						yawOffset -= dx;
+						yawOffset -= y / 40000.0f;
 					} else {
-						rollOffset -= dx;
+						rollOffset -= y / 40000.0f;
 					}
-					pitchOffset += dy;
+					pitchOffset += x / 40000.0f;
 				});
 
 				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
@@ -315,8 +314,8 @@ int main() {
 					data::usbSensorsResponse.angularRates[i] = LSM6DSO32::getRawAngularRates()[2 - i][0];
 				}
 
-				data::usbStatusResponse.pitch = handleAngles[1][0] * ATT_LSB;
-				data::usbStatusResponse.roll = handleAngles[2][0] * ATT_LSB;
+				data::usbStatusResponse.pitch = yawOffset * ATT_LSB;
+				data::usbStatusResponse.roll = pitchOffset * ATT_LSB;
 
 				float yawTarget {handleAngles[0][0] + yawOffset};
 

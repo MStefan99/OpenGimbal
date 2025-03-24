@@ -1,32 +1,16 @@
 #include "adc.hpp"
 
 
-static void (*batteryCallback)(uint16_t);
-static void (*xCallback)(uint16_t);
-static void (*yCallback)(uint16_t);
+static void (*callback)(uint16_t) {nullptr};
 
 
 extern "C" {
 	void ADC_Handler() {
-		switch ((ADC_REGS->ADC_INPUTCTRL & ADC_INPUTCTRL_MUXPOS_Msk) >> ADC_INPUTCTRL_MUXPOS_Pos) {
-			case (ADC_INPUTCTRL_MUXPOS_AIN0_Val): {
-				if (xCallback) {
-					xCallback(ADC_REGS->ADC_RESULT);
-				}
-				break;
-			}
-			case (ADC_INPUTCTRL_MUXPOS_AIN1_Val): {
-				if (yCallback) {
-					yCallback(ADC_REGS->ADC_RESULT);
-				}
-				break;
-			}
-			case (ADC_INPUTCTRL_MUXPOS_AIN6_Val): {
-				if (batteryCallback) {
-					batteryCallback(ADC_REGS->ADC_RESULT);
-				}
-				break;
-			}
+		if (callback) {
+			auto cb {callback};
+
+			callback = nullptr;
+			cb(ADC_REGS->ADC_RESULT);
 		}
 
 		ADC_REGS->ADC_INTFLAG = ADC_INTFLAG_Msk;
@@ -70,39 +54,30 @@ void adc::init() {
 	NVIC_EnableIRQ(ADC_IRQn);
 }
 
-void adc::measureTemperature(void (*cb)(uint16_t)) {
-	batteryCallback = cb;
+static void measure(void (*cb)(uint16_t), uint16_t input) {
+	if (callback) {
+		return;
+	}
+	callback = cb;
 
-	// ADC_REGS->ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTREF;    // Set ADC reference voltage, enable-protected
-	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
-	                        | ADC_INPUTCTRL_MUXPOS_TEMP;  // Set temperature sensor as positive input
+	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND  // Set GND as negative input
+	                        | input;                    // Set temperature sensor as positive input
 
 	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+}
+
+void adc::measureTemperature(void (*cb)(uint16_t)) {
+	measure(cb, ADC_INPUTCTRL_MUXPOS_TEMP);  // Set temperature sensor as positive input
 }
 
 void adc::measureBattery(void (*cb)(uint16_t)) {
-	batteryCallback = cb;
-
-	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
-	                        | ADC_INPUTCTRL_MUXPOS_AIN6;  // Set battery pin as positive input
-
-	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+	measure(cb, ADC_INPUTCTRL_MUXPOS_AIN6);  // Set battery pin as positive input
 }
 
 void adc::measureX(void (*cb)(uint16_t)) {
-	xCallback = cb;
-
-	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
-	                        | ADC_INPUTCTRL_MUXPOS_AIN0;  // Set X axis pin as positive input
-
-	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+	measure(cb, ADC_INPUTCTRL_MUXPOS_AIN0);  // Set X axis pin as positive input
 }
 
 void adc::measureY(void (*cb)(uint16_t)) {
-	yCallback = cb;
-
-	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND    // Set GND as negative input
-	                        | ADC_INPUTCTRL_MUXPOS_AIN1;  // Set Y axis pin as positive input
-
-	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+	measure(cb, ADC_INPUTCTRL_MUXPOS_AIN1);  // Set Y axis pin as positive input
 }

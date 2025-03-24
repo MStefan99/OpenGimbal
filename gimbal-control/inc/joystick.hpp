@@ -14,7 +14,7 @@
 #include "nvm.hpp"
 
 namespace joystick {
-	constexpr uint16_t deadzone {250};
+	constexpr uint16_t deadzone {500};
 
 	void update(void (*cb)(int16_t x, int16_t y) = nullptr);
 

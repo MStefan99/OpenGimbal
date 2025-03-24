@@ -28,9 +28,9 @@
 
 namespace nvm {
 	struct AxisPoints {
-		uint16_t min;
-		uint16_t center;
-		uint16_t max;
+		uint16_t min {4095};
+		uint16_t center {0};
+		uint16_t max {0};
 	};
 
 	struct Options {

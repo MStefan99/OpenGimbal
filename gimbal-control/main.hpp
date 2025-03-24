@@ -46,8 +46,8 @@ enum class PowerMode : uint8_t {
 	Shutdown = 0x4
 };
 
-constexpr uint16_t MIN_VOLTAGE {2900};
-constexpr uint16_t MAX_VOLTAGE {3900};
+constexpr uint16_t MIN_VOLTAGE {2500};
+constexpr uint16_t MAX_VOLTAGE {3600};
 
 constexpr uint16_t MAX_SHORT_PRESS_TIME {500};
 constexpr uint16_t MAX_LONG_PRESS_TIME {2000};
