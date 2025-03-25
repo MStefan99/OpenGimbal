@@ -43,6 +43,10 @@ static usb::callback_type callback {};
 
 extern "C" {
 	void USB_Handler() {
+		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_WAKEUP_Msk) {  // Process USB reset
+			USB_REGS->DEVICE.USB_INTFLAG = USB_DEVICE_INTFLAG_WAKEUP(1);       // Clear pending interrupt
+		}
+
 		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_EORST_Msk) {  // Process USB reset
 			USB_REGS->DEVICE.USB_INTFLAG = USB_DEVICE_INTFLAG_EORST(1);       // Clear pending interrupt
 			USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPINTENSET =

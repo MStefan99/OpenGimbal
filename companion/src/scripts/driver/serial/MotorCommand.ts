@@ -18,8 +18,7 @@ export enum MotorVariableID {
 	Calibration = 0x0,
 	Offset = 0x1,
 	Position = 0x2,
-	Power = 0x3,
-	Speed = 0x4,
+	Speed = 0x3,
 	Error = 0xf
 }
 
@@ -52,7 +51,6 @@ export const variableCommands: Partial<
 		throw new Error('Calibration is a read-only variable');
 	},
 	[MotorVariableID.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
-	[MotorVariableID.Power]: (buffer: Uint8Array) => new SetPowerVariableCommand(buffer),
 	[MotorVariableID.Speed]: (buffer: Uint8Array) => new SetSpeedVariableCommand(buffer),
 	[MotorVariableID.Error]: () => {
 		throw new Error('Error is a read-only variable');
@@ -382,40 +380,15 @@ export class SetOffsetVariableCommand extends SetVariableCommand {
 	}
 }
 
-export class SetPowerVariableCommand extends SetVariableCommand {
-	constructor(buffer: Uint8Array);
-	constructor(srcAddr: number, destAddr: number, range: number);
-
-	constructor(srcAddr: number | Uint8Array, destAddr?: number, range?: number) {
-		if (srcAddr instanceof Uint8Array) {
-			super(srcAddr);
-		} else {
-			super(srcAddr, destAddr, MotorVariableID.Power, range, 1);
-		}
-	}
-
-	get power(): number {
-		return this.view.getUint8(3);
-	}
-
-	override toString(type?: 'hex'): string {
-		if (type === 'hex') {
-			return super.toString(type);
-		} else {
-			return super.toString() + `\n  Average power: ${this.power}`;
-		}
-	}
-}
-
 export class SetSpeedVariableCommand extends SetVariableCommand {
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number, range: number);
 
-	constructor(srcAddr: number | Uint8Array, destAddr?: number, range?: number) {
+	constructor(srcAddr: number | Uint8Array, destAddr?: number, speed?: number) {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr, destAddr, MotorVariableID.Power, range, 2);
+			super(srcAddr, destAddr, MotorVariableID.Speed, speed, 1);
 		}
 	}
 

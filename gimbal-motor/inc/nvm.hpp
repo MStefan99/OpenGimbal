@@ -34,7 +34,6 @@ namespace nvm {
 		uint16_t phaseOffset {0};
 		uint16_t zeroOffset {0};
 		uint8_t  maxSpeed {0};
-		uint8_t  avgPower {255};
 	};
 
 	namespace _internal {

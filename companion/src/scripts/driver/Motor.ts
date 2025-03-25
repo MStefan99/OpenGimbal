@@ -1,27 +1,25 @@
-import {SerialMessage} from './serial/SerialMessage';
 import {BitwiseRegister} from './BitwiseRegister';
 import {
-	motorResponses,
-	variableResponses,
 	MotorResponse,
 	ReturnCalibrationVariableResponse,
 	ReturnOffsetVariableResponse,
-	ReturnVariableResponse
+	ReturnSpeedVariableResponse
 } from './serial/MotorResponse';
 import {
+	AdjustOffsetCommand,
 	CalibrationCommand,
 	GetVariableCommand,
 	HapticCommand,
+	MotorCommand,
 	MotorVariableID,
-	AdjustOffsetCommand,
 	MoveCommand,
 	SetOffsetVariableCommand,
+	SetSpeedVariableCommand,
 	SleepCommand,
-	ToneCommand,
-	MotorCommand
+	ToneCommand
 } from './serial/MotorCommand';
-import {IHardwareInterface} from './HardwareInterface';
 import {ISerialInterface} from './serial/SerialInterface';
+import {resolveComponent} from 'vue';
 
 export enum CalibrationBits {
 	Zero = 0x0,
@@ -75,6 +73,10 @@ export interface IMotor {
 	getOffset(): Promise<number>;
 
 	setOffset(offset: number): Promise<void>;
+
+	getMaxSpeed(): Promise<number>;
+
+	setMaxSpeed(speed: number): Promise<void>;
 }
 
 export class Motor implements IMotor {
@@ -198,6 +200,25 @@ export class Motor implements IMotor {
 	setOffset(offset: number): Promise<void> {
 		return this._hardwareInterface.send(
 			new SetOffsetVariableCommand(0, this._address, offset),
+			this._isSleeping ? 9600 : 115200
+		);
+	}
+
+	getMaxSpeed(): Promise<number> {
+		return new Promise<number>((resolve, reject) =>
+			this._hardwareInterface
+				.request(
+					new GetVariableCommand(0, this._address, MotorVariableID.Speed),
+					this._isSleeping ? 9600 : 115200
+				)
+				.then((res) => resolve((res as ReturnSpeedVariableResponse).speed))
+				.catch((err) => reject(err))
+		);
+	}
+
+	setMaxSpeed(speed: number): Promise<void> {
+		return this._hardwareInterface.send(
+			new SetSpeedVariableCommand(0, this._address, speed),
 			this._isSleeping ? 9600 : 115200
 		);
 	}

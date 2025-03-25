@@ -6,6 +6,7 @@ static GimbalMode   gimbalMode {GimbalMode::Follow};
 
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
+constexpr static float maxMotorVelocity {F_2_PI / 100.0f};    // Two revolutions per second (100 iterations)
 constexpr static float ATT_LSB {10430.0f};
 constexpr static float joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
 constexpr static float sqrt2 = sqrtf(2);
@@ -349,7 +350,8 @@ int main() {
 
 				for (uint8_t i {0}; i < 3; ++i) {
 					if (!std::isnan(calculatedAngles[i][0])) {
-						motorAngles[i] = calculatedAngles[i][0];
+						motorAngles[i] +=
+						    util::clamp(normalize(calculatedAngles[i][0] - motorAngles[i]), -maxMotorVelocity, maxMotorVelocity);
 					}
 				}
 
@@ -372,14 +374,13 @@ int main() {
 				motor::tone(motor::all, 247);
 				util::sleep(205);
 				motor::tone();
-				util::sleep(10);  // TODO: remove, send while in sleep mode
+				motor::sleep();
 
 				powerMode = PowerMode::Sleep;
 				break;
 			}
 			case (PowerMode::Idle):
 			default: {
-				// motor::sleep(); // Sleep only needed once
 				__WFI();
 				break;
 			}

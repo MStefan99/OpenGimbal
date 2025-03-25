@@ -22,7 +22,6 @@ export const variableResponses: Record<
 	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
 	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
 	[MotorVariableID.Position]: (buffer) => new ReturnPositionVariableResponse(buffer),
-	[MotorVariableID.Power]: (buffer) => new ReturnPowerVariableResponse(buffer),
 	[MotorVariableID.Speed]: (buffer) => new ReturnSpeedVariableResponse(buffer),
 	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
 };

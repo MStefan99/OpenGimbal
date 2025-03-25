@@ -26,9 +26,8 @@ namespace Command {
 		Calibration = 0x0,
 		Offset = 0x1,
 		Position = 0x2,
-		Power = 0x3,
-		Speed = 0x4,
-		Temperature = 0x5
+		Speed = 0x3,
+		Temperature = 0x4
 	};
 
 	enum class CalibrationMode : uint8_t {
