@@ -1,7 +1,5 @@
 #include "usb.hpp"
 
-#include "data.hpp"
-
 using namespace usb;
 
 
@@ -205,7 +203,8 @@ void usb::init() {
 	                                              | USB_DEVICE_EPCFG_EPTYPE1(0x1);  // Configure endpoint 0 as setup in
 	USB_REGS->DEVICE.USB_DESCADD = (uint32_t)&EPDESCTBL;                            // Setting endpoint descriptor address
 	USB_REGS->DEVICE.USB_CTRLB = USB_DEVICE_CTRLB_DETACH(0);                        // Attach to host
-	USB_REGS->DEVICE.USB_INTENSET = USB_DEVICE_INTENSET_EORST(1);                   // Enable end-of-reset interrupt
+	USB_REGS->DEVICE.USB_INTENSET = USB_DEVICE_INTENSET_EORST(1)                    // Enable end-of-reset interrupt
+	                              | USB_DEVICE_INTENSET_WAKEUP(1);                  // Enable wakeup interrupt
 }
 
 bool usb::isActive() {
