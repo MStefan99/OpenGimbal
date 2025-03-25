@@ -21,12 +21,6 @@
 
 // Encoder counts per one full revolution
 constexpr static uint16_t fullRevolution {4096};
-/* Motor range can be limited to avoid tangling the wires
- * The range is the maximum motor deflection from the zero point in either direction
- * An offset of 2048 means the motor can take any position from -2048 to 2048,
- * or one full revolution. The range can be changed over UART.
- */
-constexpr static uint16_t defaultRange {0};
 /* Arriving position commands are interpolated to avoid jerky movements and noise
  * Maximum interpolation time can be adjusted here
  */

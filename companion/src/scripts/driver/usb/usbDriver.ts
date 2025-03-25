@@ -6,6 +6,7 @@ import {USBParser} from './USBParser';
 import {USBSerialEncapsulator} from './USBSerialEncapsulator';
 
 export const connectedUSBDevice = ref<IGimbal | null>(null);
+let connectedDevice: USBDevice | null = null;
 
 export async function connectUSBDevice(
 	demo: boolean = false,
@@ -35,6 +36,7 @@ export async function connectUSBDevice(
 					const usbInterface = new USBInterface(usbDevice, new USBParser(), verbose);
 					const device = new Gimbal(usbInterface, new USBSerialEncapsulator(usbInterface));
 					connectedUSBDevice.value = device;
+					connectedDevice = usbDevice;
 
 					resolve(device);
 				})
@@ -57,19 +59,15 @@ export async function connectUSBDevice(
 export function disconnectUSBDevice(device: IGimbal): void {
 	device.close();
 
-	connectedUSBDevice.value = null;
+	connectedUSBDevice.value = connectedDevice = null;
 }
 
-// TODO: fix
-// if ('usb' in navigator) {
-// 	navigator.usb.addEventListener('disconnect', (e: Event) => {
-// 		const device = (e as USBConnectionEvent).device;
-// 		const foundDevice = connectedDevices.find((d) => d._hardwareInterface === device);
-//
-// 		if (foundDevice === undefined) {
-// 			device.close();
-// 		} else {
-// 			disconnectDevice(foundDevice as Gimbal);
-// 		}
-// 	});
-// }
+if ('usb' in navigator) {
+	navigator.usb.addEventListener('disconnect', (e: Event) => {
+		const device = (e as USBConnectionEvent).device;
+
+		if (device === connectedDevice) {
+			connectedUSBDevice.value = connectedDevice = null;
+		}
+	});
+}

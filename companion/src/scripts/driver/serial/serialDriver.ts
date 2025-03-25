@@ -1,10 +1,11 @@
-import {reactive, ref} from 'vue';
+import {ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
 import {IMotorManager, MotorManager} from '../MotorManager';
 import {SerialInterface} from './SerialInterface';
 import {SerialParser} from './SerialParser';
 
 export const connectedSerialDevice = ref<IMotorManager | null>(null);
+let connectedPort: SerialPort | null = null;
 
 export async function connectSerialDevice(
 	demo: boolean = false,
@@ -26,6 +27,7 @@ export async function connectSerialDevice(
 			serialInterface
 				.open(9600)
 				.then(() => {
+					connectedPort = port;
 					const manager = new MotorManager(serialInterface);
 					connectedSerialDevice.value = manager;
 
@@ -50,7 +52,13 @@ export async function connectSerialDevice(
 export function disconnectSerialDevice(device: IMotorManager): void {
 	device.close();
 
-	connectedSerialDevice.value = null;
+	connectedSerialDevice.value = connectedPort = null;
 }
 
-// TODO: close on disconnect
+if ('serial' in navigator) {
+	navigator.serial.addEventListener('disconnect', (e: Event): void => {
+		if (connectedPort === e.target) {
+			connectedSerialDevice.value = connectedPort = null;
+		}
+	});
+}
