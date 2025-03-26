@@ -25,7 +25,7 @@ export async function connectSerialDevice(
 		return new Promise((resolve, reject) => {
 			const serialInterface = new SerialInterface(port, new SerialParser(), verbose);
 			serialInterface
-				.open(9600)
+				.open(115200)
 				.then(() => {
 					connectedPort = port;
 					const manager = new MotorManager(serialInterface);

@@ -10,6 +10,7 @@ import {
 	CalibrationCommand,
 	GetVariableCommand,
 	HapticCommand,
+	IdleCommand,
 	MotorCommand,
 	MotorVariableID,
 	MoveCommand,
@@ -34,6 +35,8 @@ export interface IMotor {
 	send(command: MotorCommand): Promise<void>;
 
 	request(command: MotorCommand): Promise<MotorResponse | null>;
+
+	idle(): Promise<void>;
 
 	sleep(): Promise<void>;
 
@@ -109,12 +112,18 @@ export class Motor implements IMotor {
 		return this.move(0, 0);
 	}
 
+	idle(): Promise<void> {
+		return this._hardwareInterface.send(
+			new IdleCommand(0, this._address),
+			this._isSleeping ? 9600 : 115200
+		);
+	}
+
 	sleep(): Promise<void> {
-		return this._hardwareInterface
-			.send(new SleepCommand(0, this._address), this._isSleeping ? 9600 : 115200)
-			.then(() => {
-				this._isSleeping = true;
-			});
+		return this._hardwareInterface.send(
+			new SleepCommand(0, this._address),
+			this._isSleeping ? 9600 : 115200
+		);
 	}
 
 	wakeup(): Promise<void> {
@@ -122,43 +131,26 @@ export class Motor implements IMotor {
 	}
 
 	move(position: number = 0, torque: number = 15): Promise<void> {
-		return this._hardwareInterface
-			.send(new MoveCommand(0, this._address, torque, position), this._isSleeping ? 9600 : 115200)
-			.then(() => {
-				this._isSleeping = false;
-			});
+		return this._hardwareInterface.send(
+			new MoveCommand(0, this._address, torque, position),
+			this._isSleeping ? 9600 : 115200
+		);
 	}
 
 	tone(frequency: number): Promise<void> {
-		return this._hardwareInterface.send(
-			new ToneCommand(0, this._address, frequency),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new ToneCommand(0, this._address, frequency));
 	}
 
 	silent(): Promise<void> {
-		return this._hardwareInterface.send(
-			new ToneCommand(0, this._address, 25000),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new ToneCommand(0, this._address, 25000));
 	}
 
 	haptic(intensity: number, duration: number = 5): Promise<void> {
-		return this._hardwareInterface
-			.send(
-				new HapticCommand(0, this._address, intensity, duration),
-				this._isSleeping ? 9600 : 115200
-			)
-			.then(() => {
-				this._isSleeping = false;
-			});
+		return this._hardwareInterface.send(new HapticCommand(0, this._address, intensity, duration));
 	}
 
 	adjustOffset(targetPosition: number = 0): Promise<void> {
-		return this._hardwareInterface.send(
-			new AdjustOffsetCommand(0, this._address, targetPosition),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new AdjustOffsetCommand(0, this._address, targetPosition));
 	}
 
 	calibrate(
@@ -166,20 +158,13 @@ export class Motor implements IMotor {
 			CalibrationBits.Zero
 		)
 	): Promise<void> {
-		return this._hardwareInterface
-			.send(new CalibrationCommand(0, this._address, mode), this._isSleeping ? 9600 : 115200)
-			.then(() => {
-				this._isSleeping = false;
-			});
+		return this._hardwareInterface.send(new CalibrationCommand(0, this._address, mode));
 	}
 
 	getCalibration(): Promise<BitwiseRegister<CalibrationBits>> {
 		return new Promise<BitwiseRegister<CalibrationBits>>((resolve, reject) =>
 			this._hardwareInterface
-				.request(
-					new GetVariableCommand(0, this._address, MotorVariableID.Calibration),
-					this._isSleeping ? 9600 : 115200
-				)
+				.request(new GetVariableCommand(0, this._address, MotorVariableID.Calibration))
 				.then((res) => resolve((res as ReturnCalibrationVariableResponse).calibrationMode))
 				.catch((err) => reject(err))
 		);
@@ -188,38 +173,26 @@ export class Motor implements IMotor {
 	getOffset(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this._hardwareInterface
-				.request(
-					new GetVariableCommand(0, this._address, MotorVariableID.Offset),
-					this._isSleeping ? 9600 : 115200
-				)
+				.request(new GetVariableCommand(0, this._address, MotorVariableID.Offset))
 				.then((res) => resolve((res as ReturnOffsetVariableResponse).offset))
 				.catch((err) => reject(err))
 		);
 	}
 
 	setOffset(offset: number): Promise<void> {
-		return this._hardwareInterface.send(
-			new SetOffsetVariableCommand(0, this._address, offset),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new SetOffsetVariableCommand(0, this._address, offset));
 	}
 
 	getMaxSpeed(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this._hardwareInterface
-				.request(
-					new GetVariableCommand(0, this._address, MotorVariableID.Speed),
-					this._isSleeping ? 9600 : 115200
-				)
+				.request(new GetVariableCommand(0, this._address, MotorVariableID.Speed))
 				.then((res) => resolve((res as ReturnSpeedVariableResponse).speed))
 				.catch((err) => reject(err))
 		);
 	}
 
 	setMaxSpeed(speed: number): Promise<void> {
-		return this._hardwareInterface.send(
-			new SetSpeedVariableCommand(0, this._address, speed),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new SetSpeedVariableCommand(0, this._address, speed));
 	}
 }

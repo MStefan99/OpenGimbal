@@ -19,6 +19,7 @@ namespace uart {
 		uint8_t   buffer[C] = {0};
 		size_type transferred {0};
 		size_type remaining {0};
+		void      (*callback)() {nullptr};
 	};
 
 	template <class size_type, size_type C>
@@ -31,13 +32,12 @@ namespace uart {
 	using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 2>;
 
 	void init();
+	void enable();
+	void disable();
 
 	uint8_t print(const char* buf);
-	void    send(const uint8_t* buf, uint8_t len);
+	void    send(const uint8_t* buf, uint8_t len, void (*cb)() = nullptr);
 	void    setCallback(DefaultCallback::callback_type cb);
-
-	void slow();
-	void fast();
 }
 
 

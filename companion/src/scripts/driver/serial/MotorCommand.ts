@@ -4,12 +4,13 @@ import {SerialMessage} from './SerialMessage';
 import {CalibrationBits} from '../Motor';
 
 export enum MotorCommandType {
-	Sleep = 0x0,
-	Move = 0x1,
-	Tone = 0x2,
-	Haptic = 0x3,
-	AdjustOffset = 0x4,
-	Calibration = 0x5,
+	Idle = 0x0,
+	Sleep = 0x1,
+	Move = 0x2,
+	Tone = 0x3,
+	Haptic = 0x4,
+	AdjustOffset = 0x5,
+	Calibrate = 0x6,
 	GetVariable = 0xe,
 	SetVariable = 0xf
 }
@@ -23,23 +24,25 @@ export enum MotorVariableID {
 }
 
 export const motorCommandNames: Record<MotorCommandType, string> = {
+	[MotorCommandType.Idle]: 'Idle',
 	[MotorCommandType.Sleep]: 'Sleep',
 	[MotorCommandType.Move]: 'Move',
 	[MotorCommandType.Tone]: 'Tone',
 	[MotorCommandType.Haptic]: 'Haptic',
 	[MotorCommandType.AdjustOffset]: 'AdjustOffset',
-	[MotorCommandType.Calibration]: 'Calibration',
+	[MotorCommandType.Calibrate]: 'Calibration',
 	[MotorCommandType.GetVariable]: 'Get variable',
 	[MotorCommandType.SetVariable]: 'Set variable'
 };
 
 export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
+	[MotorCommandType.Idle]: (buffer: Uint8Array) => new IdleCommand(buffer),
 	[MotorCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
 	[MotorCommandType.Move]: (buffer: Uint8Array) => new MoveCommand(buffer),
 	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
 	[MotorCommandType.Haptic]: (buffer: Uint8Array) => new HapticCommand(buffer),
 	[MotorCommandType.AdjustOffset]: (buffer: Uint8Array) => new AdjustOffsetCommand(buffer),
-	[MotorCommandType.Calibration]: (buffer: Uint8Array) => new CalibrationCommand(buffer),
+	[MotorCommandType.Calibrate]: (buffer: Uint8Array) => new CalibrationCommand(buffer),
 	[MotorCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
 	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
 };
@@ -74,6 +77,19 @@ export class MotorCommand extends SerialMessage {
 				`\n  Source address: ${this.view.getUint8(1) >> 4}` +
 				`\n  Destination address: ${this.view.getUint8(0) & 0xf}`
 			);
+		}
+	}
+}
+
+export class IdleCommand extends MotorCommand {
+	constructor(buffer: Uint8Array);
+	constructor(srcAddr: number, destAddr: number);
+
+	constructor(srcAddr: Uint8Array | number, destAddr?: number) {
+		if (srcAddr instanceof Uint8Array) {
+			super(srcAddr);
+		} else {
+			super(srcAddr, destAddr, MotorCommandType.Idle);
 		}
 	}
 }
@@ -252,7 +268,7 @@ export class CalibrationCommand extends MotorCommand {
 			const view = new DataView(buffer.buffer);
 			view.setUint8(0, mode.value);
 
-			super(srcAddr, destAddr, MotorCommandType.Calibration, buffer);
+			super(srcAddr, destAddr, MotorCommandType.Calibrate, buffer);
 		}
 	}
 

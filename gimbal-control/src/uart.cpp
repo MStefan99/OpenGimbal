@@ -1,23 +1,18 @@
 #include "uart.hpp"
 
 
-constexpr static uint16_t slowBaud = 65536.0f * (1 - 16.0f * 9600.0f / 48000000.0f);
-constexpr static uint16_t fastBaud = 65536.0f * (1 - 16.0f * 115200.0f / 48000000.0f);
-
 static uart::DefaultQueue                   motorOutQueue {};
 static uart::DefaultCallback::buffer_type   motorInBuffer {};
 static uart::DefaultCallback::callback_type motorCallback {nullptr};
 static uint32_t                             motorReceiveTime {0};
-static uint32_t                             targetBaud {slowBaud};
 
 static void initSERCOM(sercom_registers_t* regs) {
 	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1)                       // Enable receiver
 	                             | SERCOM_USART_INT_CTRLB_COLDEN(1)                     // Enable collision detection
-	                             | SERCOM_USART_INT_CTRLB_SFDE(1)                       // Enable start bit detection
 	                             | SERCOM_USART_INT_CTRLB_PMODE_ODD                     // Set odd parity mode
 	                             | SERCOM_USART_INT_CTRLB_SBMODE_1_BIT                  // Set 1 stop bit
 	                             | SERCOM_USART_INT_CTRLB_CHSIZE_8_BIT;                 // Set frame to 8 bits
-	regs->USART_INT.SERCOM_BAUD = slowBaud;                                             // Set baud rate
+	regs->USART_INT.SERCOM_BAUD = 65536.0f * (1 - 16.0f * 115200.0f / 48000000.0f);     // Set baud rate
 	regs->USART_INT.SERCOM_CTRLA = SERCOM_USART_INT_CTRLA_DORD_LSB                      // Send LSB first
 	                             | SERCOM_USART_INT_CTRLA_CMODE_ASYNC                   // Asynchronous smode
 	                             | SERCOM_USART_INT_CTRLA_SAMPR_16X_ARITHMETIC          // 16x oversampling
@@ -39,18 +34,6 @@ static bool busy() {
 	}
 
 	return false;
-}
-
-static void setBaud(sercom_registers_t* regs, uint16_t baudValue) {
-	if (regs->USART_INT.SERCOM_BAUD == baudValue) {
-		return;
-	}
-
-	regs->USART_INT.SERCOM_CTRLA &= ~SERCOM_USART_INT_CTRLA_ENABLE(1);
-	while (regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk);
-	regs->USART_INT.SERCOM_BAUD = baudValue;
-	regs->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE(1);
-	while (!(regs->USART_INT.SERCOM_CTRLA & SERCOM_USART_INT_CTRLA_ENABLE_Msk));
 }
 
 static void disableTx(sercom_registers_t* regs) {
@@ -84,10 +67,12 @@ static void SERCOM_Handler(
 		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
 			--outQueue.front().remaining;
 			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
+				if (outQueue.front().callback) {
+					outQueue.front().callback();
+				}
 				outQueue.pop_front();
 				if (outQueue.empty()) {
 					disableTx(regs);
-					setBaud(regs, targetBaud);
 				} else {
 					startTransfer(regs, outQueue);
 				}
@@ -105,7 +90,6 @@ static void SERCOM_Handler(
 			}
 			if (!inBuffer.remaining && callback) {  // Received last byte, ready to process
 				callback(inBuffer);
-				setBaud(regs, targetBaud);
 			}
 			prevByteTime = util::getTime();
 		}
@@ -148,7 +132,7 @@ void uart::init() {
 	                                     | GCLK_PCHCTRL_GEN_GCLK2;  // Set GCLK2 as a clock source
 
 	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1);
-	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(800);
+	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(1600);
 	TC0_REGS->COUNT16.TC_CTRLA = TC_CTRLA_ENABLE(1) | TC_CTRLA_MODE_COUNT16 | TC_CTRLA_ONDEMAND(1);
 	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_ONESHOT(1) | TC_CTRLBSET_CMD_STOP;
 	while (!(TC0_REGS->COUNT16.TC_SYNCBUSY = TC_SYNCBUSY_CTRLB_Msk));
@@ -172,32 +156,16 @@ uint8_t uart::print(const char* buf) {
 	return len;
 }
 
-void uart::sendToMotors(const uint8_t* buf, uint8_t len) {
+void uart::sendToMotors(const uint8_t* buf, uint8_t len, void (*cb)()) {
 	if (motorOutQueue.full()) {
 		return;
 	}
 
-	motorOutQueue.push_back({{}, 0, len});
+	motorOutQueue.push_back({{}, 0, len, cb});
 	util::copy(motorOutQueue.back().buffer, buf, len);
 	startTransfer(SERCOM3_REGS, motorOutQueue);
 }
 
 void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
 	motorCallback = cb;
-}
-
-void uart::slow() {
-	targetBaud = slowBaud;
-
-	if (!busy()) {
-		setBaud(SERCOM3_REGS, targetBaud);
-	}
-}
-
-void uart::fast() {
-	targetBaud = fastBaud;
-
-	if (!busy()) {
-		setBaud(SERCOM3_REGS, targetBaud);
-	}
 }

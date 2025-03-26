@@ -17,10 +17,13 @@ static LowPassFilter torqueFilter {1000, 2};
 static LowPassFilter angleFilter {1000, 1};
 static bool          dataReady {false};
 
-static uint32_t hapticEnd {0};
-static uint16_t hapticPower {0};
-static uint16_t hapticDuration {0};
-static bool     hapticDirection {false};
+volatile static uint32_t hapticEnd {0};
+volatile static uint16_t hapticPower {0};
+static uint16_t          hapticDuration {0};
+static bool              hapticDirection {false};
+
+volatile static bool     wokenByPin {false};
+volatile static uint32_t wakeTime {0};
 
 struct TorqueLUT {
 	uint16_t table[16];
@@ -37,6 +40,24 @@ struct TorqueLUT {
 
 constexpr static auto torqueLUT = TorqueLUT();
 
+void powerDown() {
+	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+	bldc::removeTorque();
+}
+
+void powerUp() {
+	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+	AS5600::init();
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processWakeup() {
+	uart::enable();
+	mode = Mode::Idle;
+	wokenByPin = true;
+	wakeTime = util::getTime();
+}
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	uint8_t address = buffer.buffer[0] & 0x0f;
@@ -45,13 +66,23 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	}
 
 	switch (static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) {  // Switch command type
+		case (Command::CommandType::Idle): {
+			mode = Mode::Idle;
+			maxTorque = 0;
+			powerDown();
+			break;
+		}
 		case (Command::CommandType::Sleep): {
 			mode = Mode::Sleep;
 			maxTorque = 0;
+			powerDown();
+			uart::disable();
+			eic::enable();
 			break;
 		}
 		case (Command::CommandType::Move): {
 			mode = Mode::Drive;
+			powerUp();
 			auto time {util::getTime()};
 			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			if (offsetAdjusted) {
@@ -68,20 +99,24 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		}
 		case (Command::CommandType::Haptic): {
 			mode = Mode::Haptic;
+			powerUp();
 			hapticPower = torqueLUT.table[buffer.buffer[2] >> 4u];
 			hapticEnd = util::getTime() + (((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			break;
 		}
 		case (Command::CommandType::AdjustOffset): {
-			movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
-			uint16_t offset = movementController.getOffset();
-			offsetAdjusted = true;
-			nvm::edit(&nvm::options->zeroOffset, offset);
-			nvm::write();
+			if (mode == Mode::Drive) {
+				movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+				uint16_t offset = movementController.getOffset();
+				offsetAdjusted = true;
+				nvm::edit(&nvm::options->zeroOffset, offset);
+				nvm::write();
+			}
 			break;
 		}
 		case (Command::CommandType::Calibrate): {
 			mode = Mode::Calibrate;
+			powerUp();
 			calibrationMode = buffer.buffer[2];
 			break;
 		}
@@ -393,10 +428,6 @@ bool calibrate() {
 }
 
 void sleep() {
-	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
-	uart::slow();
-	bldc::removeTorque();
-
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -404,15 +435,13 @@ void sleep() {
 	} while (mode == Mode::Sleep);
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
-
-	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
-	uart::fast();
-	AS5600::init();
 }
 
 int main() {
 	util::init();
 	uart::init();
+	eic::init();
+	eic::enable();
 	i2c::init();
 	bldc::init();
 	bldc::enable();
@@ -420,6 +449,8 @@ int main() {
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
 
 	uart::setCallback(processCommand);
+	eic::setCallback(processWakeup);
+	powerDown();
 
 	while (1) {
 		switch (mode) {
@@ -467,6 +498,11 @@ int main() {
 				break;
 			}
 			case (Mode::Idle): {
+				if (wokenByPin && util::getTime() - wakeTime > 20) {
+					mode = Mode::Sleep;
+					uart::disable();
+					eic::enable();
+				}
 				__WFI();
 				break;
 			}

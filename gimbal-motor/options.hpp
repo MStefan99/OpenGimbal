@@ -13,12 +13,6 @@
 #include "util.hpp"
 
 
-/* This will enable diagnostic output for Data Visualizer
- * Only use when no other devices are connected as the data sent
- * might be misinterpreted by them
- */
-#define DV_OUT 0
-
 // Encoder counts per one full revolution
 constexpr static uint16_t fullRevolution {4096};
 /* Arriving position commands are interpolated to avoid jerky movements and noise

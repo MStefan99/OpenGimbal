@@ -31,6 +31,8 @@
 					:scale="15"
 					v-model="torques[motor.address - 1]"
 					@update:model-value="motor.move(positions[motor.address - 1], torques[motor.address - 1])")
+				button.block.mb-2(
+					@click="motor.move(positions[motor.address - 1], torques[motor.address - 1])") Move
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Haptic
 				p Haptic intensity
@@ -73,9 +75,8 @@
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Power
 				button.block.mb-2(@click="motor.disable()") Disable
+				button.block.mb-2(@click="motor.idle()") Idle
 				button.block.mb-2(@click="motor.sleep()") Sleep
-				button.block.mb-2(
-					@click="motor.move(positions[motor.address - 1], torques[motor.address - 1])") Wake up
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Recalibrate
 				.mb-2

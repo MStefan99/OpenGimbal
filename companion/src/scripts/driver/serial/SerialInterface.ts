@@ -3,8 +3,7 @@ import {SerialMessage} from './SerialMessage';
 import {MotorResponse} from './MotorResponse';
 import {ISerialParser} from './SerialParser';
 
-const fastTimeout = 20; // For 115200 baud
-const slowTimeout = 40; // For 9600 baud
+const timeout = 20;
 
 export interface ISerialInterface extends IHardwareInterface {
 	open(baudRate: number): Promise<void>;
@@ -95,16 +94,13 @@ export class SerialInterface implements ISerialInterface {
 					let readBytes = 0;
 
 					const reader = this._port.readable.getReader();
-					setTimeout(
-						() => {
-							reader
-								.cancel()
-								.then(() =>
-									reject(new Error(`Timed out waiting for a response to ${message.toString()}`))
-								);
-						},
-						this._currentBaudRate === 115200 ? fastTimeout : slowTimeout
-					);
+					setTimeout(() => {
+						reader
+							.cancel()
+							.then(() =>
+								reject(new Error(`Timed out waiting for a response to ${message.toString()}`))
+							);
+					}, timeout);
 
 					try {
 						while (true) {

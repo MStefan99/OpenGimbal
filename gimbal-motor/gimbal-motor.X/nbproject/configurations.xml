@@ -45,6 +45,7 @@
         <itemPath>../inc/TaskScheduler.hpp</itemPath>
         <itemPath>../inc/uart.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
+        <itemPath>../inc/eic.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -213,6 +214,7 @@
         <itemPath>../src/Response.cpp</itemPath>
         <itemPath>../src/uart.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>
+        <itemPath>../src/eic.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>

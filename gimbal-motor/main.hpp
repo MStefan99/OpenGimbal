@@ -16,6 +16,7 @@
 
 #include "AS5600.hpp"
 #include "bldc.hpp"
+#include "eic.hpp"
 #include "i2c.hpp"
 #include "Kalman.hpp"
 #include "LowPassFilter.hpp"

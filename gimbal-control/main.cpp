@@ -35,6 +35,8 @@ volatile bool     leftButton {true};
 volatile bool     usbPassthrough {false};
 volatile uint32_t usbPassthroughTime {0};
 
+volatile static bool wokenByUSB {false};
+
 float normalize(float difference) {
 	if (difference > F_PI) {
 		difference -= F_2_PI;
@@ -252,7 +254,7 @@ void sleep() {  // TODO: disable IMU
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
 		__WFI();
-	} while (powerMode == PowerMode::Sleep);
+	} while (powerMode == PowerMode::Sleep && !usb::isActive());
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
 }
@@ -381,6 +383,11 @@ int main() {
 			}
 			case (PowerMode::Idle):
 			default: {
+				if (!usb::isActive() && wokenByUSB) {
+					powerMode = PowerMode::Sleep;
+					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+					wokenByUSB = false;
+				}
 				__WFI();
 				break;
 			}
@@ -388,6 +395,7 @@ int main() {
 				if (usb::isActive()) {
 					powerMode = PowerMode::Idle;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+					wokenByUSB = true;
 					break;
 				}
 				motor::sleep();
