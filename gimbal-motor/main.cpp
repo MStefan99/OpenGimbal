@@ -12,7 +12,7 @@ static uint32_t           lastTargetTime {0};
 
 static bool offsetAdjusted {false};
 
-float                prevDAngle {0.0f};
+static float         prevDAngle {0.0f};
 static LowPassFilter torqueFilter {1000, 2};
 static LowPassFilter angleFilter {1000, 1};
 static bool          dataReady {false};
@@ -105,7 +105,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			break;
 		}
 		case (Command::CommandType::AdjustOffset): {
-			if (mode == Mode::Drive) {
+			if (mode != Mode::Sleep && mode != Mode::Idle) {
 				movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 				uint16_t offset = movementController.getOffset();
 				offsetAdjusted = true;

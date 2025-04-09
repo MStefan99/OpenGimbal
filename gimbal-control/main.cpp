@@ -6,11 +6,11 @@ static GimbalMode   gimbalMode {GimbalMode::Follow};
 
 constexpr static float attFactor {2048 / F_PI};
 constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
-constexpr static float maxMotorVelocity {F_2_PI / 100.0f};    // Two revolutions per second (100 iterations)
 constexpr static float ATT_LSB {10430.0f};
 constexpr static float joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
 constexpr static float sqrt2 = sqrtf(2);
 
+static float maxMotorVelocity {F_2_PI / 100.0f};  // Half revolution per second (100 iterations)
 static float yawCurrent {0};
 static float pitchCurrent {0};
 static float rollCurrent {0};
@@ -19,7 +19,7 @@ static float yawOffset {0};
 static float pitchOffset {0};
 static float rollOffset {0};
 
-static float motorAngles[3] {0};
+volatile static float motorAngles[3] {0};
 
 int16_t yawReset {0};
 int16_t rollReset {0};
@@ -56,6 +56,20 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 		usb::write(buf, buffer.transferred + 1);
 
 		usbPassthrough = false;
+		return;
+	}
+
+	if ((buffer.buffer[0] & 0xf) != 0) {
+		return;  // Command intended for another device
+	}
+
+	uint8_t srcAddress = buffer.buffer[1] >> 4u;
+	if (static_cast<MotorResponse::ResponseType>(buffer.buffer[1] & 0xf) == MotorResponse::ResponseType::ReturnVariable
+	    && static_cast<MotorResponse::Variable>(buffer.buffer[2]) == MotorResponse::Variable::Position
+	    && srcAddress <= 3) {
+		float angle = normalize(((buffer.buffer[3] << 8u) | buffer.buffer[4]) / attFactor);
+		motorAngles[srcAddress - 1] = angle;
+		powerMode = PowerMode::Active;
 	}
 }
 
@@ -130,7 +144,7 @@ void setLEDs(uint32_t brightnesses) {
 }
 
 void showMode() {
-	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep || powerMode == PowerMode::Shutdown) {
+	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep) {
 		setLEDs(0);
 	} else {
 		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
@@ -179,12 +193,28 @@ bool triggerAction() {
 			} else if (led > 3) {
 				if (isOff) {
 					displayState = DisplayState::GimbalMode;
-					powerMode = PowerMode::Startup;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
 					LSM6DSO32::enable();
+					maxMotorVelocity = F_PI_8 / 100;
+
+					motor::move(motor::all, 0, 0);
+
+					util::setTimeout([]() {
+						motor::getVariable(1, MotorCommand::Variable::Position);
+						motor::getVariable(2, MotorCommand::Variable::Position);
+						motor::getVariable(3, MotorCommand::Variable::Position);
+						powerMode = PowerMode::Active;
+					}, 100);
+
+					util::setTimeout([]() {
+						motor::move();
+						maxMotorVelocity = F_2_PI / 100;
+					}, 1000);
+
 				} else {
-					powerMode = PowerMode::Shutdown;
+					powerMode = PowerMode::Sleep;
+					motor::sleep();
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					joystick::saveValues();
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
@@ -268,7 +298,7 @@ int main() {
 	uart::init();
 	usb::init();
 
-	uart::setMotorCallback(processMotorResponse);
+	motor::setCallback(processMotorResponse);
 	buttons::setCallback(processButtons);
 	usb::setCallback(processUSBCommand);
 
@@ -278,26 +308,6 @@ int main() {
 
 	while (1) {
 		switch (powerMode) {
-			case (PowerMode::Startup): {
-				// TODO: check motor state
-
-				motor::move();
-				motor::tone(motor::all, 247);
-				util::sleep(205);
-
-				for (uint8_t i {15}; i > 4; i -= 5) {
-					motor::tone(motor::all, 294);
-					motor::move(motor::all, 0, i);
-					util::sleep(205);
-					motor::tone(motor::all, 392);
-					motor::move(motor::all, 0, i);
-					util::sleep(205);
-				}
-				motor::tone();
-
-				powerMode = PowerMode::Active;
-				break;
-			}
 			case (PowerMode::Active): {
 				LSM6DSO32::update();
 				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), 0.01f);
@@ -369,18 +379,18 @@ int main() {
 				util::sleep(10);
 				break;
 			}
-			case (PowerMode::Shutdown): {
-				motor::move();
-				motor::tone(motor::all, 294);
-				util::sleep(205);
-				motor::tone(motor::all, 247);
-				util::sleep(205);
-				motor::tone();
-				motor::sleep();
-
-				powerMode = PowerMode::Sleep;
-				break;
-			}
+				//			case (PowerMode::Shutdown): {
+				//				motor::move();
+				//				motor::tone(motor::all, 294);
+				//				util::sleep(205);
+				//				motor::tone(motor::all, 247);
+				//				util::sleep(205);
+				//				motor::tone();
+				//				motor::sleep();
+				//
+				//				powerMode = PowerMode::Sleep;
+				//				break;
+				//			}
 			case (PowerMode::Idle):
 			default: {
 				if (!usb::isActive() && wokenByUSB) {

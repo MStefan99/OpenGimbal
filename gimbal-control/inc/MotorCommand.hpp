@@ -30,8 +30,9 @@ public:
 	enum class Variable : uint8_t {
 		Calibration = 0x0,
 		Offset = 0x1,
-		Range = 0x2,
-		Position = 0x3
+		Position = 0x2,
+		Speed = 0x3,
+		Temperature = 0x4
 	};
 
 	enum class CalibrationMode : uint8_t {
@@ -39,6 +40,7 @@ public:
 		Pole = 1u
 	};
 
+	MotorCommand() = default;
 	MotorCommand(uint8_t srcAddr, uint8_t destAddr, CommandType type, uint8_t dataLength = 0);
 
 	buffer_type& getBuffer();

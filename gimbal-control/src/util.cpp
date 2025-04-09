@@ -1,12 +1,14 @@
 #include "util.hpp"
 
 
-static uint32_t ticks {0};
+static uint32_t                   ticks {0};
+static TaskScheduler<uint8_t, 32> scheduler {};
 
 
 extern "C" {
 	void SysTick_Handler() {
 		++ticks;
+		scheduler.execute(ticks);
 	}
 }
 
@@ -87,4 +89,20 @@ void util::sleep(uint32_t ms) {
 	while (ticks - start < ms) {
 		__WFI();
 	}
+}
+
+uint8_t util::setTimeout(void (*cb)(), uint32_t timeout) {
+	return scheduler.setTimeout(ticks, timeout, cb);
+}
+
+uint8_t util::setInterval(void (*cb)(), uint32_t interval) {
+	return scheduler.setInterval(ticks, interval, cb);
+}
+
+void util::clearInterval(uint8_t taskID) {
+	scheduler.clearInterval(taskID);
+}
+
+void util::clearTimeout(uint8_t taskID) {
+	scheduler.clearTimeout(taskID);
 }

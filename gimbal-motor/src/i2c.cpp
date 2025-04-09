@@ -101,7 +101,9 @@ void i2c::read(uint8_t devAddr, uint8_t regAddr, uint8_t size, void (*cb)(bool, 
 }
 
 void startTransfer(const i2c::Transfer& transfer) {
+	__disable_irq();
 	pendingTransfers.push_back(transfer);
+	__enable_irq();
 	nextTransfer();
 }
 

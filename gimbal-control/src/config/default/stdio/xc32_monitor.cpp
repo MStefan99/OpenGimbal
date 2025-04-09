@@ -52,7 +52,7 @@ extern "C" {
     }
 
     int write(int handle, void * buffer, size_t count) {   
-        uart::sendToMotors(reinterpret_cast<const uint8_t*>(buffer), count);
+        uart::send(reinterpret_cast<const uint8_t*>(buffer), count);
         return count;
     }
 }

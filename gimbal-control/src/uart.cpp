@@ -121,18 +121,19 @@ void uart::init() {
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
 
 	// Pin setup
-	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u | 0x1 << 1u)  // Select pins
-	                                  | PORT_WRCONFIG_PMUXEN(1)                       // Enable multiplexing
-	                                  | PORT_WRCONFIG_PMUX(MUX_PA16D_SERCOM3_PAD0)    // Multiplex to SERCOM
-	                                  | PORT_WRCONFIG_WRPMUX(1)                       // Write pin multiplex settings
-	                                  | PORT_WRCONFIG_WRPINCFG(1)                     // Write pin config settings
-	                                  | PORT_WRCONFIG_HWSEL(1);                       // Select pin range
+	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u)            // Select pins
+	                                  | PORT_WRCONFIG_PMUXEN(1)                     // Enable multiplexing
+	                                  | PORT_WRCONFIG_PULLEN(1)                     // Enable pull
+	                                  | PORT_WRCONFIG_PMUX(MUX_PA16D_SERCOM3_PAD0)  // Multiplex to SERCOM
+	                                  | PORT_WRCONFIG_WRPMUX(1)                     // Write pin multiplex settings
+	                                  | PORT_WRCONFIG_WRPINCFG(1)                   // Write pin config settings
+	                                  | PORT_WRCONFIG_HWSEL(1);                     // Select pin range
 
 	GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TC0 clock
 	                                     | GCLK_PCHCTRL_GEN_GCLK2;  // Set GCLK2 as a clock source
 
 	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1);
-	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(1600);
+	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(320);
 	TC0_REGS->COUNT16.TC_CTRLA = TC_CTRLA_ENABLE(1) | TC_CTRLA_MODE_COUNT16 | TC_CTRLA_ONDEMAND(1);
 	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_ONESHOT(1) | TC_CTRLBSET_CMD_STOP;
 	while (!(TC0_REGS->COUNT16.TC_SYNCBUSY = TC_SYNCBUSY_CTRLB_Msk));
@@ -156,7 +157,7 @@ uint8_t uart::print(const char* buf) {
 	return len;
 }
 
-void uart::sendToMotors(const uint8_t* buf, uint8_t len, void (*cb)()) {
+void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
 	if (motorOutQueue.full()) {
 		return;
 	}
@@ -166,6 +167,6 @@ void uart::sendToMotors(const uint8_t* buf, uint8_t len, void (*cb)()) {
 	startTransfer(SERCOM3_REGS, motorOutQueue);
 }
 
-void uart::setMotorCallback(uart::DefaultCallback::callback_type cb) {
+void uart::setCallback(uart::DefaultCallback::callback_type cb) {
 	motorCallback = cb;
 }
