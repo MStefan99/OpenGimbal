@@ -225,7 +225,7 @@ void usb::writeDefault(uint8_t* data, uint8_t len) {
 	}
 }
 
-void usb::write(uint8_t* data, uint8_t len) {
+void usb::write(const uint8_t* data, uint8_t len) {
 	util::copy(outBuffer, data, len);
 	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)outBuffer;
 	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_PCKSIZE =

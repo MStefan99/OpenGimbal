@@ -34,7 +34,6 @@ protected:
 		Interpolator() = delete;
 		Interpolator(int32_t offset);
 
-		int32_t extrapolate(int32_t target) const;
 		void    offset(int32_t offset);
 		void    applyTarget(uint32_t dt, int32_t target);
 		int32_t interpolate(uint32_t dt) const;

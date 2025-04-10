@@ -4,13 +4,13 @@ static DisplayState displayState {DisplayState::GimbalMode};
 static PowerMode    powerMode {PowerMode::Sleep};
 static GimbalMode   gimbalMode {GimbalMode::Follow};
 
-constexpr static float attFactor {2048 / F_PI};
-constexpr static float maxRestoringVelocity {F_PI / 100.0f};  // Half revolution per second (100 iterations)
-constexpr static float ATT_LSB {10430.0f};
-constexpr static float joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
-constexpr static float sqrt2 = sqrtf(2);
+constexpr static float    attFactor {2048 / F_PI};
+constexpr static float    ATT_LSB {10430.0f};
+constexpr static float    joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
+constexpr static float    sqrt2 = sqrtf(2);
+constexpr static uint16_t deltaTime {1000 / updateRate};
+constexpr static float    maxVelocityPerStep {maxRestoringVelocity / updateRate};
 
-static float maxMotorVelocity {F_2_PI / 100.0f};  // Half revolution per second (100 iterations)
 static float yawCurrent {0};
 static float pitchCurrent {0};
 static float rollCurrent {0};
@@ -20,6 +20,9 @@ static float pitchOffset {0};
 static float rollOffset {0};
 
 volatile static float motorAngles[3] {0};
+
+volatile static uint32_t softStartTime {0};
+volatile static bool     softStartActive {false};
 
 int16_t yawReset {0};
 int16_t rollReset {0};
@@ -63,12 +66,14 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 		return;  // Command intended for another device
 	}
 
-	uint8_t srcAddress = buffer.buffer[1] >> 4u;
+	uint8_t srcAddress = (buffer.buffer[1] >> 4u) - 1;
 	if (static_cast<MotorResponse::ResponseType>(buffer.buffer[1] & 0xf) == MotorResponse::ResponseType::ReturnVariable
 	    && static_cast<MotorResponse::Variable>(buffer.buffer[2]) == MotorResponse::Variable::Position
-	    && srcAddress <= 3) {
+	    && srcAddress <= 2) {
 		float angle = normalize(((buffer.buffer[3] << 8u) | buffer.buffer[4]) / attFactor);
-		motorAngles[srcAddress - 1] = angle;
+		motorAngles[srcAddress] = angle;
+	}
+	if (srcAddress == 2 && softStartActive) {
 		powerMode = PowerMode::Active;
 	}
 }
@@ -196,21 +201,16 @@ bool triggerAction() {
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
 					LSM6DSO32::enable();
-					maxMotorVelocity = F_PI_8 / 100;
+					softStartActive = true;
+					softStartTime = util::getTime();
 
 					motor::move(motor::all, 0, 0);
 
 					util::setTimeout([]() {
-						motor::getVariable(1, MotorCommand::Variable::Position);
-						motor::getVariable(2, MotorCommand::Variable::Position);
+						//						motor::getVariable(1, MotorCommand::Variable::Position);
+						//						motor::getVariable(2, MotorCommand::Variable::Position);
 						motor::getVariable(3, MotorCommand::Variable::Position);
-						powerMode = PowerMode::Active;
-					}, 100);
-
-					util::setTimeout([]() {
-						motor::move();
-						maxMotorVelocity = F_2_PI / 100;
-					}, 1000);
+					}, 10);
 
 				} else {
 					powerMode = PowerMode::Sleep;
@@ -344,15 +344,14 @@ int main() {
 				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - rollOffset
 				};
 
-				yawCurrent +=
-				    util::clamp(normalize(yawTarget - yawCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+				yawCurrent += util::clamp(normalize(yawTarget - yawCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 				yawCurrent = normalize(yawCurrent);
 
 				pitchCurrent +=
-				    util::clamp(normalize(pitchTarget - pitchCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+				    util::clamp(normalize(pitchTarget - pitchCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
 				rollCurrent +=
-				    util::clamp(normalize(rollTarget - rollCurrent) / 50.0f, -maxRestoringVelocity, maxRestoringVelocity);
+				    util::clamp(normalize(rollTarget - rollCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
 				Quaternion cameraOrientation {Quaternion::fromEuler(yawCurrent, pitchCurrent, rollCurrent)};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
@@ -360,23 +359,29 @@ int main() {
 				auto rotationAngles {gimbalRotation.toEuler()};
 				auto calculatedAngles {calculateAngles(rotationAngles)};
 
+				if (softStartActive && util::getTime() - softStartTime >= softStartDuration) {
+					softStartActive = false;
+				}
+
 				for (uint8_t i {0}; i < 3; ++i) {
 					if (!std::isnan(calculatedAngles[i][0])) {
-						motorAngles[i] +=
-						    util::clamp(normalize(calculatedAngles[i][0] - motorAngles[i]), -maxMotorVelocity, maxMotorVelocity);
+						if (softStartActive) {
+							motorAngles[i] += normalize(calculatedAngles[i][0] - motorAngles[i])
+							                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime)) * deltaTime;
+						} else {
+							motorAngles[i] = calculatedAngles[i][0];
+						}
+
+						int16_t position = motorAngles[i] * attFactor;
+						if (position < 0) {
+							position += fullRevolution;
+						}
+
+						motor::move(i + 1, position);
 					}
 				}
 
-				for (uint8_t i {0}; i < 3; ++i) {
-					int16_t position = motorAngles[i] * attFactor;
-					if (position < 0) {
-						position += 4096;
-					}
-
-					motor::move(i + 1, position);
-				}
-
-				util::sleep(10);
+				util::sleep(deltaTime);
 				break;
 			}
 				//			case (PowerMode::Shutdown): {

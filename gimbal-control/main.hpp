@@ -54,7 +54,10 @@ constexpr uint16_t LONG_PRESS_STEP_TIME {250};
 constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
 constexpr uint16_t USB_PASSTHROUGH_TIMEOUT {2};
 
-constexpr float controlBoardAngle {-30.0f * F_DEG_TO_RAD};
+constexpr uint16_t updateRate {100};                           // Hz
+constexpr float    controlBoardAngle {-30.0f * F_DEG_TO_RAD};  // rad
+constexpr float    maxRestoringVelocity {F_PI};                // Half revolution per second
+constexpr uint16_t softStartDuration {2000};                   // ms
 
 constexpr int16_t fullRevolution {4096};
 constexpr int16_t halfRevolution {fullRevolution / 2};

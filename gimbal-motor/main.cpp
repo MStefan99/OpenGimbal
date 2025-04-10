@@ -9,13 +9,15 @@ static MovementController movementController {};
 static Mode               mode {Mode::Sleep};
 static uint8_t            calibrationMode = nvm::options->polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
+static bool               poweredDown {mode == Mode::Sleep || mode == Mode::Idle};
 
 static bool offsetAdjusted {false};
 
+static uint16_t      currentAngle {0};
 static float         prevDAngle {0.0f};
+static bool          angleReady {false};
 static LowPassFilter torqueFilter {1000, 2};
-static LowPassFilter angleFilter {1000, 1};
-static bool          dataReady {false};
+static uint16_t      targetAngle {0};
 
 volatile static uint32_t hapticEnd {0};
 volatile static uint16_t hapticPower {0};
@@ -41,13 +43,22 @@ struct TorqueLUT {
 constexpr static auto torqueLUT = TorqueLUT();
 
 void powerDown() {
+	if (poweredDown) {
+		return;
+	}
 	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 	bldc::removeTorque();
+	angleReady = false;
+	poweredDown = true;
 }
 
 void powerUp() {
+	if (!poweredDown) {
+		return;
+	}
 	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 	AS5600::init();
+	poweredDown = false;
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
@@ -84,6 +95,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			mode = Mode::Drive;
 			powerUp();
 			auto time {util::getTime()};
+			targetAngle = (((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]) + movementController.getOffset();
 			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			if (offsetAdjusted) {
 				offsetAdjusted = false;
@@ -106,7 +118,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		}
 		case (Command::CommandType::AdjustOffset): {
 			if (mode != Mode::Sleep && mode != Mode::Idle) {
-				movementController.adjustOffset(angleFilter.getState(), ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+				movementController.adjustOffset(currentAngle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 				uint16_t offset = movementController.getOffset();
 				offsetAdjusted = true;
 				nvm::edit(&nvm::options->zeroOffset, offset);
@@ -151,7 +163,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					    buffer.buffer[1] >> 8u,
 					    Command::Variable::Position,
 					    static_cast<int16_t>(util::mod(
-					        static_cast<int32_t>(angleFilter.getState() - movementController.getOffset()),
+					        static_cast<int32_t>(currentAngle - movementController.getOffset()),
 					        static_cast<int32_t>(fullRevolution)
 					    ))
 					);
@@ -202,19 +214,19 @@ float countsToRad(int16_t counts) {
 uint16_t measureAngle() {
 	static uint16_t rawAngle;
 
-	dataReady = false;
+	angleReady = false;
 	auto startTime {util::getTime()};
 
 	AS5600::getAngle([](bool success, const i2c::Transfer& transfer) {
 		rawAngle = reinterpret_cast<const uint16_t*>(transfer.buf)[0];
-		dataReady = true;
+		angleReady = true;
 	});
 
-	while (!dataReady && util::getTime() - startTime < 5) {
+	while (!angleReady && util::getTime() - startTime < 5) {
 		__WFI();
 	}
 
-	return util::switchEndianness(rawAngle);
+	return (currentAngle = util::switchEndianness(rawAngle));
 }
 
 int16_t normalize(int16_t difference) {
@@ -245,7 +257,6 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
 void moveToTarget(uint16_t target) {
 	// Calculating difference between current and target angle
 	auto angle {measureAngle()};
-	angleFilter.process(angle);
 
 	float dAngle {countsToRad(normalize(target - angle))};
 	float velocity {(dAngle - prevDAngle) * 1000.0f};
@@ -450,7 +461,10 @@ int main() {
 
 	uart::setCallback(processCommand);
 	eic::setCallback(processWakeup);
-	powerDown();
+
+	if (mode == Mode::Sleep || mode == Mode::Idle) {
+		powerDown();
+	}
 
 	while (1) {
 		switch (mode) {
@@ -477,6 +491,7 @@ int main() {
 				auto time {util::getTime()};
 				movementController.interpolate(time - lastTargetTime);
 				moveToTarget(movementController.getTarget());
+				// moveToTarget(targetAngle);
 
 				util::sleep(1);  // Waiting until next tick
 				break;

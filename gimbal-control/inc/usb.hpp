@@ -193,7 +193,7 @@ namespace usb {
 	bool isActive();
 
 	void writeDefault(uint8_t* data, uint8_t len);
-	void write(uint8_t* data, uint8_t len);
+	void write(const uint8_t* data, uint8_t len);
 	void setCallback(callback_type cb);
 }  // namespace usb
 
