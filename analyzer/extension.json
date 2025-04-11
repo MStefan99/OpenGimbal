@@ -1,0 +1,13 @@
+{
+  "name": "OpenGimbal",
+  "apiVersion": "1.0.0",
+  "author": "MStefan99",
+  "version": "0.0.1",
+  "description": "Decoder for the OpenGimbal protocol",
+  "extensions": {
+    "OpenGimbal": {
+      "type": "HighLevelAnalyzer",
+      "entryPoint": "HighLevelAnalyzer.Hla"
+    }
+  }
+}
