@@ -49,6 +49,17 @@ class MoveCommand(MotorCommand):
         return f'Torque: {self.torque}, Position: {self.position}'
 
 
+class ToneCommand(MotorCommand):
+    def __init__(self, bytes):
+        super().__init__(bytes)
+
+        if (len(bytes) == 4):
+            self.frequency = (bytes[2] << 8) | bytes[3]
+
+    def __str__(self):
+        return f'Frequency: {self.frequency}'
+
+
 class HapticCommand(MotorCommand):
     def __init__(self, bytes):
         super().__init__(bytes)
@@ -59,17 +70,6 @@ class HapticCommand(MotorCommand):
 
     def __str__(self):
         return f'Intensity: {self.intensity}, Duration: {self.duration}'
-
-
-class ToneCommand(MotorCommand):
-    def __init__(self, bytes):
-        super().__init__(bytes)
-
-        if (len(bytes) == 4):
-            self.frequency = (bytes[2] << 8) | bytes[3]
-
-    def __str__(self):
-        return f'Frequency: {self.frequency}'
 
 
 class AdjustOffsetCommand(MotorCommand):
@@ -143,12 +143,12 @@ commands = {
         'parse': lambda bytes: MoveCommand(bytes)
     },
     0x3: {
-        'name': 'Haptic',
-        'parse': lambda bytes: HapticCommand(bytes)
-    },
-    0x4: {
         'name': 'Tone',
         'parse': lambda bytes: ToneCommand(bytes)
+    },
+    0x4: {
+        'name': 'Haptic',
+        'parse': lambda bytes: HapticCommand(bytes)
     },
     0x5: {
         'name': 'Adjust offset',
