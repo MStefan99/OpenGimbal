@@ -193,13 +193,13 @@ unknown_message = {
 class Hla(HighLevelAnalyzer):
     result_types = {
         'cmd': {
-            'format': 'Length: {{data.len}}, To: {{data.dest_addr}}'
+            'format': 'Length: {{data.len}}, To: {{data.dest_addr}} '
         },
         'src': {
-            'format': 'From: {{data.src_addr}}, Command: {{data.cmd}}'
+            'format': 'From: {{data.src_addr}}, Command: {{data.cmd}} '
         },
         'data': {
-            'format': '{{data.str}}'
+            'format': '{{data.str}} '
         }
     }
 

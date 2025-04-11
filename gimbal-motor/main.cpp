@@ -521,7 +521,11 @@ int main() {
 					uart::disable();
 					eic::enable();
 				}
-				__WFI();
+
+				if (!poweredDown) {
+					measureAngle();
+				}
+				util::sleep(1);
 				break;
 			}
 			default: {

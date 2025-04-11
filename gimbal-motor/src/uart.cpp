@@ -80,7 +80,7 @@ static void SERCOM_Handler(
 			}
 		} else {  // Incoming transfer
 			if (!inBuffer.remaining
-			    || RTC_REGS->MODE0.RTC_COUNT - prevByteTime > 32) {  // Received first byte, set up new transfer
+			    || RTC_REGS->MODE0.RTC_COUNT - prevByteTime > 64) {  // Received first byte, set up new transfer
 				inBuffer.buffer[0] = regs->USART_INT.SERCOM_DATA;
 				inBuffer.remaining = (inBuffer.buffer[0] >> 4u);
 				inBuffer.transferred = 1;

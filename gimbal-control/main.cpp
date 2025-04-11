@@ -73,9 +73,6 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 		float angle = normalize(((buffer.buffer[3] << 8u) | buffer.buffer[4]) / attFactor);
 		motorAngles[srcAddress] = angle;
 	}
-	if (srcAddress == 2 && softStartActive) {
-		powerMode = PowerMode::Active;
-	}
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
@@ -203,17 +200,18 @@ bool triggerAction() {
 					LSM6DSO32::enable();
 					softStartActive = true;
 					softStartTime = util::getTime();
+					powerMode = PowerMode::Idle;
 
 					motor::wake(motor::all);
 					util::setTimeout([]() {
 						//						motor::getVariable(1, MotorCommand::Variable::Position);
 						//						motor::getVariable(2, MotorCommand::Variable::Position);
 						motor::getVariable(3, MotorCommand::Variable::Position);
+						powerMode = PowerMode::Active;
 					}, 10);
 
 				} else {
 					powerMode = PowerMode::Sleep;
-					motor::sleep();
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					joystick::saveValues();
 					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
@@ -306,6 +304,13 @@ int main() {
 	Mahony mahony {};
 
 	while (1) {
+		if (softStartActive && util::getTime() - softStartTime >= softStartDuration) {
+			softStartActive = false;
+			if (powerMode == PowerMode::Idle) {
+				powerMode = PowerMode::Sleep;
+			}
+		}
+
 		switch (powerMode) {
 			case (PowerMode::Active): {
 				LSM6DSO32::update();
@@ -357,10 +362,6 @@ int main() {
 
 				auto rotationAngles {gimbalRotation.toEuler()};
 				auto calculatedAngles {calculateAngles(rotationAngles)};
-
-				if (softStartActive && util::getTime() - softStartTime >= softStartDuration) {
-					softStartActive = false;
-				}
 
 				for (uint8_t i {0}; i < 3; ++i) {
 					if (!std::isnan(calculatedAngles[i][0])) {

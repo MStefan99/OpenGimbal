@@ -1,10 +1,10 @@
 #include "uart.hpp"
 
 
-static uart::DefaultQueue                   motorOutQueue {};
-static uart::DefaultCallback::buffer_type   motorInBuffer {};
-static uart::DefaultCallback::callback_type motorCallback {nullptr};
-static uint32_t                             motorReceiveTime {0};
+static uart::DefaultQueue                   outQueue {};
+static uart::DefaultCallback::buffer_type   inBuffer {};
+static uart::DefaultCallback::callback_type callback {nullptr};
+static uint32_t                             lastReceiveTime {0};
 
 static void initSERCOM(sercom_registers_t* regs) {
 	regs->USART_INT.SERCOM_CTRLB = SERCOM_USART_INT_CTRLB_RXEN(1)                       // Enable receiver
@@ -27,8 +27,8 @@ static void initSERCOM(sercom_registers_t* regs) {
 }
 
 static bool busy() {
-	if (motorOutQueue.size()) {
-		if (motorOutQueue.front().transferred) {  // Another transfer in progress
+	if (outQueue.size()) {
+		if (outQueue.front().transferred) {  // Another transfer in progress
 			return true;
 		}
 	}
@@ -103,12 +103,12 @@ static void SERCOM_Handler(
 
 extern "C" {
 	void SERCOM3_Handler() {
-		SERCOM_Handler(SERCOM3_REGS, motorOutQueue, motorInBuffer, motorCallback, motorReceiveTime);
+		SERCOM_Handler(SERCOM3_REGS, outQueue, inBuffer, callback, lastReceiveTime);
 	}
 
 	void TC0_Handler() {
 		if (TC0_REGS->COUNT16.TC_INTFLAG & TC_INTFLAG_MC0_Msk) {
-			SERCOM3_REGS->USART_INT.SERCOM_DATA = motorOutQueue.front().buffer[0];
+			SERCOM3_REGS->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
 			TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_CMD_STOP;
 		}
 		TC0_REGS->COUNT16.TC_INTFLAG = TC_INTFLAG_Msk;
@@ -119,6 +119,8 @@ void uart::init() {
 	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM3 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
+	GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)              // Enable TC0 clock
+	                                     | GCLK_PCHCTRL_GEN_GCLK2;           // Set GCLK2 as a clock source
 
 	// Pin setup
 	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u)            // Select pins
@@ -128,9 +130,6 @@ void uart::init() {
 	                                  | PORT_WRCONFIG_WRPMUX(1)                     // Write pin multiplex settings
 	                                  | PORT_WRCONFIG_WRPINCFG(1)                   // Write pin config settings
 	                                  | PORT_WRCONFIG_HWSEL(1);                     // Select pin range
-
-	GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TC0 clock
-	                                     | GCLK_PCHCTRL_GEN_GCLK2;  // Set GCLK2 as a clock source
 
 	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1);
 	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(320);
@@ -145,32 +144,32 @@ void uart::init() {
 }
 
 uint8_t uart::print(const char* buf) {
-	if (motorOutQueue.full()) {
+	if (outQueue.full()) {
 		return 0;
 	}
 	uint8_t len {0};
 	for (; buf[len] && len < 32; ++len);
 
 	__disable_irq();
-	motorOutQueue.push_back({{}, 0, len});
-	util::copy(motorOutQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+	outQueue.push_back({{}, 0, len});
+	util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
 	__enable_irq();
-	startTransfer(SERCOM3_REGS, motorOutQueue);
+	startTransfer(SERCOM3_REGS, outQueue);
 	return len;
 }
 
 void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
-	if (motorOutQueue.full()) {
+	if (outQueue.full()) {
 		return;
 	}
 
 	__disable_irq();
-	motorOutQueue.push_back({{}, 0, len, cb});
-	util::copy(motorOutQueue.back().buffer, buf, len);
+	outQueue.push_back({{}, 0, len, cb});
+	util::copy(outQueue.back().buffer, buf, len);
 	__enable_irq();
-	startTransfer(SERCOM3_REGS, motorOutQueue);
+	startTransfer(SERCOM3_REGS, outQueue);
 }
 
 void uart::setCallback(uart::DefaultCallback::callback_type cb) {
-	motorCallback = cb;
+	callback = cb;
 }
