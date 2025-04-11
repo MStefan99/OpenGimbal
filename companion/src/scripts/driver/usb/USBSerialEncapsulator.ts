@@ -37,8 +37,8 @@ export class USBSerialEncapsulator implements ISerialInterface {
 		this._usbInterface = usbInterface;
 	}
 
-	open(baudRate: number): Promise<void> {
-		return;
+	get open(): Promise<void> {
+		return Promise.resolve();
 	}
 
 	send(message: SerialMessage): Promise<void> {

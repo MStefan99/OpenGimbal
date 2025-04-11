@@ -4,13 +4,14 @@ import {SerialMessage} from './SerialMessage';
 import {CalibrationBits} from '../Motor';
 
 export enum MotorCommandType {
-	Idle = 0x0,
-	Sleep = 0x1,
-	Move = 0x2,
-	Tone = 0x3,
-	Haptic = 0x4,
-	AdjustOffset = 0x5,
-	Calibrate = 0x6,
+	Sleep = 0x0,
+	Idle = 0x1,
+	Wake = 0x2,
+	Move = 0x3,
+	Tone = 0x4,
+	Haptic = 0x5,
+	AdjustOffset = 0x6,
+	Calibrate = 0x7,
 	GetVariable = 0xe,
 	SetVariable = 0xf
 }
@@ -24,8 +25,9 @@ export enum MotorVariableID {
 }
 
 export const motorCommandNames: Record<MotorCommandType, string> = {
-	[MotorCommandType.Idle]: 'Idle',
 	[MotorCommandType.Sleep]: 'Sleep',
+	[MotorCommandType.Idle]: 'Idle',
+	[MotorCommandType.Wake]: 'Wake',
 	[MotorCommandType.Move]: 'Move',
 	[MotorCommandType.Tone]: 'Tone',
 	[MotorCommandType.Haptic]: 'Haptic',
@@ -36,8 +38,9 @@ export const motorCommandNames: Record<MotorCommandType, string> = {
 };
 
 export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => MotorCommand> = {
-	[MotorCommandType.Idle]: (buffer: Uint8Array) => new IdleCommand(buffer),
 	[MotorCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
+	[MotorCommandType.Idle]: (buffer: Uint8Array) => new IdleCommand(buffer),
+	[MotorCommandType.Wake]: (buffer: Uint8Array) => new WakeCommand(buffer),
 	[MotorCommandType.Move]: (buffer: Uint8Array) => new MoveCommand(buffer),
 	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
 	[MotorCommandType.Haptic]: (buffer: Uint8Array) => new HapticCommand(buffer),
@@ -81,6 +84,19 @@ export class MotorCommand extends SerialMessage {
 	}
 }
 
+export class SleepCommand extends MotorCommand {
+	constructor(buffer: Uint8Array);
+	constructor(srcAddr: number, destAddr: number);
+
+	constructor(srcAddr: Uint8Array | number, destAddr?: number) {
+		if (srcAddr instanceof Uint8Array) {
+			super(srcAddr);
+		} else {
+			super(srcAddr, destAddr, MotorCommandType.Sleep);
+		}
+	}
+}
+
 export class IdleCommand extends MotorCommand {
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number);
@@ -94,7 +110,7 @@ export class IdleCommand extends MotorCommand {
 	}
 }
 
-export class SleepCommand extends MotorCommand {
+export class WakeCommand extends MotorCommand {
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number);
 
@@ -102,7 +118,7 @@ export class SleepCommand extends MotorCommand {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr, destAddr, MotorCommandType.Sleep);
+			super(srcAddr, destAddr, MotorCommandType.Wake);
 		}
 	}
 }

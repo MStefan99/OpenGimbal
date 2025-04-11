@@ -17,7 +17,8 @@ import {
 	SetOffsetVariableCommand,
 	SetSpeedVariableCommand,
 	SleepCommand,
-	ToneCommand
+	ToneCommand,
+	WakeCommand
 } from './serial/MotorCommand';
 import {ISerialInterface} from './serial/SerialInterface';
 import {resolveComponent} from 'vue';
@@ -40,8 +41,7 @@ export interface IMotor {
 
 	sleep(): Promise<void>;
 
-	// Technically not needed since any command would wake the device up, but it's nice to have an opposite of sleep()
-	wakeup(): Promise<void>;
+	wake(): Promise<void>;
 
 	move(position?: number, torque?: number): Promise<void>;
 
@@ -113,28 +113,19 @@ export class Motor implements IMotor {
 	}
 
 	idle(): Promise<void> {
-		return this._hardwareInterface.send(
-			new IdleCommand(0, this._address),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new IdleCommand(0, this._address));
 	}
 
 	sleep(): Promise<void> {
-		return this._hardwareInterface.send(
-			new SleepCommand(0, this._address),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new SleepCommand(0, this._address));
 	}
 
-	wakeup(): Promise<void> {
-		return this.disable();
+	wake(): Promise<void> {
+		return this._hardwareInterface.send(new WakeCommand(0, this._address));
 	}
 
 	move(position: number = 0, torque: number = 15): Promise<void> {
-		return this._hardwareInterface.send(
-			new MoveCommand(0, this._address, torque, position),
-			this._isSleeping ? 9600 : 115200
-		);
+		return this._hardwareInterface.send(new MoveCommand(0, this._address, torque, position));
 	}
 
 	tone(frequency: number): Promise<void> {

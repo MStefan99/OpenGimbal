@@ -16,13 +16,14 @@ public:
 	using size_type = uint8_t;
 
 	enum class CommandType : uint8_t {
-		Idle = 0x0,
-		Sleep = 0x1,
-		Move = 0x2,
-		Tone = 0x3,
-		Haptic = 0x4,
-		AdjustOffset = 0x5,
-		Calibrate = 0x6,
+		Sleep = 0x0,
+		Idle = 0x1,
+		Wake = 0x2,
+		Move = 0x3,
+		Tone = 0x4,
+		Haptic = 0x5,
+		AdjustOffset = 0x6,
+		Calibrate = 0x7,
 		GetVariable = 0xe,
 		SetVariable = 0xf
 	};

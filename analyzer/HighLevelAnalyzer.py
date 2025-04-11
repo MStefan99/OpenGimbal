@@ -27,12 +27,17 @@ class MotorCommand:
             self.cmd = bytes[1] & 0x0f
 
 
+class SleepCommand(MotorCommand):
+    def __init__(self, bytes):
+        super().__init__(bytes)
+
+
 class IdleCommand(MotorCommand):
     def __init__(self, bytes):
         super().__init__(bytes)
 
 
-class SleepCommand(MotorCommand):
+class WakeCommand(MotorCommand):
     def __init__(self, bytes):
         super().__init__(bytes)
 
@@ -131,30 +136,34 @@ class ReturnVariableCommand(MotorCommand):
 
 commands = {
     0x0: {
-        'name': 'Idle',
-        'parse': lambda bytes: IdleCommand(bytes)
-    },
-    0x1: {
         'name': 'Sleep',
         'parse': lambda bytes: SleepCommand(bytes)
     },
+    0x1: {
+        'name': 'Idle',
+        'parse': lambda bytes: IdleCommand(bytes)
+    },
     0x2: {
+        'name': 'Wake',
+        'parse': lambda bytes: WakeCommand(bytes)
+    },
+    0x3: {
         'name': 'Move',
         'parse': lambda bytes: MoveCommand(bytes)
     },
-    0x3: {
+    0x4: {
         'name': 'Tone',
         'parse': lambda bytes: ToneCommand(bytes)
     },
-    0x4: {
+    0x5: {
         'name': 'Haptic',
         'parse': lambda bytes: HapticCommand(bytes)
     },
-    0x5: {
+    0x6: {
         'name': 'Adjust offset',
         'parse': lambda bytes: AdjustOffsetCommand(bytes)
     },
-    0x6: {
+    0x7: {
         'name': 'Calibrate',
         'parse': lambda bytes: CalibrateCommand(bytes)
     },

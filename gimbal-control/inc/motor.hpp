@@ -18,6 +18,8 @@ namespace motor {
 	void process(uart::DefaultCallback cb);
 
 	void sleep(uint8_t address = all);
+	void idle(uint8_t address = all);
+	void wake(uint8_t address = all);
 	void move(uint8_t address = all, uint16_t position = 0, uint8_t torque = 15);
 	void tone(uint8_t address = all, uint16_t frequency = 25000);
 	void haptic(uint8_t address = all, uint8_t intensity = 15, uint16_t duration = 5);

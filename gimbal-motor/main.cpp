@@ -17,7 +17,6 @@ static uint16_t      currentAngle {0};
 static float         prevDAngle {0.0f};
 static bool          angleReady {false};
 static LowPassFilter torqueFilter {1000, 2};
-static uint16_t      targetAngle {0};
 
 volatile static uint32_t hapticEnd {0};
 volatile static uint16_t hapticPower {0};
@@ -77,12 +76,6 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	}
 
 	switch (static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) {  // Switch command type
-		case (Command::CommandType::Idle): {
-			mode = Mode::Idle;
-			maxTorque = 0;
-			powerDown();
-			break;
-		}
 		case (Command::CommandType::Sleep): {
 			mode = Mode::Sleep;
 			maxTorque = 0;
@@ -91,11 +84,22 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			eic::enable();
 			break;
 		}
+		case (Command::CommandType::Idle): {
+			mode = Mode::Idle;
+			maxTorque = 0;
+			powerDown();
+			break;
+		}
+		case (Command::CommandType::Wake): {
+			mode = Mode::Idle;
+			powerUp();
+			lastTargetTime = 0;
+			break;
+		}
 		case (Command::CommandType::Move): {
 			mode = Mode::Drive;
 			powerUp();
 			auto time {util::getTime()};
-			targetAngle = (((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]) + movementController.getOffset();
 			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 			if (offsetAdjusted) {
 				offsetAdjusted = false;
@@ -491,7 +495,6 @@ int main() {
 				auto time {util::getTime()};
 				movementController.interpolate(time - lastTargetTime);
 				moveToTarget(movementController.getTarget());
-				// moveToTarget(targetAngle);
 
 				util::sleep(1);  // Waiting until next tick
 				break;

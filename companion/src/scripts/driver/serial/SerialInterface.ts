@@ -6,7 +6,7 @@ import {ISerialParser} from './SerialParser';
 const timeout = 20;
 
 export interface ISerialInterface extends IHardwareInterface {
-	open(baudRate: number): Promise<void>;
+	get open(): Promise<void>;
 
 	send(message: SerialMessage, baudRate?: number): Promise<void>;
 
@@ -19,37 +19,27 @@ export class SerialInterface implements ISerialInterface {
 	private _port: SerialPort;
 	private _parser: ISerialParser;
 	private readonly _verbose: boolean;
-	private _currentBaudRate: number;
-	private _isOpen: boolean = false;
+	private readonly _openPromise: Promise<void>;
 
-	constructor(port: SerialPort, parser: ISerialParser, verbose: boolean = false) {
+	constructor(
+		port: SerialPort,
+		parser: ISerialParser,
+		baudRate = 115200,
+		verbose: boolean = false
+	) {
 		this._port = port;
 		this._parser = parser;
 		this._verbose = verbose;
-	}
-
-	async open(baudRate: number): Promise<void> {
-		if (baudRate === this._currentBaudRate) {
-			return;
-		}
-
-		this._verbose &&
-			console.log(
-				this._isOpen ? 'Setting baud rate to' : 'Opening serial port with baud rate of',
-				baudRate
-			);
-		if (this._isOpen) {
-			await this._port.close();
-		}
-		await this._port.open({
+		this._openPromise = this._port.open({
 			baudRate,
 			dataBits: 8,
 			stopBits: 1,
 			parity: 'odd'
 		});
+	}
 
-		this._currentBaudRate = baudRate;
-		this._isOpen = true;
+	get open(): Promise<void> {
+		return this._openPromise;
 	}
 
 	send(message: SerialMessage, baudRate?: number): Promise<void> {
@@ -58,7 +48,6 @@ export class SerialInterface implements ISerialInterface {
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 			Promise.resolve()
-				.then(() => baudRate && this.open(baudRate))
 				.then(() => this._port.writable.getWriter())
 				.then((writer) =>
 					writer.write(buffer).then(() => {
@@ -85,7 +74,6 @@ export class SerialInterface implements ISerialInterface {
 			}
 
 			Promise.resolve()
-				.then(() => baudRate && this.open(baudRate))
 				.then(() => this._port.readable.cancel()) // Discard all previous data we're not interested in
 				.then(() => this._port.writable.getWriter())
 				.then((writer) => writer.write(writeBuffer).then(() => writer.releaseLock()))

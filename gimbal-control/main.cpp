@@ -204,8 +204,7 @@ bool triggerAction() {
 					softStartActive = true;
 					softStartTime = util::getTime();
 
-					motor::move(motor::all, 0, 0);
-
+					motor::wake(motor::all);
 					util::setTimeout([]() {
 						//						motor::getVariable(1, MotorCommand::Variable::Position);
 						//						motor::getVariable(2, MotorCommand::Variable::Position);
@@ -384,18 +383,6 @@ int main() {
 				util::sleep(deltaTime);
 				break;
 			}
-				//			case (PowerMode::Shutdown): {
-				//				motor::move();
-				//				motor::tone(motor::all, 294);
-				//				util::sleep(205);
-				//				motor::tone(motor::all, 247);
-				//				util::sleep(205);
-				//				motor::tone();
-				//				motor::sleep();
-				//
-				//				powerMode = PowerMode::Sleep;
-				//				break;
-				//			}
 			case (PowerMode::Idle):
 			default: {
 				if (!usb::isActive() && wokenByUSB) {

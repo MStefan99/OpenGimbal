@@ -27,6 +27,22 @@ void motor::sleep(uint8_t address) {
 	uart::send(command.getBuffer(), command.getLength());
 }
 
+void motor::idle(uint8_t address) {
+	auto command {
+	  MotorCommand {0, address, MotorCommand::CommandType::Idle, 0}
+	};
+
+	uart::send(command.getBuffer(), command.getLength());
+}
+
+void motor::wake(uint8_t address) {
+	auto command {
+	  MotorCommand {0, address, MotorCommand::CommandType::Wake, 0}
+	};
+
+	uart::send(command.getBuffer(), command.getLength());
+}
+
 void motor::move(uint8_t address, uint16_t position, uint8_t torque) {
 	auto command {
 	  MotorCommand {0, address, MotorCommand::CommandType::Move, 2}
