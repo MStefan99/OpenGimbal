@@ -151,8 +151,10 @@ uint8_t uart::print(const char* buf) {
 	uint8_t len {0};
 	for (; buf[len] && len < 32; ++len);
 
+	__disable_irq();
 	motorOutQueue.push_back({{}, 0, len});
 	util::copy(motorOutQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
+	__enable_irq();
 	startTransfer(SERCOM3_REGS, motorOutQueue);
 	return len;
 }
@@ -162,8 +164,10 @@ void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
 		return;
 	}
 
+	__disable_irq();
 	motorOutQueue.push_back({{}, 0, len, cb});
 	util::copy(motorOutQueue.back().buffer, buf, len);
+	__enable_irq();
 	startTransfer(SERCOM3_REGS, motorOutQueue);
 }
 

@@ -184,6 +184,11 @@ responses = {
     }
 }
 
+unknown_message = {
+    'name': 'Unknown',
+    'parse': lambda bytes: None
+}
+
 
 class Hla(HighLevelAnalyzer):
     result_types = {
@@ -229,7 +234,7 @@ class Hla(HighLevelAnalyzer):
 
         if (len(self.bytes) == 2):
             command = MotorCommand(self.bytes)
-            message = responses[command.cmd] if command.src_addr != 0 else commands[command.cmd]
+            message = responses.get(command.cmd, unknown_message) if command.src_addr != 0 else commands.get(command.cmd, unknown_message)
             return AnalyzerFrame('src', frame.start_time, frame.end_time, {
                 'src_addr': command.src_addr,
                 'cmd': message['name']
@@ -240,9 +245,9 @@ class Hla(HighLevelAnalyzer):
 
         if not self.remaining_bytes:
             command = MotorCommand(self.bytes)
-            message = responses[command.cmd]['parse'](self.bytes) if command.src_addr != 0 else \
-                commands[command.cmd]['parse'](self.bytes)
+            message = responses.get(command.cmd, unknown_message)['parse'](self.bytes) if command.src_addr != 0 else \
+                commands.get(command.cmd, unknown_message)['parse'](self.bytes)
             self.bytes = []
             return AnalyzerFrame('data', self.data_start, frame.end_time, {
-                'str': str(message)
+                'str': str(message) if message else 'Unknown'
             })
