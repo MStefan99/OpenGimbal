@@ -1,6 +1,21 @@
 from saleae.analyzers import HighLevelAnalyzer, AnalyzerFrame
 from saleae.data.timing import SaleaeTimeDelta
 
+variables = {
+    0x0: {
+        'name': 'Calibration'
+    },
+    0x2: {
+        'name': 'Offset'
+    },
+    0x3: {
+        'name': 'Position'
+    },
+    0x4: {
+        'name': 'Speed'
+    },
+}
+
 
 class MotorCommand:
     def __init__(self, bytes):
@@ -87,7 +102,7 @@ class GetVariableCommand(MotorCommand):
             self.variable = bytes[2] & 0x3
 
     def __str__(self):
-        return f'Variable: {self.variable}'
+        return f'Variable: {variables[self.variable]["name"]}'
 
 
 class SetVariableCommand(MotorCommand):
@@ -96,9 +111,10 @@ class SetVariableCommand(MotorCommand):
 
         if (len(bytes) >= 3):
             self.variable = bytes[2] & 0x3
+            self.value = int.from_bytes(bytes[3:], 'big')
 
     def __str__(self):
-        return f'Variable: {self.variable}'
+        return f'Variable: {variables[self.variable]["name"]}, Value: {self.value}'
 
 
 class ReturnVariableCommand(MotorCommand):
@@ -107,9 +123,10 @@ class ReturnVariableCommand(MotorCommand):
 
         if (len(bytes) >= 3):
             self.variable = bytes[2] & 0x3
+            self.value = int.from_bytes(bytes[3:], 'big')
 
     def __str__(self):
-        return f'Variable: {self.variable}'
+        return f'Variable: {variables[self.variable]["name"]}, Value: {self.value}'
 
 
 commands = {
@@ -183,7 +200,7 @@ class Hla(HighLevelAnalyzer):
         if not frame.type == 'data':
             return  # Not interested in anything but data
 
-        byte = int.from_bytes(frame.data['data'], 'little')
+        byte = int.from_bytes(frame.data['data'], 'big')
 
         if not len(self.bytes) or frame.start_time - self.start_time > SaleaeTimeDelta(0.001):  # First byte
             self.remaining_bytes = ((byte & 0xf0) >> 4) + 1
