@@ -5,13 +5,13 @@ variables = {
     0x0: {
         'name': 'Calibration'
     },
-    0x2: {
+    0x1: {
         'name': 'Offset'
     },
-    0x3: {
+    0x2: {
         'name': 'Position'
     },
-    0x4: {
+    0x3: {
         'name': 'Speed'
     },
 }
@@ -23,7 +23,7 @@ class MotorCommand:
         self.dest_addr = bytes[0] & 0x0f
 
         if len(bytes) > 1:
-            self.src_addr = ((bytes[1] & 0xf0) >> 4) + 1
+            self.src_addr = ((bytes[1] & 0xf0) >> 4)
             self.cmd = bytes[1] & 0x0f
 
 
@@ -194,7 +194,6 @@ class Hla(HighLevelAnalyzer):
         self.data_start = 0
         self.bytes = []
         self.remaining_bytes = 0
-        self.is_response = False
 
     def decode(self, frame: AnalyzerFrame):
         if not frame.type == 'data':
@@ -204,7 +203,6 @@ class Hla(HighLevelAnalyzer):
 
         if not len(self.bytes) or frame.start_time - self.start_time > SaleaeTimeDelta(0.001):  # First byte
             self.remaining_bytes = ((byte & 0xf0) >> 4) + 1
-            self.is_response = (byte & 0xf) == 0
             self.start_time = frame.start_time
 
         self.bytes.append(byte)
@@ -219,7 +217,7 @@ class Hla(HighLevelAnalyzer):
 
         if (len(self.bytes) == 2):
             command = MotorCommand(self.bytes)
-            message = responses[self.bytes[1] & 0xf] if self.is_response else commands[self.bytes[1] & 0xf]
+            message = responses[command.cmd] if command.src_addr != 0 else commands[command.cmd]
             return AnalyzerFrame('src', frame.start_time, frame.end_time, {
                 'src_addr': command.src_addr,
                 'cmd': message['name']
@@ -230,10 +228,10 @@ class Hla(HighLevelAnalyzer):
 
         if not self.remaining_bytes:
             # Parse bytes
-            generic_command = MotorCommand(self.bytes)
-            specific_command = responses[generic_command.cmd]['parse'](self.bytes) if self.is_response else \
-                commands[generic_command.cmd]['parse'](self.bytes)
+            command = MotorCommand(self.bytes)
+            message = responses[command.cmd]['parse'](self.bytes) if command.src_addr != 0 else \
+                commands[command.cmd]['parse'](self.bytes)
             self.bytes = []
             return AnalyzerFrame('data', self.data_start, frame.end_time, {
-                'str': str(specific_command)
+                'str': str(message)
             })
