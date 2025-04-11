@@ -189,8 +189,9 @@ class Hla(HighLevelAnalyzer):
         }
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.start_time = 0
+        self.last_end_time = 0
         self.data_start = 0
         self.bytes = []
         self.remaining_bytes = 0
@@ -201,12 +202,14 @@ class Hla(HighLevelAnalyzer):
 
         byte = int.from_bytes(frame.data['data'], 'big')
 
-        if not len(self.bytes) or frame.start_time - self.start_time > SaleaeTimeDelta(0.001):  # First byte
+        if not self.remaining_bytes or (frame.start_time - self.last_end_time) > SaleaeTimeDelta(millisecond=5):  # First byte
             self.remaining_bytes = ((byte & 0xf0) >> 4) + 1
             self.start_time = frame.start_time
+            self.bytes = []
 
         self.bytes.append(byte)
         self.remaining_bytes -= 1
+        self.last_end_time = frame.end_time
 
         if (len(self.bytes) == 1):
             command = MotorCommand(self.bytes)
@@ -227,7 +230,6 @@ class Hla(HighLevelAnalyzer):
             self.data_start = frame.start_time
 
         if not self.remaining_bytes:
-            # Parse bytes
             command = MotorCommand(self.bytes)
             message = responses[command.cmd]['parse'](self.bytes) if command.src_addr != 0 else \
                 commands[command.cmd]['parse'](self.bytes)
