@@ -32,14 +32,12 @@ namespace uart {
 	using DefaultCallback = Callback<uint8_t, 16>;
 	using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
 
-	void    init();
+	void init();
+
 	uint8_t print(const char* buf);
-
-	void send(const uint8_t* buf, uint8_t len, void (*cb)() = nullptr);
-	void setCallback(DefaultCallback::callback_type cb);
-
-	void slow();
-	void fast();
+	void    send(const uint8_t* buf, uint8_t len, void (*cb)() = nullptr);
+	void    setCallback(DefaultCallback::callback_type cb);
+	bool    busy();
 }
 
 

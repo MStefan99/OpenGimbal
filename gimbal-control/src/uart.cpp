@@ -65,6 +65,12 @@ static void SERCOM_Handler(
 ) {
 	if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {  // Not a framing error
 		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
+			if (!outQueue.size()) {
+				(void)regs->USART_INT.SERCOM_DATA;
+				regs->USART_INT.SERCOM_INTFLAG = SERCOM_I2CM_INTFLAG_Msk;
+				return;
+			}
+
 			--outQueue.front().remaining;
 			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
 				if (outQueue.front().callback) {
@@ -125,7 +131,6 @@ void uart::init() {
 	// Pin setup
 	PORT_REGS->GROUP[0].PORT_WRCONFIG = PORT_WRCONFIG_PINMASK(0x1 << 0u)            // Select pins
 	                                  | PORT_WRCONFIG_PMUXEN(1)                     // Enable multiplexing
-	                                  | PORT_WRCONFIG_PULLEN(1)                     // Enable pull
 	                                  | PORT_WRCONFIG_PMUX(MUX_PA16D_SERCOM3_PAD0)  // Multiplex to SERCOM
 	                                  | PORT_WRCONFIG_WRPMUX(1)                     // Write pin multiplex settings
 	                                  | PORT_WRCONFIG_WRPINCFG(1)                   // Write pin config settings
@@ -150,10 +155,8 @@ uint8_t uart::print(const char* buf) {
 	uint8_t len {0};
 	for (; buf[len] && len < 32; ++len);
 
-	__disable_irq();
 	outQueue.push_back({{}, 0, len});
 	util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
-	__enable_irq();
 	startTransfer(SERCOM3_REGS, outQueue);
 	return len;
 }
@@ -163,13 +166,15 @@ void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
 		return;
 	}
 
-	__disable_irq();
 	outQueue.push_back({{}, 0, len, cb});
 	util::copy(outQueue.back().buffer, buf, len);
-	__enable_irq();
 	startTransfer(SERCOM3_REGS, outQueue);
 }
 
 void uart::setCallback(uart::DefaultCallback::callback_type cb) {
 	callback = cb;
+}
+
+bool uart::busy() {
+	return outQueue.size();
 }

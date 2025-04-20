@@ -11,23 +11,31 @@ static void startTransfer(const i2c::Transfer& transfer);
 static void nextTransfer();
 static void completeTransfer(bool success);
 
-
 extern "C" {
 	void SERCOM0_Handler() {
 		auto& transfer {pendingTransfers.front()};
 
 		if (SERCOM_REGS->I2CM.SERCOM_INTFLAG & SERCOM_I2CM_INTFLAG_ERROR_Msk
-		    || (SERCOM_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_RXNACK_Msk)) {  // Error
-			SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(3);
+		    || (SERCOM_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_RXNACK_Msk)) {    // Error
+			SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(0x3);                 // Stop
+			while (SERCOM_REGS->I2CM.SERCOM_SYNCBUSY & SERCOM_I2CM_SYNCBUSY_SYSOP_Msk);  // Wait for synchronization
+
 			completeTransfer(false);
 			nextTransfer();
+			SERCOM_REGS->I2CM.SERCOM_STATUS = SERCOM_I2CM_STATUS_Msk;
+		} else if (!pendingTransfers.size()) {
+			(void)SERCOM_REGS->I2CM.SERCOM_DATA;
+			SERCOM_REGS->I2CM.SERCOM_INTFLAG = SERCOM_I2CM_INTFLAG_Msk;
+			return;
 		} else if (SERCOM_REGS->I2CM.SERCOM_INTFLAG & SERCOM_I2CM_INTFLAG_MB_Msk) {  // Master on bus
 			if (!transfer.flags.read) {
 				if (transfer.transferred < transfer.length) {
 					SERCOM_REGS->I2CM.SERCOM_DATA = SERCOM_I2CM_DATA_DATA(transfer.buf[transfer.transferred++]
 					);  // Send bytes (1st - register address, then data)
 				} else {
-					SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(3);
+					SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(3);                   // Stop
+					while (SERCOM_REGS->I2CM.SERCOM_SYNCBUSY & SERCOM_I2CM_SYNCBUSY_SYSOP_Msk);  // Wait for synchronization
+
 					completeTransfer(true);
 					nextTransfer();
 				}
@@ -51,7 +59,9 @@ extern "C" {
 				SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_ACKACT(1)  // Send NACK after last byte
 				                               | SERCOM_I2CM_CTRLB_CMD(0x2);  // Read next byte
 			} else {
-				SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(0x3);  // Stop
+				SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(0x3);                 // Stop
+				while (SERCOM_REGS->I2CM.SERCOM_SYNCBUSY & SERCOM_I2CM_SYNCBUSY_SYSOP_Msk);  // Wait for synchronization
+
 				completeTransfer(true);
 				nextTransfer();
 			}
@@ -81,7 +91,7 @@ void i2c::init() {
 	    SERCOM_I2CM_INTENSET_MB(1) | SERCOM_I2CM_INTENSET_SB(1) | SERCOM_I2CM_INTENSET_ERROR(1);
 
 	SERCOM_REGS->I2CM.SERCOM_STATUS |= SERCOM_I2CM_STATUS_BUSSTATE(1);
-	while (!(SERCOM_REGS->I2CM.SERCOM_STATUS & SERCOM_I2CM_STATUS_BUSSTATE_Msk));
+	while (SERCOM_REGS->I2CM.SERCOM_SYNCBUSY & SERCOM_I2CM_SYNCBUSY_SYSOP_Msk);  // Wait for synchronization
 
 	NVIC_EnableIRQ(SERCOM0_IRQn);
 }
@@ -101,10 +111,12 @@ void i2c::read(uint8_t devAddr, uint8_t regAddr, uint8_t size, void (*cb)(bool, 
 	startTransfer(transfer);
 }
 
+bool i2c::busy() {
+	return pendingTransfers.size();
+}
+
 void startTransfer(const i2c::Transfer& transfer) {
-	__disable_irq();
 	pendingTransfers.push_back(transfer);
-	__enable_irq();
 	nextTransfer();
 }
 

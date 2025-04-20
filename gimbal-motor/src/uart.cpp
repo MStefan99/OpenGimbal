@@ -64,6 +64,12 @@ static void SERCOM_Handler(
 ) {
 	if (!(regs->USART_INT.SERCOM_STATUS & SERCOM_USART_INT_STATUS_FERR_Msk)) {  // Not a framing error
 		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
+			if (!outQueue.size()) {
+				(void)regs->USART_INT.SERCOM_DATA;
+				regs->USART_INT.SERCOM_INTFLAG = SERCOM_I2CM_INTFLAG_Msk;
+				return;
+			}
+
 			--outQueue.front().remaining;
 			if (!outQueue.front().remaining) {  // Transmitted last byte, turning off transmitter
 				if (outQueue.front().callback) {

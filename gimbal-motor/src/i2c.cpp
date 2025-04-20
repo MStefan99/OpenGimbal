@@ -21,6 +21,12 @@ extern "C" {
 			SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(3);
 			completeTransfer(false);
 			nextTransfer();
+		} else
+
+		    if (!pendingTransfers.size()) {
+			(void)SERCOM_REGS->I2CM.SERCOM_DATA;
+			SERCOM_REGS->I2CM.SERCOM_INTFLAG = SERCOM_I2CM_INTFLAG_Msk;
+			return;
 		} else if (SERCOM_REGS->I2CM.SERCOM_INTFLAG & SERCOM_I2CM_INTFLAG_MB_Msk) {  // Master on bus
 			if (!transfer.flags.read) {
 				if (transfer.transferred < transfer.length) {

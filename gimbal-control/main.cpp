@@ -204,8 +204,8 @@ bool triggerAction() {
 
 					motor::wake(motor::all);
 					util::setTimeout([]() {
-						//						motor::getVariable(1, MotorCommand::Variable::Position);
-						//						motor::getVariable(2, MotorCommand::Variable::Position);
+						motor::getVariable(1, MotorCommand::Variable::Position);
+						motor::getVariable(2, MotorCommand::Variable::Position);
 						motor::getVariable(3, MotorCommand::Variable::Position);
 						powerMode = PowerMode::Active;
 					}, 10);
@@ -276,7 +276,10 @@ bool triggerAction() {
 	return !buttonPressed;
 }
 
-void sleep() {  // TODO: disable IMU
+void sleep() {
+	while (uart::busy() || i2c::busy()) {
+		__WFI();
+	}
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {

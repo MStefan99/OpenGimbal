@@ -126,9 +126,7 @@ void motor::getVariable(uint8_t address, MotorCommand::Variable variable) {
 		uart::send(command.getBuffer(), command.getLength());
 		lastRequestSent = util::getTime();
 	}
-	__disable_irq();
 	requestQueue.push_back(command);
-	__enable_irq();
 }
 
 void motor::send(const uint8_t* buf, uint8_t len, void (*cb)()) {

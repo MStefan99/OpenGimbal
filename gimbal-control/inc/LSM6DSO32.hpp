@@ -17,8 +17,8 @@
 
 namespace LSM6DSO32 {
 	// I2C needs to be initialized first
-	void enable();
-	void disable();
+	void enable(void (*cb)(bool success, const i2c::Transfer& transfer) = nullptr);
+	void disable(void (*cb)(bool success, const i2c::Transfer& transfer) = nullptr);
 
 	void update();
 

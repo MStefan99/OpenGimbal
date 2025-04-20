@@ -49,6 +49,7 @@ namespace i2c {
 	    uint8_t size = 1,
 	    void (*cb)(bool success, const Transfer& transfer) = nullptr
 	);
+	bool busy();
 }
 
 #endif /* I2C_HPP */
