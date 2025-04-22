@@ -37,9 +37,9 @@ void util::init() {
 	while (!(OSCCTRL_REGS->OSCCTRL_STATUS & OSCCTRL_STATUS_DFLLRDY_Msk));  // Wait for DFLL to start
 
 	// Enable OSC16M
-	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)  // Enable OSC16M
-	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)
-	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;  // Set frequency to 16MHz
+	OSCCTRL_REGS->OSCCTRL_OSC16MCTRL = OSCCTRL_OSC16MCTRL_ENABLE(1)    // Enable OSC16M
+	                                 | OSCCTRL_OSC16MCTRL_ONDEMAND(1)  // Only run when requested
+	                                 | OSCCTRL_OSC16MCTRL_FSEL_16;     // Set frequency to 16MHz
 
 	// Enable generic clocks
 	GCLK_REGS->GCLK_GENCTRL[1] = GCLK_GENCTRL_GENEN(1)      // Enable GCLK 1

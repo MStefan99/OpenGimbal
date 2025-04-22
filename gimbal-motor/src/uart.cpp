@@ -50,9 +50,13 @@ static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue
 		return;
 	}
 
-	enableTx(regs);
 	++outQueue.front().transferred;
-	regs->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
+	if (PORT_REGS->GROUP[0].PORT_IN & (0x1 << 22u)) {  // UART pin high, start transmitting immediately
+		enableTx(regs);
+		SERCOM3_REGS->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
+	} else {  // UART pin low, insert a delay before transmitting
+		TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_CMD_RETRIGGER;
+	}
 }
 
 static void SERCOM_Handler(
@@ -111,24 +115,43 @@ extern "C" {
 	void SERCOM3_Handler() {
 		SERCOM_Handler(SERCOM3_REGS, outQueue, inBuffer, callback, lastReceiveTime);
 	}
+
+	void TC0_Handler() {
+		if (TC0_REGS->COUNT16.TC_INTFLAG & TC_INTFLAG_MC0_Msk) {
+			enableTx(SERCOM3_REGS);
+		} else if (TC0_REGS->COUNT16.TC_INTFLAG & TC_INTFLAG_MC1_Msk) {
+			SERCOM3_REGS->USART_INT.SERCOM_DATA = outQueue.front().buffer[0];
+			TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_CMD_STOP;
+		}
+		TC0_REGS->COUNT16.TC_INTFLAG = TC_INTFLAG_Msk;
+	}
 }
 
 void uart::init() {
+	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[SERCOM3_GCLK_ID_CORE] = GCLK_PCHCTRL_CHEN(1)     // Enable SERCOM3 clock
 	                                              | GCLK_PCHCTRL_GEN_GCLK2;  // Set GCLK2 as a clock source
+	GCLK_REGS->GCLK_PCHCTRL[TC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)              // Enable TC0 clock
+	                                     | GCLK_PCHCTRL_GEN_GCLK2;           // Set GCLK2 as a clock source
 
-	// SERCOM config
+	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1) | TC_INTENSET_MC1(1);
+	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC((16000000.0f / 115200 * 12));  // Wait for 12 bit times
+	TC0_REGS->COUNT16.TC_CC[1] =
+	    TC_COUNT16_CC_CC((16000000.0f / 115200 * 14));  // Wait for 2 additional bit times after enabling
+	TC0_REGS->COUNT16.TC_CTRLA = TC_CTRLA_ENABLE(1) | TC_CTRLA_MODE_COUNT16 | TC_CTRLA_ONDEMAND(1) | TC_CTRLA_RUNSTDBY(1);
+	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_ONESHOT(1) | TC_CTRLBSET_CMD_STOP;
+
+	// SERCOM setup
 	initSERCOM(SERCOM3_REGS);
 	NVIC_EnableIRQ(SERCOM3_IRQn);
+	NVIC_EnableIRQ(TC0_IRQn);
 }
 
 void uart::enable() {
 	SERCOM3_REGS->USART_INT.SERCOM_CTRLA |= SERCOM_USART_INT_CTRLA_ENABLE(1);  // Enable USART
 
 	PORT_REGS->GROUP[0].PORT_PINCFG[22] = PORT_PINCFG_PMUXEN(1);                  // Enable mux on pin 22
-	PORT_REGS->GROUP[0].PORT_PINCFG[23] = PORT_PINCFG_PMUXEN(1);                  // Enable mux on pin 23
-	PORT_REGS->GROUP[0].PORT_PMUX[11] = PORT_PMUX_PMUXE(MUX_PA22C_SERCOM3_PAD0)   // Mux pin 22 to SERCOM3
-	                                  | PORT_PMUX_PMUXO(MUX_PA23C_SERCOM3_PAD1);  // Mux pin 23 to SERCOM3
+	PORT_REGS->GROUP[0].PORT_PMUX[11] = PORT_PMUX_PMUXE(MUX_PA22C_SERCOM3_PAD0);  // Mux pin 22 to SERCOM3
 }
 
 void uart::disable() {
@@ -142,26 +165,26 @@ uint8_t uart::print(const char* buf) {
 	uint8_t len {0};
 	for (; buf[len] && len < 32; ++len);
 
-	__disable_irq();
 	outQueue.push_back({{}, 0, len});
 	util::copy(outQueue.back().buffer, reinterpret_cast<const uint8_t*>(buf), len);
-	__enable_irq();
 	startTransfer(SERCOM3_REGS, outQueue);
 	return len;
 }
 
-void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
+void uart::send(const uint8_t* buf, const uint8_t len, void (*cb)()) {
 	if (outQueue.full()) {
 		return;
 	}
 
-	__disable_irq();
 	outQueue.push_back({{}, 0, len, cb});
 	util::copy(outQueue.back().buffer, buf, len);
-	__enable_irq();
 	startTransfer(SERCOM3_REGS, outQueue);
 }
 
 void uart::setCallback(uart::DefaultCallback::callback_type cb) {
 	callback = cb;
+}
+
+bool uart::busy() {
+	return outQueue.size();
 }

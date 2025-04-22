@@ -36,8 +36,9 @@ namespace uart {
 	void disable();
 
 	uint8_t print(const char* buf);
-	void    send(const uint8_t* buf, uint8_t len, void (*cb)() = nullptr);
+	void    send(const uint8_t* buf, const uint8_t len, void (*cb)() = nullptr);
 	void    setCallback(DefaultCallback::callback_type cb);
+	bool    busy();
 }
 
 

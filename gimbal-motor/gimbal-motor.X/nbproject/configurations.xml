@@ -39,7 +39,6 @@
         <itemPath>../inc/MovementController.hpp</itemPath>
         <itemPath>../inc/nvm.hpp</itemPath>
         <itemPath>../inc/PID.hpp</itemPath>
-        <itemPath>../inc/pwm.hpp</itemPath>
         <itemPath>../inc/Response.hpp</itemPath>
         <itemPath>../inc/RingBuffer.hpp</itemPath>
         <itemPath>../inc/TaskScheduler.hpp</itemPath>
@@ -210,7 +209,6 @@
         <itemPath>../src/interop.cpp</itemPath>
         <itemPath>../src/MovementController.cpp</itemPath>
         <itemPath>../src/nvm.cpp</itemPath>
-        <itemPath>../src/pwm.cpp</itemPath>
         <itemPath>../src/Response.cpp</itemPath>
         <itemPath>../src/uart.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>

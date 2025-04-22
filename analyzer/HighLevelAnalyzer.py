@@ -212,7 +212,10 @@ class Hla(HighLevelAnalyzer):
 
     def decode(self, frame: AnalyzerFrame):
         if not frame.type == 'data':
-            return  # Not interested in anything but data
+            return  # Skip non-data frames
+
+        if frame.data.get('error', None):
+            return  # Skip frames with errors
 
         byte = int.from_bytes(frame.data['data'], 'big')
 

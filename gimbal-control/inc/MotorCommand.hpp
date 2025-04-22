@@ -47,6 +47,9 @@ public:
 	buffer_type& getBuffer();
 	size_type    getLength();
 
+	const buffer_type& getBuffer() const;
+	const size_type    getLength() const;
+
 protected:
 	buffer_type _buffer = {0};
 };
