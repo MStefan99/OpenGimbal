@@ -12,3 +12,11 @@ MotorCommand::buffer_type& MotorCommand::getBuffer() {
 MotorCommand::size_type MotorCommand::getLength() {
 	return (this->_buffer[0] >> 4u) + 1;
 }
+
+const MotorCommand::buffer_type& MotorCommand::getBuffer() const {
+	return this->_buffer;
+}
+
+const MotorCommand::size_type MotorCommand::getLength() const {
+	return (this->_buffer[0] >> 4u) + 1;
+}

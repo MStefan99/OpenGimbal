@@ -1,17 +1,52 @@
 #include "motor.hpp"
 
-static uint32_t                             lastRequestSent {0};
 static RingBuffer<MotorCommand, uint8_t, 4> requestQueue;
 static uart::DefaultCallback::callback_type callback;
+volatile static uint8_t                     timeout {0};
+
+static void request() {
+	if (requestQueue.empty()) {
+		return;
+	}
+
+	auto& command {requestQueue.front()};
+
+	if (!timeout) {
+		uart::send(command.getBuffer(), command.getLength());
+		timeout = util::setTimeout([]() {
+			timeout = 0;
+			if (requestQueue.empty()) {
+				return;
+			}
+
+			requestQueue.pop_front();
+			if (requestQueue.size()) {
+				request();
+			}
+		}, 10);
+	}
+}
+
+static void request(const MotorCommand& command) {
+	if (requestQueue.full()) {
+		return;
+	}
+
+	requestQueue.push_back(command);
+	request();
+}
 
 static void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
 	if (requestQueue.size()) {  // Should always be true
 		requestQueue.pop_front();
 		if (requestQueue.size()) {
-			auto command {requestQueue.front()};
-			uart::send(command.getBuffer(), command.getLength());
-			lastRequestSent = util::getTime();
+			request(requestQueue.front());
 		}
+	}
+
+	if (timeout) {
+		util::clearTimeout(timeout);
+		timeout = 0;
 	}
 
 	if (callback) {
@@ -48,14 +83,6 @@ void motor::move(uint8_t address, uint16_t position, uint8_t torque) {
 	  MotorCommand {0, address, MotorCommand::CommandType::Move, 2}
 	};
 	auto& buf {command.getBuffer()};
-
-	if (util::getTime() - lastRequestSent > 50) {
-		requestQueue.clear();
-	}
-
-	if (requestQueue.size()) {
-		return;
-	}
 
 	buf[2] = (torque << 4u) | (position >> 8u);
 	buf[3] = position;
@@ -118,15 +145,7 @@ void motor::getVariable(uint8_t address, MotorCommand::Variable variable) {
 
 	buf[2] = static_cast<uint8_t>(variable);
 
-	if (util::getTime() - lastRequestSent > 50) {
-		requestQueue.clear();
-	}
-
-	if (requestQueue.empty()) {
-		uart::send(command.getBuffer(), command.getLength());
-		lastRequestSent = util::getTime();
-	}
-	requestQueue.push_back(command);
+	request(command);
 }
 
 void motor::send(const uint8_t* buf, uint8_t len, void (*cb)()) {

@@ -137,7 +137,7 @@ void uart::init() {
 	                                  | PORT_WRCONFIG_HWSEL(1);                     // Select pin range
 
 	TC0_REGS->COUNT16.TC_INTENSET = TC_INTENSET_MC0(1);
-	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(320);
+	TC0_REGS->COUNT16.TC_CC[0] = TC_COUNT16_CC_CC(16 * 200);  // Wait for 200us
 	TC0_REGS->COUNT16.TC_CTRLA = TC_CTRLA_ENABLE(1) | TC_CTRLA_MODE_COUNT16 | TC_CTRLA_ONDEMAND(1);
 	TC0_REGS->COUNT16.TC_CTRLBSET = TC_CTRLBSET_ONESHOT(1) | TC_CTRLBSET_CMD_STOP;
 	while (!(TC0_REGS->COUNT16.TC_SYNCBUSY = TC_SYNCBUSY_CTRLB_Msk));
@@ -161,7 +161,7 @@ uint8_t uart::print(const char* buf) {
 	return len;
 }
 
-void uart::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
+void uart::send(const uint8_t* buf, const uint8_t len, void (*cb)()) {
 	if (outQueue.full()) {
 		return;
 	}
