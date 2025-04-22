@@ -1,59 +1,5 @@
 #include "motor.hpp"
 
-static RingBuffer<MotorCommand, uint8_t, 4> requestQueue;
-static uart::DefaultCallback::callback_type callback;
-volatile static uint8_t                     timeout {0};
-
-static void request() {
-	if (requestQueue.empty()) {
-		return;
-	}
-
-	auto& command {requestQueue.front()};
-
-	if (!timeout) {
-		uart::send(command.getBuffer(), command.getLength());
-		timeout = util::setTimeout([]() {
-			timeout = 0;
-			if (requestQueue.empty()) {
-				return;
-			}
-
-			requestQueue.pop_front();
-			if (requestQueue.size()) {
-				request();
-			}
-		}, 10);
-	}
-}
-
-static void request(const MotorCommand& command) {
-	if (requestQueue.full()) {
-		return;
-	}
-
-	requestQueue.push_back(command);
-	request();
-}
-
-static void processResponse(const uart::DefaultCallback::buffer_type& buffer) {
-	if (requestQueue.size()) {  // Should always be true
-		requestQueue.pop_front();
-		if (requestQueue.size()) {
-			request(requestQueue.front());
-		}
-	}
-
-	if (timeout) {
-		util::clearTimeout(timeout);
-		timeout = 0;
-	}
-
-	if (callback) {
-		callback(buffer);
-	}
-}
-
 void motor::sleep(uint8_t address) {
 	auto command {
 	  MotorCommand {0, address, MotorCommand::CommandType::Sleep, 0}
@@ -145,7 +91,7 @@ void motor::getVariable(uint8_t address, MotorCommand::Variable variable) {
 
 	buf[2] = static_cast<uint8_t>(variable);
 
-	request(command);
+	uart::send(command.getBuffer(), command.getLength());
 }
 
 void motor::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
@@ -156,9 +102,4 @@ void motor::send(const uint8_t* buf, uint8_t len, void (*cb)()) {
 	}
 
 	uart::send(buf, len, cb);
-}
-
-void motor::setCallback(uart::DefaultCallback::callback_type cb) {
-	uart::setCallback(processResponse);
-	callback = cb;
 }

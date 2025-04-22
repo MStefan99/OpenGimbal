@@ -53,6 +53,7 @@ constexpr uint16_t MAX_PRESS_WAIT_TIME {600};
 constexpr uint16_t LONG_PRESS_STEP_TIME {250};
 constexpr uint16_t VOLTAGE_DISPLAY_TIME {250};
 constexpr uint16_t USB_PASSTHROUGH_TIMEOUT {2};
+constexpr uint16_t MOTOR_REQUEST_TIMEOUT {8};
 
 constexpr uint16_t updateRate {100};                           // Hz
 constexpr float    controlBoardAngle {-30.0f * F_DEG_TO_RAD};  // rad

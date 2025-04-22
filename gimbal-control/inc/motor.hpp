@@ -29,8 +29,6 @@ namespace motor {
 	void getVariable(uint8_t address, MotorCommand::Variable variable);
 
 	void send(const uint8_t* buf, uint8_t len, void (*cb)() = nullptr);
-
-	void setCallback(uart::DefaultCallback::callback_type cb);
 }
 
 #endif /* MOTOR_HPP */

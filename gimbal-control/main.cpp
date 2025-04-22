@@ -11,6 +11,9 @@ constexpr static float    sqrt2 = sqrtf(2);
 constexpr static uint16_t deltaTime {1000 / updateRate};
 constexpr static float    maxVelocityPerStep {maxRestoringVelocity / updateRate};
 
+volatile static uint8_t  motorPositionRequest {0};
+volatile static uint32_t motorRequestTime {0};
+
 static float yawCurrent {0};
 static float pitchCurrent {0};
 static float rollCurrent {0};
@@ -66,12 +69,12 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 		return;  // Command intended for another device
 	}
 
-	uint8_t srcAddress = (buffer.buffer[1] >> 4u) - 1;
+	uint8_t srcAddress = (buffer.buffer[1] >> 4u);
 	if (static_cast<MotorResponse::ResponseType>(buffer.buffer[1] & 0xf) == MotorResponse::ResponseType::ReturnVariable
 	    && static_cast<MotorResponse::Variable>(buffer.buffer[2]) == MotorResponse::Variable::Position
-	    && srcAddress <= 2) {
+	    && srcAddress < 4) {
 		float angle = normalize(((buffer.buffer[3] << 8u) | buffer.buffer[4]) / attFactor);
-		motorAngles[srcAddress] = angle;
+		motorAngles[srcAddress - 1] = angle;
 	}
 }
 
@@ -199,17 +202,14 @@ bool triggerAction() {
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
 					LSM6DSO32::enable();
+					powerMode = PowerMode::Active;
+
 					softStartActive = true;
 					softStartTime = util::getTime();
-					powerMode = PowerMode::Idle;
 
 					motor::wake(motor::all);
-					util::setTimeout([]() {
-						motor::getVariable(1, MotorCommand::Variable::Position);
-						motor::getVariable(2, MotorCommand::Variable::Position);
-						motor::getVariable(3, MotorCommand::Variable::Position);
-						powerMode = PowerMode::Active;
-					}, 10);
+					motorPositionRequest = 0;
+					motorRequestTime = util::getTime();
 
 				} else {
 					powerMode = PowerMode::Sleep;
@@ -302,7 +302,7 @@ int main() {
 	uart::init();
 	usb::init();
 
-	motor::setCallback(processMotorResponse);
+	uart::setCallback(processMotorResponse);
 	buttons::setCallback(processButtons);
 	usb::setCallback(processUSBCommand);
 
@@ -311,13 +311,6 @@ int main() {
 	Mahony mahony {};
 
 	while (1) {
-		if (softStartActive && util::getTime() - softStartTime >= softStartDuration) {
-			softStartActive = false;
-			if (powerMode == PowerMode::Idle) {
-				powerMode = PowerMode::Sleep;
-			}
-		}
-
 		switch (powerMode) {
 			case (PowerMode::Active): {
 				LSM6DSO32::update();
@@ -370,23 +363,38 @@ int main() {
 				auto rotationAngles {gimbalRotation.toEuler()};
 				auto calculatedAngles {calculateAngles(rotationAngles)};
 
-				for (uint8_t i {0}; i < 3; ++i) {
-					if (!std::isnan(calculatedAngles[i][0])) {
-						if (softStartActive) {
-							motorAngles[i] += normalize(calculatedAngles[i][0] - motorAngles[i])
-							                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime)) * deltaTime;
-						} else {
-							motorAngles[i] = calculatedAngles[i][0];
+				if (softStartActive) {
+					for (uint8_t i {0}; i < motorPositionRequest; ++i) {
+						motorAngles[i] += normalize(calculatedAngles[i][0] - motorAngles[i])
+						                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime)) * deltaTime;
+
+						if (std::isnan(calculatedAngles[i][0])) {
+							continue;
 						}
 
-						int16_t position = motorAngles[i] * attFactor;
-						if (position < 0) {
-							position += fullRevolution;
+						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * attFactor), fullRevolution));
+
+						if (util::getTime() - softStartTime >= softStartDuration) {
+							softStartActive = false;
+						}
+					}
+
+					if (motorPositionRequest < 3 && util::getTime() - motorRequestTime > MOTOR_REQUEST_TIMEOUT) {
+						motor::getVariable(++motorPositionRequest, MotorCommand::Variable::Position);
+						motorRequestTime = util::getTime();
+					}
+				} else {
+					for (uint8_t i {0}; i < 3; ++i) {
+						motorAngles[i] = calculatedAngles[i][0];
+
+						if (std::isnan(calculatedAngles[i][0])) {
+							continue;
 						}
 
-						motor::move(i + 1, position);
+						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * attFactor), fullRevolution));
 					}
 				}
+
 
 				util::sleep(deltaTime);
 				break;
@@ -396,6 +404,7 @@ int main() {
 				if (!usb::isActive() && wokenByUSB) {
 					powerMode = PowerMode::Sleep;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+					uart::disable();
 					wokenByUSB = false;
 				}
 				__WFI();
@@ -405,6 +414,7 @@ int main() {
 				if (usb::isActive()) {
 					powerMode = PowerMode::Idle;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+					uart::enable();
 					wokenByUSB = true;
 					break;
 				}
