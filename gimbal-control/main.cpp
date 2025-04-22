@@ -155,7 +155,7 @@ void showMode() {
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processButtons(bool left, bool pressed) {
-	if (powerMode == PowerMode::Sleep) {
+	if (pressed && powerMode == PowerMode::Sleep) {
 		powerMode = PowerMode::Idle;
 	}
 
@@ -183,7 +183,7 @@ void processButtons(bool left, bool pressed) {
 }
 
 bool triggerAction() {
-	bool isOff {powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep};
+	bool isOff {powerMode != PowerMode::Active};
 
 	if (buttonPressed) {  // buttonPressed being true means this is a long press
 		if (shortPresses == 1) {
@@ -194,6 +194,7 @@ bool triggerAction() {
 				setLEDs(isOff ? 0 : 0xffffffff);
 			} else if (led > 3) {
 				if (isOff) {
+					uart::enable();
 					displayState = DisplayState::GimbalMode;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					joystick::updateCenter();
@@ -271,6 +272,8 @@ bool triggerAction() {
 				showMode();
 			}
 		}
+	} else if (powerMode == PowerMode::Idle) {
+		powerMode = PowerMode::Sleep;
 	}
 
 	return !buttonPressed;
@@ -280,6 +283,7 @@ void sleep() {
 	while (uart::busy() || i2c::busy()) {
 		__WFI();
 	}
+	uart::disable();
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -404,6 +408,7 @@ int main() {
 					wokenByUSB = true;
 					break;
 				}
+				uart::enable();
 				motor::sleep();
 				sleep();
 				break;

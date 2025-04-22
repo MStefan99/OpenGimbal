@@ -25,7 +25,7 @@ static void initSERCOM(sercom_registers_t* regs) {
 	                                | SERCOM_USART_INT_INTENSET_TXC(1);  // Enable transmit complete interrupt
 }
 
-static bool busy() {
+bool uart::busy() {
 	if (outQueue.size()) {
 		if (outQueue.front().transferred) {  // Another transfer in progress
 			return true;
@@ -46,7 +46,7 @@ static void enableTx(sercom_registers_t* regs) {
 }
 
 static void startTransfer(sercom_registers_t* regs, uart::DefaultQueue& outQueue) {
-	if (busy()) {
+	if (uart::busy()) {
 		return;
 	}
 
@@ -70,7 +70,7 @@ static void SERCOM_Handler(
 		if (regs->USART_INT.SERCOM_CTRLB & SERCOM_USART_INT_CTRLB_TXEN_Msk) {     // Outgoing transfer
 			if (!outQueue.size()) {
 				(void)regs->USART_INT.SERCOM_DATA;
-				regs->USART_INT.SERCOM_INTFLAG = SERCOM_I2CM_INTFLAG_Msk;
+				regs->USART_INT.SERCOM_INTFLAG = SERCOM_USART_INT_INTFLAG_Msk;
 				return;
 			}
 
@@ -183,8 +183,4 @@ void uart::send(const uint8_t* buf, const uint8_t len, void (*cb)()) {
 
 void uart::setCallback(uart::DefaultCallback::callback_type cb) {
 	callback = cb;
-}
-
-bool uart::busy() {
-	return outQueue.size();
 }

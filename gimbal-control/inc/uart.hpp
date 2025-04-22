@@ -33,6 +33,8 @@ namespace uart {
 	using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
 
 	void init();
+	void enable();
+	void disable();
 
 	uint8_t print(const char* buf);
 	void    send(const uint8_t* buf, const uint8_t len, void (*cb)() = nullptr);
