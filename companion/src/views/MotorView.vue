@@ -184,8 +184,18 @@ async function adjustOffset(motor: IMotor): Promise<void> {
 	await motor.adjustOffset(positions.value[motor.address - 1]);
 	await delay(10);
 
+	const broadcastAddress = connectedDevice.value.all.address;
+
 	if (torques.value[motor.address - 1] > 0) {
 		await motor.move(positions.value[motor.address - 1], torques.value[motor.address - 1]);
+	} else if (torques.value[broadcastAddress - 1] > 0) {
+		await motor.move(positions.value[broadcastAddress - 1], torques.value[broadcastAddress - 1]);
+	} else if (motor.address === broadcastAddress) {
+		for (const motor of connectedDevice.value.active) {
+			if (torques.value[motor.address - 1] > 0) {
+				await motor.move(positions.value[motor.address - 1], torques.value[motor.address - 1]);
+			}
+		}
 	}
 
 	if (motor.address < 15) {

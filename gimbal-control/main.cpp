@@ -1,8 +1,8 @@
 #include "main.hpp"
 
-static DisplayState displayState {DisplayState::GimbalMode};
-static PowerMode    powerMode {PowerMode::Sleep};
-static GimbalMode   gimbalMode {GimbalMode::Follow};
+volatile static DisplayState displayState {DisplayState::GimbalMode};
+volatile static PowerMode    powerMode {PowerMode::Sleep};
+volatile static GimbalMode   gimbalMode {GimbalMode::Follow};
 
 constexpr static float    attFactor {2048 / F_PI};
 constexpr static float    ATT_LSB {10430.0f};
@@ -18,28 +18,28 @@ static float yawCurrent {0};
 static float pitchCurrent {0};
 static float rollCurrent {0};
 
-static float yawOffset {0};
-static float pitchOffset {0};
-static float rollOffset {0};
+volatile static float yawOffset {0};
+volatile static float pitchOffset {0};
+volatile static float rollOffset {0};
 
 volatile static float motorAngles[3] {0};
 
 volatile static uint32_t softStartTime {0};
 volatile static bool     softStartActive {false};
 
-int16_t yawReset {0};
-int16_t rollReset {0};
+volatile static int16_t yawReset {0};
+volatile static int16_t rollReset {0};
 
-volatile uint32_t stateChangeTime {0};
-volatile uint8_t  voltageBars {0};
+volatile static uint32_t stateChangeTime {0};
+volatile static uint8_t  voltageBars {0};
 
-volatile uint8_t  shortPresses {0};
-volatile uint32_t eventTime {0};
-volatile bool     buttonPressed {false};
-volatile bool     leftButton {true};
+volatile static uint8_t  shortPresses {0};
+volatile static uint32_t eventTime {0};
+volatile static bool     buttonPressed {false};
+volatile static bool     leftButton {true};
 
-volatile bool     usbPassthrough {false};
-volatile uint32_t usbPassthroughTime {0};
+volatile static bool     usbPassthrough {false};
+volatile static uint32_t usbPassthroughTime {0};
 
 volatile static bool wokenByUSB {false};
 
