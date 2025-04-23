@@ -22,13 +22,13 @@ volatile static float yawOffset {0};
 volatile static float pitchOffset {0};
 volatile static float rollOffset {0};
 
+volatile static float yawReset {0};
+volatile static float rollReset {0};
+
 volatile static float motorAngles[3] {0};
 
 volatile static uint32_t softStartTime {0};
 volatile static bool     softStartActive {false};
-
-volatile static int16_t yawReset {0};
-volatile static int16_t rollReset {0};
 
 volatile static uint32_t stateChangeTime {0};
 volatile static uint8_t  voltageBars {0};
@@ -250,14 +250,14 @@ bool triggerAction() {
 				pitchOffset = 0;
 				rollOffset = rollReset;
 			} else if (shortPresses == 2) {
-				rollReset += quarterRevolution;
-				if (rollReset > halfRevolution) {
+				rollReset += F_PI_2;
+				if (rollReset > F_PI + 0.05f) {
 					rollReset = 0;
 				}
 				rollOffset = rollReset;
 			} else if (shortPresses == 3) {
-				yawReset += halfRevolution + 2;  // Slightly more than half a revolution to indicate direction
-				if (yawReset > halfRevolution + 2) {
+				yawReset += F_PI;
+				if (yawReset > F_PI + 0.05f) {
 					yawReset = 0;
 				}
 				yawOffset = yawReset;

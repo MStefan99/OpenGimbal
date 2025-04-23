@@ -42,11 +42,24 @@ int16_t joystick::getAxis(uint8_t axis) {
 
 	if (dx * dx + dy * dy < deadzone) {
 		return 0;
-	} else if (values[axis] < axisPoints[axis].center) {
-		return util::scale<int16_t>(values[axis], axisPoints[axis].min, axisPoints[axis].center, -1000, 0);
-	} else {
-		return util::scale<int16_t>(values[axis], axisPoints[axis].center, axisPoints[axis].max, 0, 1000);
+	} else if (values[axis] < axisPoints[axis].center - joystick::deadzone) {
+		return util::scale<int16_t>(
+		    values[axis],
+		    axisPoints[axis].min,
+		    axisPoints[axis].center - joystick::deadzone,
+		    -1000,
+		    0
+		);
+	} else if (values[axis] > axisPoints[axis].center + joystick::deadzone) {
+		return util::scale<int16_t>(
+		    values[axis],
+		    axisPoints[axis].center + joystick::deadzone,
+		    axisPoints[axis].max,
+		    0,
+		    1000
+		);
 	}
+	return 0;
 }
 
 void joystick::updateCenter() {
