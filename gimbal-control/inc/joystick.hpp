@@ -15,8 +15,9 @@
 
 namespace joystick {
 	constexpr uint16_t deadzone {500};
+	using callback_type = void (*)(int16_t x, int16_t y);
 
-	void update(void (*cb)(int16_t x, int16_t y) = nullptr);
+	void update(callback_type cb = nullptr);
 
 	int16_t getAxis(uint8_t axis);
 

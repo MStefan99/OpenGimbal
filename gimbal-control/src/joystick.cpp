@@ -5,13 +5,19 @@ constexpr int deadzone = joystick::deadzone * joystick::deadzone;
 static uint16_t        values[2] {};
 static nvm::AxisPoints axisPoints[2] {};
 
-static void (*callback)(int16_t x, int16_t y) {nullptr};
+volatile static joystick::callback_type callback {nullptr};
+volatile static uint32_t                lastUpdateTime {0};
 
-void joystick::update(void (*cb)(int16_t, int16_t)) {
+void joystick::update(callback_type cb) {
+	if (util::getTime() - lastUpdateTime > 20) {
+		callback = nullptr;
+	}
 	if (callback) {
 		return;
 	}
+
 	callback = cb;
+	lastUpdateTime = util::getTime();
 
 	adc::measureX([](uint16_t x) {
 		values[0] = x;
