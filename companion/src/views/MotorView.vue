@@ -75,8 +75,8 @@
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Power
 				button.block.mb-2(@click="motor.disable()") Disable
-				button.block.mb-2(@click="motor.sleep()") Sleep
 				button.block.mb-2(@click="motor.idle()") Idle
+				button.block.mb-2(@click="motor.sleep()") Sleep
 				button.block.mb-2(@click="motor.wake()") Wake
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Recalibrate

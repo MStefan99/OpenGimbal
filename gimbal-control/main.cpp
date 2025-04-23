@@ -225,6 +225,8 @@ bool triggerAction() {
 
 				return true;
 			}
+		} else if (shortPresses == 3) {
+			__NVIC_SystemReset();
 		} else {
 			return true;
 		}
