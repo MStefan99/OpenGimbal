@@ -58,7 +58,7 @@ constexpr uint16_t MOTOR_REQUEST_TIMEOUT {8};
 constexpr uint16_t updateRate {100};                           // Hz
 constexpr float    controlBoardAngle {-30.0f * F_DEG_TO_RAD};  // rad
 constexpr float    maxRestoringVelocity {F_PI};                // Half revolution per second
-constexpr uint16_t softStartDuration {2000};                   // ms
+constexpr uint16_t softStartDuration {1500};                   // ms
 
 constexpr int16_t fullRevolution {4096};
 constexpr int16_t halfRevolution {fullRevolution / 2};

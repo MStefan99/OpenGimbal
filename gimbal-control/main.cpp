@@ -213,6 +213,7 @@ bool triggerAction() {
 					motorPositionRequest = 0;
 					motorRequestTime = util::getTime();
 
+					WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
 				} else {
 					powerMode = PowerMode::Sleep;
 					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
@@ -282,6 +283,7 @@ bool triggerAction() {
 }
 
 void sleep() {
+	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(0);
 	while (uart::busy() || i2c::busy()) {
 		__WFI();
 	}
@@ -309,6 +311,8 @@ int main() {
 	usb::setCallback(processUSBCommand);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
+	WDT_REGS->WDT_CONFIG = WDT_CONFIG_PER_CYC64;
+
 	{
 		uint8_t steps {150};
 
@@ -413,7 +417,6 @@ int main() {
 					}
 				}
 
-
 				util::sleep(deltaTime);
 				break;
 			}
@@ -483,6 +486,8 @@ int main() {
 				shortPresses = 0;
 			}
 		}
+
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 	}
 
 	return 1;

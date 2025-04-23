@@ -280,6 +280,7 @@ void unwind(int16_t offset) {
 	for (; offset > 0; offset -= 8) {
 		bldc::applyTorque(offset, 255);
 		util::sleep(1);
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 	}
 	bldc::applyTorque(0, 0);
 }
@@ -311,6 +312,7 @@ int16_t checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool countercl
 		}
 
 		util::sleep(1);
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 	}
 
 	return 0;
@@ -348,6 +350,8 @@ bool calibrate() {
 				bldc::applyTorque(0, 0);
 				return false;
 			}
+
+			WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 		} while (samples < 10);  // Wait for a while to ensure the motor has settled
 		nvm::edit(&nvm::options->phaseOffset, phaseOffset);
 	}
@@ -402,6 +406,7 @@ bool calibrate() {
 			}
 
 			util::sleep(1);
+			WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 		} while (util::abs(angle - phaseOffset) > 10 || !polePairs);
 
 		// Adding the last pole if we're close enough
@@ -443,6 +448,7 @@ bool calibrate() {
 }
 
 void sleep() {
+	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(0);
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -450,6 +456,7 @@ void sleep() {
 	} while (mode == Mode::Sleep);
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_IDLE;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_IDLE);
+	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
 }
 
 int main() {
@@ -462,6 +469,7 @@ int main() {
 	bldc::enable();
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
+	WDT_REGS->WDT_CONFIG = WDT_CONFIG_PER_CYC64;
 
 	uart::setCallback(processCommand);
 	eic::setCallback(processWakeup);
@@ -533,6 +541,8 @@ int main() {
 				break;
 			}
 		}
+
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 	}
 
 	return 1;

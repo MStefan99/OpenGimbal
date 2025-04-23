@@ -32,7 +32,6 @@
         <itemPath>../inc/as5600.hpp</itemPath>
         <itemPath>../inc/bldc.hpp</itemPath>
         <itemPath>../inc/i2c.hpp</itemPath>
-        <itemPath>../inc/interop.h</itemPath>
         <itemPath>../inc/Kalman.hpp</itemPath>
         <itemPath>../inc/LowPassFilter.hpp</itemPath>
         <itemPath>../inc/Matrix.hpp</itemPath>
@@ -45,6 +44,7 @@
         <itemPath>../inc/uart.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/eic.hpp</itemPath>
+        <itemPath>../inc/bldc.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -206,7 +206,6 @@
         <itemPath>../src/as5600.cpp</itemPath>
         <itemPath>../src/bldc.cpp</itemPath>
         <itemPath>../src/i2c.cpp</itemPath>
-        <itemPath>../src/interop.cpp</itemPath>
         <itemPath>../src/MovementController.cpp</itemPath>
         <itemPath>../src/nvm.cpp</itemPath>
         <itemPath>../src/Response.cpp</itemPath>

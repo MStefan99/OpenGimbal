@@ -42,6 +42,13 @@ constexpr static auto     trigTable = TrigTable();
 constexpr static uint16_t SQRT3 = sqrtf(3) * 128;
 constexpr static uint16_t MAX_VAL = 255 * 255;
 
+
+extern "C" {
+	void bldcDisable() {
+		bldc::disable();
+	}
+}
+
 void bldc::init() {
 	// Clock setup
 	GCLK_REGS->GCLK_PCHCTRL[TCC0_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable TCC[0:1] clock
