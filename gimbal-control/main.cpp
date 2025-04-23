@@ -11,6 +11,8 @@ constexpr static float    sqrt2 = sqrtf(2);
 constexpr static uint16_t deltaTime {1000 / updateRate};
 constexpr static float    maxVelocityPerStep {maxRestoringVelocity / updateRate};
 
+static Mahony mahony {};
+
 volatile static uint8_t  motorPositionRequest {0};
 volatile static uint32_t motorRequestTime {0};
 
@@ -307,8 +309,24 @@ int main() {
 	usb::setCallback(processUSBCommand);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
+	{
+		uint8_t steps {150};
 
-	Mahony mahony {};
+		for (uint8_t step {0}; step < steps; ++step) {
+			auto percentage = util::scale(static_cast<int>(step), 0, static_cast<int>(steps), 0, 255);
+			auto brightnessInner = util::clamp(util::min(percentage, 192 - percentage), 0, 192) * (65535 / 192);
+			auto brightnessOuter = util::clamp(util::min(percentage - 63, 255 - percentage), 0, 192) * (65535 / 192);
+
+			pwm::setBrightness(1, brightnessInner);
+			pwm::setBrightness(2, brightnessInner);
+
+			pwm::setBrightness(0, brightnessOuter);
+			pwm::setBrightness(3, brightnessOuter);
+
+			util::sleep(1000 / steps);
+		}
+		setLEDs(0);
+	}
 
 	while (1) {
 		switch (powerMode) {
