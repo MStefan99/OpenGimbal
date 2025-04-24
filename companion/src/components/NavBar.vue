@@ -3,7 +3,10 @@
 	#title-bar
 		span#title OpenGimbal Companion
 		nav
+			RouterLink(:to="{name: 'control'}" v-if="appState.developerMode") Control
+			RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline
 			RouterLink(:to="{name: 'motors'}") Motors
+			RouterLink(:to="{name: 'developer'}" v-if="appState.developerMode") Developer
 		label#device-status.connected(v-if="connectedDevice" for="device-toggle") Connected
 		label#device-status(v-else for="device-toggle") Not connected
 		input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")
@@ -15,6 +18,7 @@
 <script setup lang="ts">
 import DeviceSelector from './DeviceSelector.vue';
 import {connectedDevice} from '../scripts/driver/driver';
+import {appState} from '../scripts/store';
 import {ref} from 'vue';
 
 const deviceSelectorOpen = ref<boolean>(false);

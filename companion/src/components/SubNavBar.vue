@@ -11,7 +11,7 @@
 
 <style scoped>
 .subnavbar {
-	background-color: var(--color-blue-dark);
+	background-color: var(--color-accent);
 	color: var(--color-background);
 }
 
@@ -20,11 +20,12 @@
 	flex-flow: row wrap;
 	color: var(--color-white);
 	background-color: var(--color-accent);
-	border-top: 1px solid var(--color-blue);
+	border-top: 1px solid var(--color-background);
 }
 
 .subnavbar nav :deep(a:hover) {
-	background-color: var(--color-blue-bright);
+	background-color: var(--color-background);
+	color: var(--color-accent);
 }
 
 .subnavbar nav :deep(a.router-link-active) {

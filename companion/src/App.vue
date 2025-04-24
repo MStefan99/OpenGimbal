@@ -18,6 +18,11 @@ import PopupContainer from './components/PopupContainer.vue';
 import {connectedDevice} from './scripts/driver/driver';
 import {crashCourse} from './scripts/analytics';
 import {PopupColor, alert, prompt} from './scripts/popups';
+import appState from './scripts/store';
+
+let lastKeyPress = 0;
+let inputStr = '';
+const inputTimeout = 2000;
 
 function sendFeedback(): void {
 	prompt(
@@ -44,6 +49,21 @@ function sendFeedback(): void {
 		)
 		.catch((): null => null);
 }
+
+document.addEventListener('keydown', (event: KeyboardEvent) => {
+	const now = Date.now();
+	if (now - lastKeyPress >= inputTimeout) {
+		inputStr = '';
+	}
+	lastKeyPress = now;
+	inputStr += event.key;
+
+	if (inputStr === 'developer') {
+		appState.setDeveloperMode(true);
+	} else if (inputStr === 'nodev') {
+		appState.setDeveloperMode(false);
+	}
+});
 </script>
 
 <style>
