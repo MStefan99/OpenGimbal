@@ -14,8 +14,11 @@
 
 namespace USBCommand {
 	enum class CommandType : uint8_t {
-		GetVariable = 0x0,
-		SetVariable = 0x1,
+		Sleep = 0x0,
+		Enable = 0x1,
+		Move = 0x2,
+		SetVariable = 0x0d,
+		GetVariable = 0x0e,
 		MotorPassthrough = 0xf
 	};
 

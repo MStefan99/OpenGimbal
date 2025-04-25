@@ -1,8 +1,19 @@
 import {Message} from '../Message';
+import {GimbalCommandType} from './GimbalCommand';
 
 export class USBMessage extends Message {
-	constructor(buffer: Uint8Array) {
-		super(buffer);
+	constructor(buffer: Uint8Array);
+	constructor(type: GimbalCommandType, data?: Uint8Array);
+
+	constructor(buffer: Uint8Array | GimbalCommandType, data?: Uint8Array) {
+		if (buffer instanceof Uint8Array) {
+			super(buffer);
+		} else {
+			super(new Uint8Array(1 + (data?.byteLength ?? 0)));
+
+			this.view.setUint8(0, buffer);
+			data && this.buffer.set(data, 1);
+		}
 	}
 
 	get length(): number {

@@ -30,7 +30,7 @@ export class GimbalResponse extends USBMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${gimbalCommandNames[(this.view.getUint8(1) & 0xf) as GimbalResponseType]} command`;
+			return `${gimbalCommandNames[this.view.getUint8(0) as GimbalResponseType]} command`;
 		}
 	}
 }

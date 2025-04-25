@@ -1,19 +1,27 @@
 import {CalibrationBits, IMotor, Motor} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './serial/SerialInterface';
+import {MotorCommand} from './serial/MotorCommand';
+import {MotorResponse} from './serial/MotorResponse';
 
-export interface IMotorManager {
-	get motors(): IMotor[];
-
+export interface IMotorControl {
 	get active(): IMotor[];
 
 	get all(): IMotor;
+
+	send(command: MotorCommand): Promise<void>;
+
+	request(command: MotorCommand): Promise<MotorResponse | null>;
 
 	motor(address?: IMotor['address']): IMotor;
 
 	enumerate(): Promise<IMotor[]>;
 
 	getInitialCalibration(address?: IMotor['address']): BitwiseRegister<CalibrationBits>;
+}
+
+export interface IMotorManager {
+	get motors(): IMotorControl;
 
 	close(): Promise<void>;
 }
@@ -24,7 +32,7 @@ export type MotorEntry = {
 	initialCalibration?: BitwiseRegister<CalibrationBits>;
 };
 
-export class MotorManager implements IMotorManager {
+class MotorControl implements IMotorControl {
 	readonly _hardwareInterface: ISerialInterface;
 	readonly _motorEntries: MotorEntry[];
 
@@ -36,10 +44,6 @@ export class MotorManager implements IMotorManager {
 		}));
 	}
 
-	get motors(): Motor[] {
-		return this._motorEntries.map((e) => e.motor);
-	}
-
 	get active(): Motor[] {
 		return this._motorEntries.filter((e) => e.active).map((e) => e.motor);
 	}
@@ -48,8 +52,16 @@ export class MotorManager implements IMotorManager {
 		return new Motor(this._hardwareInterface, 15);
 	}
 
+	send(command: MotorCommand): Promise<void> {
+		return this._hardwareInterface.send(command);
+	}
+
+	request(command: MotorCommand): Promise<MotorResponse | null> {
+		return this._hardwareInterface.request(command) as Promise<MotorResponse | null>;
+	}
+
 	motor(address: Motor['address'] = 1): Motor {
-		return this.motors.find((e) => e.address === address);
+		return this._motorEntries.find((e) => e.motor.address === address).motor;
 	}
 
 	async enumerate(): Promise<Motor[]> {
@@ -74,5 +86,21 @@ export class MotorManager implements IMotorManager {
 
 	close(): Promise<void> {
 		return this._hardwareInterface.close();
+	}
+}
+
+export class MotorManager implements IMotorManager {
+	readonly _control: MotorControl;
+
+	constructor(serialInterface: ISerialInterface) {
+		this._control = new MotorControl(serialInterface);
+	}
+
+	get motors(): IMotorControl {
+		return this._control;
+	}
+
+	close(): Promise<void> {
+		return this._control.close();
 	}
 }

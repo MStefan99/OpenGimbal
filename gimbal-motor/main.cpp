@@ -6,7 +6,7 @@ constexpr static uint16_t halfRevolution {fullRevolution / 2};
 constexpr static uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
-static Mode               mode {Mode::Sleep};
+static Mode               mode {Mode::Idle};  // Start in idle for UART compatibility
 static uint8_t            calibrationMode = nvm::options->polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
 static bool               poweredDown {mode == Mode::Sleep || mode == Mode::Idle};

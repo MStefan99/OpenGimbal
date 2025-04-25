@@ -4,22 +4,22 @@ import {exposeSerialMessage} from './USBSerialEncapsulator';
 import {SerialParser} from '../serial/SerialParser';
 
 export enum GimbalCommandType {
-	Sleep = 0x01,
-	Wake = 0x02,
-	Move = 0x03,
+	Sleep = 0x00,
+	Enable = 0x01,
+	Move = 0x02,
 	MotorPassthrough = 0x0f
 }
 
 export const gimbalCommandNames: Record<GimbalCommandType, string> = {
 	[GimbalCommandType.Sleep]: 'Sleep',
-	[GimbalCommandType.Wake]: 'Wake',
+	[GimbalCommandType.Enable]: 'Enable',
 	[GimbalCommandType.Move]: 'Move',
 	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
 };
 
 export const getGimbalCommand: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
 	[GimbalCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
-	[GimbalCommandType.Wake]: (buffer: Uint8Array) => new WakeCommand(buffer),
+	[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
 	[GimbalCommandType.Move]: (buffer: Uint8Array) => {
 		throw new Error('Not implemented');
 	},
@@ -38,20 +38,20 @@ export class GimbalCommand extends USBMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${gimbalCommandNames[(this.view.getUint8(1) & 0xf) as GimbalCommandType]} command`;
+			return `${gimbalCommandNames[this.view.getUint8(0) as GimbalCommandType]} command`;
 		}
 	}
 }
 
 export class SleepCommand extends GimbalCommand {
 	constructor(buffer: Uint8Array);
-	constructor(motorCommand: MotorCommand);
+	constructor();
 
-	constructor(srcAddr: Uint8Array | MotorCommand) {
-		if (srcAddr instanceof Uint8Array) {
-			super(srcAddr);
+	constructor(buffer?: Uint8Array) {
+		if (buffer) {
+			super(buffer);
 		} else {
-			super(srcAddr.buffer);
+			super(GimbalCommandType.Sleep);
 		}
 	}
 
@@ -64,15 +64,15 @@ export class SleepCommand extends GimbalCommand {
 	}
 }
 
-export class WakeCommand extends GimbalCommand {
+export class EnableCommand extends GimbalCommand {
 	constructor(buffer: Uint8Array);
-	constructor(motorCommand: MotorCommand);
+	constructor();
 
-	constructor(srcAddr: Uint8Array | MotorCommand) {
-		if (srcAddr instanceof Uint8Array) {
-			super(srcAddr);
+	constructor(buffer?: Uint8Array) {
+		if (buffer) {
+			super(buffer);
 		} else {
-			super(srcAddr.buffer);
+			super(GimbalCommandType.Enable);
 		}
 	}
 
@@ -80,7 +80,7 @@ export class WakeCommand extends GimbalCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return 'Wake command';
+			return 'Enable command';
 		}
 	}
 }

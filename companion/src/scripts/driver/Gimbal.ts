@@ -1,13 +1,21 @@
 import {IUSBInterface} from './usb/USBInterface';
-import {IMotorManager, MotorManager} from './MotorManager';
+import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
 import {USBSerialEncapsulator} from './usb/USBSerialEncapsulator';
-import {CalibrationBits, Motor} from './Motor';
-import {BitwiseRegister} from './BitwiseRegister';
+import {EnableCommand, GimbalCommand, SleepCommand} from './usb/GimbalCommand';
+import {GimbalResponse} from './usb/GimbalResponse';
 
 export interface IGimbal extends IMotorManager {
 	get manufacturerName(): string;
 
 	get productName(): string;
+
+	send(command: GimbalCommand): Promise<void>;
+
+	request(command: GimbalCommand): Promise<GimbalResponse | null>;
+
+	enable(): Promise<void>;
+
+	sleep(): Promise<void>;
 }
 
 export class Gimbal implements IGimbal {
@@ -27,28 +35,24 @@ export class Gimbal implements IGimbal {
 		return this._hardwareInterface.productName;
 	}
 
-	get active(): Motor[] {
-		return this.motorManager.active;
-	}
-
-	get all(): Motor {
-		return this.motorManager.all;
-	}
-
-	enumerate(): Promise<Motor[]> {
-		return this.motorManager.enumerate();
-	}
-
-	getInitialCalibration(address: Motor['address']): BitwiseRegister<CalibrationBits> {
-		return this.motorManager.getInitialCalibration(address);
-	}
-
-	motor(address: Motor['address']): Motor {
-		return this.motorManager.motor(address);
-	}
-
-	get motors(): Motor[] {
+	get motors(): IMotorControl {
 		return this.motorManager.motors;
+	}
+
+	send(command: GimbalCommand): Promise<void> {
+		return this._hardwareInterface.send(command);
+	}
+
+	request(command: GimbalCommand): Promise<GimbalResponse | null> {
+		return this._hardwareInterface.request(command) as Promise<GimbalResponse | null>;
+	}
+
+	enable(): Promise<void> {
+		return this._hardwareInterface.send(new EnableCommand());
+	}
+
+	sleep(): Promise<void> {
+		return this._hardwareInterface.send(new SleepCommand());
 	}
 
 	close(): Promise<void> {

@@ -146,8 +146,8 @@ async function enumerate(): Promise<void> {
 	enumerating.value = true;
 	motors.value = [];
 
-	const detectedMotors = await connectedDevice.value.enumerate();
-	detectedMotors.length && detectedMotors.push(connectedDevice.value.all);
+	const detectedMotors = await connectedDevice.value.motors.enumerate();
+	detectedMotors.length && detectedMotors.push(connectedDevice.value.motors.all);
 
 	positions.value = new Array(15).fill(0);
 	torques.value = new Array(15).fill(0);
@@ -159,8 +159,8 @@ async function enumerate(): Promise<void> {
 	calibrations.value = new Array(15);
 
 	try {
-		for (const motor of connectedDevice.value.active) {
-			calibrations.value[motor.address - 1] = connectedDevice.value.getInitialCalibration(
+		for (const motor of connectedDevice.value.motors.active) {
+			calibrations.value[motor.address - 1] = connectedDevice.value.motors.getInitialCalibration(
 				motor.address
 			);
 			speeds.value[motor.address - 1] = await motor.getMaxSpeed();
@@ -184,14 +184,14 @@ async function adjustOffset(motor: IMotor): Promise<void> {
 	await motor.adjustOffset(positions.value[motor.address - 1]);
 	await delay(10);
 
-	const broadcastAddress = connectedDevice.value.all.address;
+	const broadcastAddress = connectedDevice.value.motors.all.address;
 
 	if (torques.value[motor.address - 1] > 0) {
 		await motor.move(positions.value[motor.address - 1], torques.value[motor.address - 1]);
 	} else if (torques.value[broadcastAddress - 1] > 0) {
 		await motor.move(positions.value[broadcastAddress - 1], torques.value[broadcastAddress - 1]);
 	} else if (motor.address === broadcastAddress) {
-		for (const motor of connectedDevice.value.active) {
+		for (const motor of connectedDevice.value.motors.active) {
 			if (torques.value[motor.address - 1] > 0) {
 				await motor.move(positions.value[motor.address - 1], torques.value[motor.address - 1]);
 			}

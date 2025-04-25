@@ -127,7 +127,7 @@ export class SerialInterface implements ISerialInterface {
 		if (this._port.readable?.locked) {
 			await this._port.readable.cancel('Port is being closed');
 		}
-		if (this._port.writable.locked) {
+		if (this._port.writable?.locked) {
 			await this._port.writable.abort('Port is being closed');
 		}
 

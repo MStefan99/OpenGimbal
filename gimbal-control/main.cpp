@@ -54,6 +54,49 @@ float normalize(float difference) {
 	return difference;
 }
 
+void setLEDs(uint32_t brightnesses) {
+	for (uint8_t i {0}; i < 4; ++i) {
+		pwm::setBrightness(i, brightnesses << 8u);
+		brightnesses >>= 8u;
+	}
+}
+
+void showMode() {
+	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep) {
+		setLEDs(0);
+	} else {
+		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
+	}
+}
+
+void enable() {
+	uart::enable();
+	displayState = DisplayState::GimbalMode;
+	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+	joystick::updateCenter();
+	LSM6DSO32::enable();
+	powerMode = PowerMode::Active;
+
+	softStartActive = true;
+	softStartTime = util::getTime();
+
+	motor::wake(motor::all);
+	motorPositionRequest = 0;
+	motorRequestTime = util::getTime();
+	showMode();
+
+	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
+}
+
+void disable() {
+	powerMode = PowerMode::Sleep;
+	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
+	joystick::saveValues();
+	yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
+	LSM6DSO32::disable();
+	showMode();
+}
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 	if (usbPassthrough) {
@@ -83,15 +126,17 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_t len) {
 	switch (static_cast<USBCommand::CommandType>(request.bRequest)) {
+		case (USBCommand::CommandType::Enable): {
+			enable();
+			break;
+		}
+		case (USBCommand::CommandType::Sleep): {
+			disable();
+			break;
+		}
 		case (USBCommand::CommandType::GetVariable): {
 			switch (request.bData[0]) {
 				case static_cast<uint8_t>(USBCommand::Variable::Status):
-					//					usb::write(reinterpret_cast<uint8_t*>(&USBCommand::usbStatusResponse),
-					// sizeof(USBCommand::USBStatusResponse));
-					break;
-				case static_cast<uint8_t>(USBCommand::Variable::Sensors):
-					//					usb::write(reinterpret_cast<uint8_t*>(&USBCommand::usbSensorsResponse),
-					// sizeof(USBCommand::USBSensorsResponse));
 					break;
 				default:
 					usb::write(nullptr, 0);
@@ -145,21 +190,6 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
 	};
 }
 
-void setLEDs(uint32_t brightnesses) {
-	for (uint8_t i {0}; i < 4; ++i) {
-		pwm::setBrightness(i, brightnesses << 8u);
-		brightnesses >>= 8u;
-	}
-}
-
-void showMode() {
-	if (powerMode == PowerMode::Idle || powerMode == PowerMode::Sleep) {
-		setLEDs(0);
-	} else {
-		setLEDs(0xff << static_cast<uint8_t>(gimbalMode) * 8);
-	}
-}
-
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processButtons(bool left, bool pressed) {
 	if (pressed && powerMode == PowerMode::Sleep) {
@@ -201,27 +231,9 @@ bool triggerAction() {
 				setLEDs(isOff ? 0 : 0xffffffff);
 			} else if (led > 3) {
 				if (isOff) {
-					uart::enable();
-					displayState = DisplayState::GimbalMode;
-					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
-					joystick::updateCenter();
-					LSM6DSO32::enable();
-					powerMode = PowerMode::Active;
-
-					softStartActive = true;
-					softStartTime = util::getTime();
-
-					motor::wake(motor::all);
-					motorPositionRequest = 0;
-					motorRequestTime = util::getTime();
-
-					WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
+					enable();
 				} else {
-					powerMode = PowerMode::Sleep;
-					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
-					joystick::saveValues();
-					yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
-					LSM6DSO32::disable();
+					disable();
 				}
 				showMode();
 
@@ -428,6 +440,8 @@ int main() {
 				break;
 			}
 			case (PowerMode::Sleep): {
+				uart::enable();
+				motor::sleep();
 				if (usb::isActive()) {
 					powerMode = PowerMode::Idle;
 					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
@@ -435,8 +449,6 @@ int main() {
 					wokenByUSB = true;
 					break;
 				}
-				uart::enable();
-				motor::sleep();
 				sleep();
 				break;
 			}

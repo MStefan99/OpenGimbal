@@ -1,5 +1,5 @@
 <template lang="pug">
-.monitor.max-w-screen-lg.my-4.mx-auto.px-4
+.serial.max-w-screen-lg.my-4.mx-auto.px-4
 	.send
 		h3.my-4.text-xl.font-bold Send commands to motors
 		form(@submit.prevent="sendCommand(stringToBuffer(commandString))")
@@ -11,12 +11,12 @@
 		and sending an invalid or malformed command could lead to unpredictable behavior or damage to the device
 	h3.my-4.text-xl.font-bold History
 	.command.card.my-4(v-for="entry in commandEntries" :key="entry.id")
-		div(v-if="entry.command")
-			p.text-lg.text-accent(v-if="!entry.command.srcAddr") Controller → Motor {{entry.command.destAddr}}
-			p.text-lg.text-accent(v-else) Motor {{entry.command.destAddr}} → Controller
+		div(v-if="entry.message")
+			p.text-lg.text-accent(v-if="!entry.message.srcAddr") Controller → Motor {{entry.message.destAddr}}
+			p.text-lg.text-accent(v-else) Motor {{entry.message.destAddr}} → Controller
 			p.text-slate-400 {{formatTime(Date.now() - entry.time)}}
-			p.whitespace-pre-wrap {{parser.parse(entry.command.buffer)}}
-			button(v-if="!entry.command.srcAddr" @click="sendCommand(entry.command.buffer)") Re-send
+			p.whitespace-pre-wrap {{parser.parse(entry.message.buffer)}}
+			button.mt-2(v-if="!entry.message.srcAddr" @click="sendCommand(entry.message.buffer)") Re-send
 		div(v-else)
 			p.text-lg.text-accent No response
 			p.text-slate-400 {{formatTime(Date.now() - entry.time)}}
@@ -37,7 +37,7 @@ import {alert, PopupColor} from '../scripts/popups';
 
 type CommandEntry = {
 	time: number;
-	command: SerialMessage;
+	message: SerialMessage;
 	id: number;
 };
 
@@ -71,19 +71,18 @@ function sendCommand(buffer: Uint8Array): void {
 
 	commandEntries.value.unshift({
 		time: Date.now(),
-		command,
+		message: command,
 		id: lastID++
 	});
 
 	commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
 
-	connectedDevice.value
-		.motor(command.destAddr)
+	connectedDevice.value.motors
 		.request(command)
 		.then((response: MotorResponse) => {
 			commandEntries.value.unshift({
 				time: Date.now(),
-				command: response,
+				message: response,
 				id: lastID++
 			});
 
