@@ -2,7 +2,8 @@
 SubNavBar
 	template(#navigation)
 		RouterLink(:to="{name: 'device'}") Device
-		RouterLink(:to="{name: 'debug'}") Debug
+		RouterLink(:to="{name: 'usb'}") USB
+		RouterLink(:to="{name: 'serial'}") Serial
 	RouterView
 </template>
 

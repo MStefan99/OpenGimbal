@@ -24,6 +24,14 @@ export enum MotorVariableID {
 	Error = 0xf
 }
 
+export enum MotorCommandError {
+	NoError,
+	TooShort,
+	SourceAddressInvalid,
+	DestinationAddressInvalid,
+	NonExistentType
+}
+
 export const motorCommandNames: Record<MotorCommandType, string> = {
 	[MotorCommandType.Sleep]: 'Sleep',
 	[MotorCommandType.Idle]: 'Idle',
@@ -63,9 +71,30 @@ export const variableCommands: Partial<
 	}
 };
 
+export const motorErrorDescriptions: Record<MotorCommandError, string> = {
+	[MotorCommandError.NoError]: 'No error',
+	[MotorCommandError.TooShort]: 'Motor command must be at least two bytes long',
+	[MotorCommandError.SourceAddressInvalid]: 'Source address must be 0',
+	[MotorCommandError.DestinationAddressInvalid]: 'Source address must not be 0',
+	[MotorCommandError.NonExistentType]: 'This command type does not exist'
+};
+
 export class MotorCommand extends SerialMessage {
 	get type(): MotorCommandType {
 		return this.view.getUint8(1) & 0xf;
+	}
+
+	get error(): MotorCommandError {
+		if (this.length < 2) {
+			return MotorCommandError.TooShort;
+		} else if (this.srcAddr) {
+			return MotorCommandError.SourceAddressInvalid;
+		} else if (!this.destAddr) {
+			return MotorCommandError.DestinationAddressInvalid;
+		} else if (!(this.type in MotorCommandType)) {
+			return MotorCommandError.NonExistentType;
+		}
+		return MotorCommandError.NoError;
 	}
 
 	override toString(type?: 'hex'): string {

@@ -17,7 +17,7 @@ export class SerialMessage extends Message {
 			super(srcAddr);
 			const view = new DataView(srcAddr.buffer);
 			this.buffer = Uint8Array.from({length: (view.getUint8(0) >> 4) + 1}, (v, i) =>
-				view.getUint8(i)
+				i < view.byteLength ? view.getUint8(i) : 0
 			);
 		} else {
 			srcAddr = Math.floor(clamp(srcAddr, 0, 14));

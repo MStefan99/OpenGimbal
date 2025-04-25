@@ -17,7 +17,7 @@ import NavBar from './components/NavBar.vue';
 import PopupContainer from './components/PopupContainer.vue';
 import {connectedDevice} from './scripts/driver/driver';
 import {crashCourse} from './scripts/analytics';
-import {PopupColor, alert, prompt} from './scripts/popups';
+import {alert, PopupColor, prompt} from './scripts/popups';
 import appState from './scripts/store';
 
 let lastKeyPress = 0;
@@ -60,8 +60,14 @@ document.addEventListener('keydown', (event: KeyboardEvent) => {
 
 	if (inputStr === 'developer') {
 		appState.setDeveloperMode(true);
+		alert(
+			'Developer mode enabled',
+			PopupColor.Accent,
+			'Developer mode allows direct access to your device. Be careful when executing commands to avoid unexpected results'
+		);
 	} else if (inputStr === 'nodev') {
 		appState.setDeveloperMode(false);
+		alert('Developer mode disabled', PopupColor.Accent, 'Developer features have been disabled');
 	}
 });
 </script>

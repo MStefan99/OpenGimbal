@@ -1,13 +1,9 @@
 <template lang="pug">
 .monitor.max-w-screen-lg.my-4.mx-auto.px-4
-	h2.mb-4.text-xl.font-bold Options
-	div
-		label History size
-		RangeSlider.inline-block.ml-2(v-model="historySize" :min="1" :max="100")
 	.send
-		h3.my-4.text-xl.font-bold Send command
+		h3.my-4.text-xl.font-bold Send commands to motors
 		form(@submit.prevent="sendCommand(stringToBuffer(commandString))")
-			input.block(type="text" v-model="commandString")
+			input.block(type="text" v-model="commandString" placeholder="31 03 F2 A6")
 			button.mt-2(type="submit") Send
 			button.mt-2.ml-2(type="button" @click="commandEntries = []") Clear history
 	p.text-red.font-bold.my-2.
@@ -27,13 +23,17 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, watch} from 'vue';
+import {ref} from 'vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import {SerialParser} from '../scripts/driver/serial/SerialParser';
-import RangeSlider from '../components/RangeSlider.vue';
 import {SerialMessage} from '../scripts/driver/serial/SerialMessage';
-import {MotorCommand} from '../scripts/driver/serial/MotorCommand';
+import {
+	MotorCommand,
+	MotorCommandError,
+	motorErrorDescriptions
+} from '../scripts/driver/serial/MotorCommand';
 import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
+import {alert, PopupColor} from '../scripts/popups';
 
 type CommandEntry = {
 	time: number;
@@ -47,19 +47,27 @@ const parser = new SerialParser();
 const historySize = ref<number>(20);
 const commandString = ref<string>('');
 
-function stringToBuffer(str: string): Uint8Array {
-	return Uint8Array.from(
-		commandString.value.match(/[0-9a-fA-F]{1,2}/g).map((byte) => parseInt(byte, 16))
-	);
+function stringToBuffer(string: string): Uint8Array {
+	return Uint8Array.from(string.match(/[0-9a-fA-F]{1,2}/g).map((byte) => parseInt(byte, 16)));
+}
+
+function bufferToString(buffer: Uint8Array): string {
+	return new Array(buffer.length)
+		.fill(0)
+		.map((_, i) => buffer[i].toString(16).padStart(2, '0').toUpperCase())
+		.join(' ');
 }
 
 function sendCommand(buffer: Uint8Array): void {
 	const command = new MotorCommand(buffer);
 
-	commandString.value = new Array(buffer.length)
-		.fill(0)
-		.map((_, i) => buffer[i].toString(16).padStart(2, '0').toUpperCase())
-		.join(' ');
+	commandString.value = bufferToString(command.buffer);
+
+	if (command.error !== MotorCommandError.NoError) {
+		alert('Invalid command', PopupColor.Red, motorErrorDescriptions[command.error]);
+		console.error(command);
+		return;
+	}
 
 	commandEntries.value.unshift({
 		time: Date.now(),
