@@ -12,8 +12,8 @@
 
 #include "device.h"
 
-#include "data.hpp"
 #include "nvm.hpp"
+#include "USBResponse.hpp"
 
 namespace usb {
 	enum class REQ_DIRECTION : uint8_t {

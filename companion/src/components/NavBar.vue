@@ -1,7 +1,7 @@
 <template lang="pug">
 .navbar
 	#title-bar
-		span#title OpenGimbal Companion
+		span#title OpenGimbal
 		nav
 			RouterLink(:to="{name: 'control'}" v-if="appState.developerMode") Control
 			RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline

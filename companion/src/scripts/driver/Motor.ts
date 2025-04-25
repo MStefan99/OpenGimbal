@@ -45,7 +45,7 @@ export interface IMotor {
 
 	move(position?: number, torque?: number): Promise<void>;
 
-	// Disables the motor, same as sending any position with the torque of 0
+	// Disables the motor, same as sending any position with the torque value of 0
 	disable(): Promise<void>;
 
 	tone(frequency: number): Promise<void>;
@@ -62,10 +62,10 @@ export interface IMotor {
 	 * If you want to change the offset directly, you can write it using a set variable command
 	 *
 	 * Example:
-	 * motor.move(1024) // Position is now 1024
-	 * motor.adjustOffset(3072) // Offset was changed so that the current position is now 3072 even though the motor didn't move
+	 * motor.move(1024) // Motor moves to position 1024
+	 * motor.adjustOffset(3072) // Offset is changed so that the current position is now 3072 even though the motor doesn't move
 	 * motor.move(3072) // Position is now 3072, which is the same as 1024 used to be, the motor still doesn't move
-	 * motor.move(2048) // Motor moves from 3072 (old 1024) to 2048 (old 0)
+	 * motor.move(2048) // Motor moves from 3072 (previously 1024) to 2048 (previously 0)
 	 */
 	adjustOffset(targetPosition?: number): Promise<void>;
 
@@ -85,7 +85,6 @@ export interface IMotor {
 export class Motor implements IMotor {
 	readonly _address: number;
 	_hardwareInterface: ISerialInterface;
-	_isSleeping: boolean = true;
 
 	constructor(hardwareInterface: ISerialInterface, address: number = 15) {
 		this._hardwareInterface = hardwareInterface;

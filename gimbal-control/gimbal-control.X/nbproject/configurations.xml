@@ -31,7 +31,6 @@
         </logicalFolder>
         <itemPath>../inc/adc.hpp</itemPath>
         <itemPath>../inc/buttons.hpp</itemPath>
-        <itemPath>../inc/data.hpp</itemPath>
         <itemPath>../inc/i2c.hpp</itemPath>
         <itemPath>../inc/joystick.hpp</itemPath>
         <itemPath>../inc/LSM6DSO32.hpp</itemPath>
@@ -47,6 +46,7 @@
         <itemPath>../inc/usb.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/pwm.hpp</itemPath>
+        <itemPath>../inc/USBResponse.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -206,7 +206,6 @@
       <logicalFolder name="src" displayName="src" projectFiles="true">
         <itemPath>../src/adc.cpp</itemPath>
         <itemPath>../src/buttons.cpp</itemPath>
-        <itemPath>../src/data.cpp</itemPath>
         <itemPath>../src/i2c.cpp</itemPath>
         <itemPath>../src/joystick.cpp</itemPath>
         <itemPath>../src/LSM6DSO32.cpp</itemPath>
@@ -221,6 +220,7 @@
         <itemPath>../src/usb_descriptors.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>
         <itemPath>../src/pwm.cpp</itemPath>
+        <itemPath>../src/USBResponse.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>

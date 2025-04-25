@@ -27,13 +27,13 @@ import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import {SerialParser} from '../scripts/driver/serial/SerialParser';
 import RangeSlider from '../components/RangeSlider.vue';
-import {SerialMessage} from '../scripts/driver/serial/SerialMessage';
-import {MotorCommand} from '../scripts/driver/serial/MotorCommand';
 import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
+import {GimbalCommand} from '../scripts/driver/usb/GimbalCommand';
+import {USBMessage} from '../scripts/driver/usb/USBMessage';
 
 type CommandEntry = {
 	time: number;
-	command: SerialMessage;
+	command: USBMessage;
 	id: number;
 };
 
@@ -50,7 +50,7 @@ function stringToBuffer(str: string): Uint8Array {
 }
 
 function sendCommand(buffer: Uint8Array): void {
-	const command = new MotorCommand(buffer);
+	const command = new GimbalCommand(buffer);
 
 	commandString.value = new Array(buffer.length)
 		.fill(0)
@@ -63,25 +63,10 @@ function sendCommand(buffer: Uint8Array): void {
 		id: lastID++
 	});
 
-	while (commandEntries.value.length > historySize.value) {
-		commandEntries.value.pop();
-	}
+	commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
 
-	connectedDevice.value
-		.motor(command.destAddr)
-		.request(command)
-		.then((response: MotorResponse) => {
-			commandEntries.value.unshift({
-				time: Date.now(),
-				command: response,
-				id: lastID++
-			});
-
-			while (commandEntries.value.length > historySize.value) {
-				commandEntries.value.pop();
-			}
-		})
-		.catch((): null => null);
+	// connectedDevice.value.
+	// 	.catch((): null => null);
 }
 
 function formatTime(time: number): string {

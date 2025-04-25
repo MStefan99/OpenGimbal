@@ -58,7 +58,7 @@ float normalize(float difference) {
 void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 	if (usbPassthrough) {
 		uint8_t buf[20];
-		buf[0] = static_cast<uint8_t>(data::ResponseType::MotorPassthrough);
+		buf[0] = static_cast<uint8_t>(USBResponse::ResponseType::MotorPassthrough);
 		util::copy(buf + 1, buffer.buffer, buffer.transferred);
 
 		usb::write(buf, buffer.transferred + 1);
@@ -82,21 +82,23 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_t len) {
-	switch (static_cast<data::CommandType>(request.bRequest)) {
-		case (data::CommandType::GetVariable): {
+	switch (static_cast<USBCommand::CommandType>(request.bRequest)) {
+		case (USBCommand::CommandType::GetVariable): {
 			switch (request.bData[0]) {
-				case static_cast<uint8_t>(data::VariableID::Status):
-					usb::write(reinterpret_cast<uint8_t*>(&data::usbStatusResponse), sizeof(data::USBStatusResponse));
+				case static_cast<uint8_t>(USBCommand::Variable::Status):
+					//					usb::write(reinterpret_cast<uint8_t*>(&USBCommand::usbStatusResponse),
+					// sizeof(USBCommand::USBStatusResponse));
 					break;
-				case static_cast<uint8_t>(data::VariableID::Sensors):
-					usb::write(reinterpret_cast<uint8_t*>(&data::usbSensorsResponse), sizeof(data::USBSensorsResponse));
+				case static_cast<uint8_t>(USBCommand::Variable::Sensors):
+					//					usb::write(reinterpret_cast<uint8_t*>(&USBCommand::usbSensorsResponse),
+					// sizeof(USBCommand::USBSensorsResponse));
 					break;
 				default:
 					usb::write(nullptr, 0);
 					break;
 			}
 			break;
-			case (data::CommandType::MotorPassthrough): {
+			case (USBCommand::CommandType::MotorPassthrough): {
 				usbPassthrough = true;
 				usbPassthroughTime = util::getTime();
 				motor::send(request.bData, len - 1);
@@ -352,14 +354,6 @@ int main() {
 				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
 				auto       handleAngles {handleOrientation.toEuler()};
 
-				for (uint8_t i {0}; i < 3; ++i) {
-					data::usbSensorsResponse.accelerations[i] = LSM6DSO32::getRawAccelerations()[2 - i][0];
-					data::usbSensorsResponse.angularRates[i] = LSM6DSO32::getRawAngularRates()[2 - i][0];
-				}
-
-				data::usbStatusResponse.pitch = yawOffset * ATT_LSB;
-				data::usbStatusResponse.roll = pitchOffset * ATT_LSB;
-
 				float yawTarget {handleAngles[0][0] + yawOffset};
 
 				float sy {sinf(yawOffset)};
@@ -449,7 +443,7 @@ int main() {
 		}
 
 		if (usb::isActive() && usbPassthrough && util::getTime() - usbPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
-			uint8_t buf[1] {static_cast<uint8_t>(data::ResponseType::MotorPassthrough)};
+			uint8_t buf[1] {static_cast<uint8_t>(USBResponse::ResponseType::MotorPassthrough)};
 
 			usb::write(buf, sizeof(buf));
 			usbPassthrough = false;

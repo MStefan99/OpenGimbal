@@ -75,9 +75,7 @@ function sendCommand(buffer: Uint8Array): void {
 		id: lastID++
 	});
 
-	while (commandEntries.value.length > historySize.value) {
-		commandEntries.value.pop();
-	}
+	commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
 
 	connectedDevice.value
 		.motor(command.destAddr)
