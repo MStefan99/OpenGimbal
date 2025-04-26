@@ -126,6 +126,12 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			disable();
 			break;
 		}
+		case (USBCommand::CommandType::Move): {
+			for (uint8_t i {0}; i < 3; ++i) {
+				offsetAngles[i] += ((request.bData[i] << 8u) | request.bData[i + 1]) / attFactor;
+			}
+			break;
+		}
 		case (USBCommand::CommandType::GetVariable): {
 			switch (request.bData[0]) {
 				case static_cast<uint8_t>(USBCommand::Variable::Status):

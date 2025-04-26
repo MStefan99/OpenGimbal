@@ -59,7 +59,7 @@ export class DisableCommand extends GimbalCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return 'Sleep command';
+			return 'Disable command';
 		}
 	}
 }
