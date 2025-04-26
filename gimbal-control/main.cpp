@@ -16,17 +16,9 @@ static Mahony mahony {};
 volatile static uint8_t  motorPositionRequest {0};
 volatile static uint32_t motorRequestTime {0};
 
-static float yawCurrent {0};
-static float pitchCurrent {0};
-static float rollCurrent {0};
-
-volatile static float yawOffset {0};
-volatile static float pitchOffset {0};
-volatile static float rollOffset {0};
-
-volatile static float yawReset {0};
-volatile static float rollReset {0};
-
+static float          currentAngles[3] {0};
+volatile static float offsetAngles[3] {0};
+volatile static float resetAngles[3] {0};
 volatile static float motorAngles[3] {0};
 
 volatile static uint32_t softStartTime {0};
@@ -92,7 +84,7 @@ void disable() {
 	powerMode = PowerMode::Sleep;
 	PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 	joystick::saveValues();
-	yawOffset = pitchOffset = rollOffset = yawReset = rollReset = 0;
+	offsetAngles[0] = offsetAngles[1] = offsetAngles[2] = resetAngles[0] = resetAngles[2] = 0;
 	LSM6DSO32::disable();
 	showMode();
 }
@@ -130,7 +122,7 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			enable();
 			break;
 		}
-		case (USBCommand::CommandType::Sleep): {
+		case (USBCommand::CommandType::Disable): {
 			disable();
 			break;
 		}
@@ -265,21 +257,21 @@ bool triggerAction() {
 	} else if (!isOff) {
 		if (leftButton) {
 			if (shortPresses == 1) {
-				yawOffset = yawReset;
-				pitchOffset = 0;
-				rollOffset = rollReset;
+				offsetAngles[0] = resetAngles[0];
+				offsetAngles[1] = 0;
+				offsetAngles[2] = resetAngles[2];
 			} else if (shortPresses == 2) {
-				rollReset += F_PI_2;
-				if (rollReset > F_PI + 0.05f) {
-					rollReset = 0;
+				resetAngles[2] += F_PI_2;
+				if (resetAngles[2] > F_PI + 0.05f) {
+					resetAngles[2] = 0;
 				}
-				rollOffset = rollReset;
+				offsetAngles[2] = resetAngles[2];
 			} else if (shortPresses == 3) {
-				yawReset += F_PI;
-				if (yawReset > F_PI + 0.05f) {
-					yawReset = 0;
+				resetAngles[0] += F_PI;
+				if (resetAngles[0] > F_PI + 0.05f) {
+					resetAngles[0] = 0;
 				}
-				yawOffset = yawReset;
+				offsetAngles[0] = resetAngles[0];
 			}
 		} else {
 			if (shortPresses == 2) {
@@ -356,38 +348,38 @@ int main() {
 
 				joystick::update([](int16_t x, int16_t y) {
 					if (gimbalMode != GimbalMode::Tilt) {
-						yawOffset -= y / 40000.0f;
+						offsetAngles[0] -= y / 40000.0f;
 					} else {
-						rollOffset -= y / 40000.0f;
+						offsetAngles[2] -= y / 40000.0f;
 					}
-					pitchOffset += x / 40000.0f;
+					offsetAngles[1] += x / 40000.0f;
 				});
 
 				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
 				auto       handleAngles {handleOrientation.toEuler()};
 
-				float yawTarget {handleAngles[0][0] + yawOffset};
+				float yawTarget {handleAngles[0][0] + offsetAngles[0]};
 
-				float sy {sinf(yawOffset)};
-				float cy {cosf(yawOffset)};
+				float sy {sinf(offsetAngles[0])};
+				float cy {cosf(offsetAngles[0])};
 
 				float pitchTarget {
-				  (gimbalMode == GimbalMode::Horizon ? 0 : cy * handleAngles[1][0] - sy * handleAngles[2][0]) + pitchOffset
+				  (gimbalMode == GimbalMode::Horizon ? 0 : cy * handleAngles[1][0] - sy * handleAngles[2][0]) + offsetAngles[1]
 				};
 				float rollTarget {
-				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - rollOffset
+				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - offsetAngles[2]
 				};
 
-				yawCurrent += util::clamp(normalize(yawTarget - yawCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
-				yawCurrent = normalize(yawCurrent);
+				currentAngles[0] +=
+				    util::clamp(normalize(yawTarget - currentAngles[0]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
-				pitchCurrent +=
-				    util::clamp(normalize(pitchTarget - pitchCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
+				currentAngles[1] +=
+				    util::clamp(normalize(pitchTarget - currentAngles[1]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
-				rollCurrent +=
-				    util::clamp(normalize(rollTarget - rollCurrent) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
+				currentAngles[2] +=
+				    util::clamp(normalize(rollTarget - currentAngles[2]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
-				Quaternion cameraOrientation {Quaternion::fromEuler(yawCurrent, pitchCurrent, rollCurrent)};
+				Quaternion cameraOrientation {Quaternion::fromEuler(currentAngles[0], currentAngles[1], currentAngles[2])};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
 
 				auto rotationAngles {gimbalRotation.toEuler()};

@@ -4,21 +4,21 @@ import {exposeSerialMessage} from './USBSerialEncapsulator';
 import {SerialParser} from '../serial/SerialParser';
 
 export enum GimbalCommandType {
-	Sleep = 0x00,
+	Disable = 0x00,
 	Enable = 0x01,
 	Move = 0x02,
 	MotorPassthrough = 0x0f
 }
 
 export const gimbalCommandNames: Record<GimbalCommandType, string> = {
-	[GimbalCommandType.Sleep]: 'Sleep',
+	[GimbalCommandType.Disable]: 'Sleep',
 	[GimbalCommandType.Enable]: 'Enable',
 	[GimbalCommandType.Move]: 'Move',
 	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
 };
 
 export const getGimbalCommand: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
-	[GimbalCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
+	[GimbalCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
 	[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
 	[GimbalCommandType.Move]: (buffer: Uint8Array) => {
 		throw new Error('Not implemented');
@@ -43,7 +43,7 @@ export class GimbalCommand extends USBMessage {
 	}
 }
 
-export class SleepCommand extends GimbalCommand {
+export class DisableCommand extends GimbalCommand {
 	constructor(buffer: Uint8Array);
 	constructor();
 
@@ -51,7 +51,7 @@ export class SleepCommand extends GimbalCommand {
 		if (buffer) {
 			super(buffer);
 		} else {
-			super(GimbalCommandType.Sleep);
+			super(GimbalCommandType.Disable);
 		}
 	}
 

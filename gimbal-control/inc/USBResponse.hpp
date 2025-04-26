@@ -14,7 +14,7 @@
 
 namespace USBCommand {
 	enum class CommandType : uint8_t {
-		Sleep = 0x0,
+		Disable = 0x0,
 		Enable = 0x1,
 		Move = 0x2,
 		SetVariable = 0x0d,
