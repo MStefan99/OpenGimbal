@@ -21,9 +21,7 @@ export const variableResponses: Record<
 > = {
 	[MotorVariable.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
 	[MotorVariable.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
-	[MotorVariable.Position]: (buffer) => new ReturnPositionVariableResponse(buffer),
-	[MotorVariable.Speed]: (buffer) => new ReturnSpeedVariableResponse(buffer),
-	[MotorVariable.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
+	[MotorVariable.Position]: (buffer) => new ReturnPositionVariableResponse(buffer)
 };
 
 export class MotorResponse extends SerialMessage {
@@ -149,23 +147,3 @@ export class ReturnPowerVariableResponse extends ReturnVariableResponse {
 		}
 	}
 }
-
-export class ReturnSpeedVariableResponse extends ReturnVariableResponse {
-	constructor(buffer: Uint8Array) {
-		super(buffer);
-	}
-
-	get speed(): number {
-		return this.view.getUint8(3);
-	}
-
-	override toString(type?: 'hex'): string {
-		if (type === 'hex') {
-			return super.toString(type);
-		} else {
-			return super.toString() + `\n  Speed: ${this.speed}`;
-		}
-	}
-}
-
-export class ReturnErrorVariableResponse extends ReturnVariableResponse {}

@@ -174,15 +174,6 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					uart::send(response.getBuffer(), response.getLength());
 					break;
 				}
-				case (Command::Variable::Speed): {
-					auto response = ReturnVariableResponse(
-					    deviceAddress,
-					    buffer.buffer[1] >> 8u,
-					    Command::Variable::Speed,
-					    movementController.getMaxSpeed()
-					);
-					uart::send(response.getBuffer(), response.getLength());
-				}
 				default:
 					break;
 			}
@@ -196,12 +187,6 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					nvm::edit(&nvm::options->zeroOffset, offset);
 					nvm::write();
 					break;
-				}
-				case (Command::Variable::Speed): {
-					uint8_t maxSpeed = buffer.buffer[3];
-					movementController.setMaxSpeed(maxSpeed);
-					nvm::edit(&nvm::options->maxSpeed, maxSpeed);
-					nvm::write();
 				}
 				default:
 					break;

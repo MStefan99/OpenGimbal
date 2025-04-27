@@ -19,9 +19,7 @@ export enum MotorCommandType {
 export enum MotorVariable {
 	Calibration = 0x0,
 	Offset = 0x1,
-	Position = 0x2,
-	Speed = 0x3,
-	Error = 0xf
+	Position = 0x2
 }
 
 export enum MotorCommandError {
@@ -64,11 +62,7 @@ export const variableCommands: Partial<
 	[MotorVariable.Calibration]: () => {
 		throw new Error('Calibration is a read-only variable');
 	},
-	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
-	[MotorVariable.Speed]: (buffer: Uint8Array) => new SetSpeedVariableCommand(buffer),
-	[MotorVariable.Error]: () => {
-		throw new Error('Error is a read-only variable');
-	}
+	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer)
 };
 
 export const motorErrorDescriptions: Record<MotorCommandError, string> = {
@@ -431,31 +425,6 @@ export class SetOffsetVariableCommand extends SetVariableCommand {
 			return super.toString(type);
 		} else {
 			return super.toString() + `\n  Offset: ${this.offset}`;
-		}
-	}
-}
-
-export class SetSpeedVariableCommand extends SetVariableCommand {
-	constructor(buffer: Uint8Array);
-	constructor(srcAddr: number, destAddr: number, range: number);
-
-	constructor(srcAddr: number | Uint8Array, destAddr?: number, speed?: number) {
-		if (srcAddr instanceof Uint8Array) {
-			super(srcAddr);
-		} else {
-			super(srcAddr, destAddr, MotorVariable.Speed, speed, 1);
-		}
-	}
-
-	get speed(): number {
-		return this.view.getUint8(3);
-	}
-
-	override toString(type?: 'hex'): string {
-		if (type === 'hex') {
-			return super.toString(type);
-		} else {
-			return super.toString() + `\n  Maximum speed: ${this.speed}`;
 		}
 	}
 }

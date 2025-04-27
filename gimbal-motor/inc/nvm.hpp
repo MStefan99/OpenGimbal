@@ -33,7 +33,6 @@ namespace nvm {
 		bool     counterclockwise {true};
 		uint16_t phaseOffset {0};
 		uint16_t zeroOffset {0};
-		uint8_t  maxSpeed {0};
 	};
 
 	namespace _internal {

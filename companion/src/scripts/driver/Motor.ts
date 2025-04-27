@@ -2,8 +2,7 @@ import {BitwiseRegister} from './BitwiseRegister';
 import {
 	MotorResponse,
 	ReturnCalibrationVariableResponse,
-	ReturnOffsetVariableResponse,
-	ReturnSpeedVariableResponse
+	ReturnOffsetVariableResponse
 } from './serial/MotorResponse';
 import {
 	AdjustOffsetCommand,
@@ -15,7 +14,6 @@ import {
 	MotorVariable,
 	MoveCommand,
 	SetOffsetVariableCommand,
-	SetSpeedVariableCommand,
 	SleepCommand,
 	ToneCommand,
 	WakeCommand
@@ -76,10 +74,6 @@ export interface IMotor {
 	getOffset(): Promise<number>;
 
 	setOffset(offset: number): Promise<void>;
-
-	getMaxSpeed(): Promise<number>;
-
-	setMaxSpeed(speed: number): Promise<void>;
 }
 
 export class Motor implements IMotor {
@@ -171,18 +165,5 @@ export class Motor implements IMotor {
 
 	setOffset(offset: number): Promise<void> {
 		return this._hardwareInterface.send(new SetOffsetVariableCommand(0, this._address, offset));
-	}
-
-	getMaxSpeed(): Promise<number> {
-		return new Promise<number>((resolve, reject) =>
-			this._hardwareInterface
-				.request(new GetVariableCommand(0, this._address, MotorVariable.Speed))
-				.then((res) => resolve((res as ReturnSpeedVariableResponse).speed))
-				.catch((err) => reject(err))
-		);
-	}
-
-	setMaxSpeed(speed: number): Promise<void> {
-		return this._hardwareInterface.send(new SetSpeedVariableCommand(0, this._address, speed));
 	}
 }

@@ -128,8 +128,6 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			break;
 		}
 		case (USBCommand::CommandType::GetVariable): {
-			//			switch(static_cast<USBCommand::Variable>(request.bData[0])) {
-			//            }
 			break;
 		}
 		case (USBCommand::CommandType::SetVariable): {
@@ -359,7 +357,7 @@ int main() {
 		switch (powerMode) {
 			case (PowerMode::Active): {
 				LSM6DSO32::update();
-				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), 0.01f);
+				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), deltaTime / 1000.0f);
 
 				joystick::update([](int16_t x, int16_t y) {
 					if (gimbalMode != GimbalMode::Tilt) {
@@ -403,7 +401,8 @@ int main() {
 				if (softStartActive) {
 					for (uint8_t i {0}; i < motorPositionRequest; ++i) {
 						motorAngles[i] += normalize(calculatedAngles[i][0] - motorAngles[i])
-						                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime)) * deltaTime;
+						                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime))
+						                * (deltaTime * 2);
 
 						if (std::isnan(calculatedAngles[i][0])) {
 							continue;

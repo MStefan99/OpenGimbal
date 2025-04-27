@@ -57,13 +57,6 @@
 				button.block.mb-2(@click="toneFrequencies[motor.address - 1] = 25000; motor.silent()") Silent
 			.border-b.border-accent.pt-2
 				p.text-accent.font-bold Setup
-				p Max speed
-				RangeSlider.mb-2(
-					:min="0"
-					:max="255"
-					:scale="255"
-					v-model="speeds[motor.address - 1]"
-					@update:model-value="motor.setMaxSpeed(speeds[motor.address - 1])")
 				p Offset
 				RangeSlider.mb-2(
 					:min="0"
@@ -136,7 +129,6 @@ const extendedRanges = ref<boolean>(false);
 
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
-const speeds = ref<number[]>([]);
 const offsets = ref<number[]>([]);
 const toneFrequencies = ref<number[]>([]);
 const hapticIntensities = ref<number[]>([]);
@@ -156,7 +148,6 @@ async function enumerate(): Promise<void> {
 
 	positions.value = new Array(15).fill(0);
 	torques.value = new Array(15).fill(0);
-	speeds.value = new Array(15).fill(0);
 	offsets.value = new Array(15).fill(0);
 	toneFrequencies.value = new Array(15).fill(25000);
 	hapticIntensities.value = new Array(15).fill(255);
@@ -168,7 +159,6 @@ async function enumerate(): Promise<void> {
 			calibrations.value[motor.address - 1] = connectedDevice.value.motors.getInitialCalibration(
 				motor.address
 			);
-			speeds.value[motor.address - 1] = await motor.getMaxSpeed();
 			offsets.value[motor.address - 1] = await motor.getOffset();
 		}
 		motors.value = detectedMotors;

@@ -17,7 +17,6 @@ public:
 	void setRange(uint16_t range);
 	void setTarget(int32_t newTarget);
 	void setOffset(int32_t newOffset);
-	void setMaxSpeed(uint8_t maxSpeed);
 	void adjustOffset(int32_t sourcePosition, int32_t targetPosition);
 
 	void extrapolate(uint32_t dt, int32_t target);
@@ -26,7 +25,6 @@ public:
 	uint16_t getRange() const;
 	int32_t  getOffset() const;
 	uint16_t getTarget() const;
-	uint8_t  getMaxSpeed() const;
 
 protected:
 	class Interpolator {
@@ -37,8 +35,6 @@ protected:
 		void    offset(int32_t offset);
 		void    applyTarget(uint32_t dt, int32_t target);
 		int32_t interpolate(uint32_t dt) const;
-
-		uint16_t _maxSpeed {nvm::options->maxSpeed};
 
 	protected:
 		int32_t  _prev {};

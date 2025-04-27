@@ -9,10 +9,6 @@ void MovementController::setOffset(int32_t newOffset) {
 	_offset = newOffset;
 }
 
-void MovementController::setMaxSpeed(uint8_t maxSpeed) {
-	_interpolator._maxSpeed = maxSpeed;
-}
-
 void MovementController::adjustOffset(int32_t sourcePosition, int32_t desiredPosition) {
 	sourcePosition = util::mod(sourcePosition, static_cast<int32_t>(fullRevolution));
 	desiredPosition = util::mod(desiredPosition, static_cast<int32_t>(fullRevolution));
@@ -27,10 +23,6 @@ int32_t MovementController::getOffset() const {
 
 uint16_t MovementController::getTarget() const {
 	return _target;
-}
-
-uint8_t MovementController::getMaxSpeed() const {
-	return _interpolator._maxSpeed;
 }
 
 MovementController::Interpolator::Interpolator(int32_t offset):
@@ -56,10 +48,6 @@ void MovementController::Interpolator::applyTarget(uint32_t dt, int32_t target) 
 		_actual += 4096;
 		_extrapolated += 4096;
 		change = target - _actual;
-	}
-
-	if (_maxSpeed > 0 && util::abs(change / dt) > _maxSpeed / 32) {
-		dt = util::abs(change / _maxSpeed * 32);
 	}
 
 	if (dt == 0 || dt > maxInterpolationTime) {

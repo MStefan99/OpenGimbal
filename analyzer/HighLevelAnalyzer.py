@@ -10,10 +10,7 @@ variables = {
     },
     0x2: {
         'name': 'Position'
-    },
-    0x3: {
-        'name': 'Speed'
-    },
+    }
 }
 
 
