@@ -4,7 +4,8 @@ volatile static DisplayState displayState {DisplayState::GimbalMode};
 volatile static PowerMode    powerMode {PowerMode::Sleep};
 volatile static GimbalMode   gimbalMode {GimbalMode::Follow};
 
-constexpr static float    attFactor {2048 / F_PI};
+constexpr static float    motorScalingFactor {2048 / F_PI};
+constexpr static float    intScalingFactor {32768 / F_PI};
 constexpr static float    ATT_LSB {10430.0f};
 constexpr static float    joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
 constexpr static float    sqrt2 = sqrtf(2);
@@ -110,7 +111,7 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 	if (static_cast<MotorResponse::ResponseType>(buffer.buffer[1] & 0xf) == MotorResponse::ResponseType::ReturnVariable
 	    && static_cast<MotorResponse::Variable>(buffer.buffer[2]) == MotorResponse::Variable::Position
 	    && srcAddress < 4) {
-		float angle = normalize(((buffer.buffer[3] << 8u) | buffer.buffer[4]) / attFactor);
+		float angle = static_cast<uint16_t>(((buffer.buffer[3] & 0xf) << 8u) | buffer.buffer[4]) / motorScalingFactor;
 		motorAngles[srcAddress - 1] = angle;
 	}
 }
@@ -126,27 +127,35 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			disable();
 			break;
 		}
-		case (USBCommand::CommandType::Move): {
-			for (uint8_t i {0}; i < 3; ++i) {
-				offsetAngles[i] += ((request.bData[i] << 8u) | request.bData[i + 1]) / attFactor;
+		case (USBCommand::CommandType::GetVariable): {
+			//			switch(static_cast<USBCommand::Variable>(request.bData[0])) {
+			//            }
+			break;
+		}
+		case (USBCommand::CommandType::SetVariable): {
+			switch (static_cast<USBCommand::Variable>(request.bData[0])) {
+				case (USBCommand::Variable::Orientation): {
+					for (uint8_t i {0}; i < 3; ++i) {
+						offsetAngles[i] =
+						    static_cast<int16_t>((request.bData[2 * i + 1] << 8u) | request.bData[2 * i + 2]) / intScalingFactor;
+					}
+					break;
+				}
+				case (USBCommand::Variable::Mode): {
+					gimbalMode = static_cast<GimbalMode>(util::min(request.bData[1], static_cast<uint8_t>(4)));
+					showMode();
+					break;
+				}
+				default:
+					break;
 			}
 			break;
 		}
-		case (USBCommand::CommandType::GetVariable): {
-			switch (request.bData[0]) {
-				case static_cast<uint8_t>(USBCommand::Variable::Status):
-					break;
-				default:
-					usb::write(nullptr, 0);
-					break;
-			}
+		case (USBCommand::CommandType::MotorPassthrough): {
+			usbPassthrough = true;
+			usbPassthroughTime = util::getTime();
+			motor::send(request.bData, len - 1);
 			break;
-			case (USBCommand::CommandType::MotorPassthrough): {
-				usbPassthrough = true;
-				usbPassthroughTime = util::getTime();
-				motor::send(request.bData, len - 1);
-				break;
-			}
 		}
 		default:
 			break;
@@ -400,7 +409,7 @@ int main() {
 							continue;
 						}
 
-						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * attFactor), fullRevolution));
+						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * motorScalingFactor), fullRevolution));
 
 						if (util::getTime() - softStartTime >= softStartDuration) {
 							softStartActive = false;
@@ -419,7 +428,7 @@ int main() {
 							continue;
 						}
 
-						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * attFactor), fullRevolution));
+						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * motorScalingFactor), fullRevolution));
 					}
 				}
 

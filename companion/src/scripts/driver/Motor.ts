@@ -12,7 +12,7 @@ import {
 	HapticCommand,
 	IdleCommand,
 	MotorCommand,
-	MotorVariableID,
+	MotorVariable,
 	MoveCommand,
 	SetOffsetVariableCommand,
 	SetSpeedVariableCommand,
@@ -154,7 +154,7 @@ export class Motor implements IMotor {
 	getCalibration(): Promise<BitwiseRegister<CalibrationBits>> {
 		return new Promise<BitwiseRegister<CalibrationBits>>((resolve, reject) =>
 			this._hardwareInterface
-				.request(new GetVariableCommand(0, this._address, MotorVariableID.Calibration))
+				.request(new GetVariableCommand(0, this._address, MotorVariable.Calibration))
 				.then((res) => resolve((res as ReturnCalibrationVariableResponse).calibrationMode))
 				.catch((err) => reject(err))
 		);
@@ -163,7 +163,7 @@ export class Motor implements IMotor {
 	getOffset(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this._hardwareInterface
-				.request(new GetVariableCommand(0, this._address, MotorVariableID.Offset))
+				.request(new GetVariableCommand(0, this._address, MotorVariable.Offset))
 				.then((res) => resolve((res as ReturnOffsetVariableResponse).offset))
 				.catch((err) => reject(err))
 		);
@@ -176,7 +176,7 @@ export class Motor implements IMotor {
 	getMaxSpeed(): Promise<number> {
 		return new Promise<number>((resolve, reject) =>
 			this._hardwareInterface
-				.request(new GetVariableCommand(0, this._address, MotorVariableID.Speed))
+				.request(new GetVariableCommand(0, this._address, MotorVariable.Speed))
 				.then((res) => resolve((res as ReturnSpeedVariableResponse).speed))
 				.catch((err) => reject(err))
 		);

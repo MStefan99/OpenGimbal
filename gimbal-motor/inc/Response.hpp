@@ -25,11 +25,11 @@ namespace Command {
 	};
 
 	enum class Variable : uint8_t {
-		Calibration = 0x0,
-		Offset = 0x1,
-		Position = 0x2,
-		Speed = 0x3,
-		Temperature = 0x4
+		Calibration = 0x00,
+		Offset = 0x01,
+		Position = 0x02,
+		Speed = 0x03,
+		Temperature = 0x04
 	};
 
 	enum class CalibrationMode : uint8_t {

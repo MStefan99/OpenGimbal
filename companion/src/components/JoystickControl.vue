@@ -6,6 +6,11 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref} from 'vue';
 
+const emit = defineEmits<{(e: 'move', x: number, y: number): void}>();
+const props = defineProps<{
+	reCenter?: boolean;
+}>();
+
 type Vector2 = {
 	x: number;
 	y: number;
@@ -73,19 +78,25 @@ function moveListener(e: MouseEvent): void {
 	 */
 	const angle = Math.atan2(difference.y, difference.x);
 	const distance = Math.sqrt(Math.pow(difference.x, 2) + Math.pow(difference.y, 2));
-	const normalizedDistance = Math.min(distance, (joystickCenter.width - controlCenter.width) / 2);
+	const maxDistance = (joystickCenter.width - controlCenter.width) / 2;
+	const cappedDistance = Math.min(distance, maxDistance);
 
-	const targetPosition: Vector2 = {
-		x: joystickCenter.x + normalizedDistance * Math.cos(angle),
-		y: joystickCenter.y + normalizedDistance * Math.sin(angle)
-	};
+	joystickControl.value.style.left = `${joystickCenter.x + cappedDistance * Math.cos(angle)}px`;
+	joystickControl.value.style.top = `${joystickCenter.y + cappedDistance * Math.sin(angle)}px`;
 
-	joystickControl.value.style.left = `${targetPosition.x}px`;
-	joystickControl.value.style.top = `${targetPosition.y}px`;
+	const normalizedDistance = cappedDistance / maxDistance;
+	emit('move', Math.cos(-angle) * normalizedDistance, Math.sin(-angle) * normalizedDistance);
 }
 
 function upListener(e: MouseEvent): void {
 	isMoving = false;
+
+	if (props.reCenter) {
+		const joystickCenter = getCenter(joystick.value);
+
+		joystickControl.value.style.left = `${joystickCenter.x}px`;
+		joystickControl.value.style.top = `${joystickCenter.y}px`;
+	}
 }
 
 onMounted(() => document.addEventListener('mousedown', downListener));

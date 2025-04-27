@@ -16,7 +16,7 @@ export enum MotorCommandType {
 	SetVariable = 0xf
 }
 
-export enum MotorVariableID {
+export enum MotorVariable {
 	Calibration = 0x0,
 	Offset = 0x1,
 	Position = 0x2,
@@ -59,14 +59,14 @@ export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => Mot
 };
 
 export const variableCommands: Partial<
-	Record<MotorVariableID, (buffer: Uint8Array) => SetVariableCommand>
+	Record<MotorVariable, (buffer: Uint8Array) => SetVariableCommand>
 > = {
-	[MotorVariableID.Calibration]: () => {
+	[MotorVariable.Calibration]: () => {
 		throw new Error('Calibration is a read-only variable');
 	},
-	[MotorVariableID.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
-	[MotorVariableID.Speed]: (buffer: Uint8Array) => new SetSpeedVariableCommand(buffer),
-	[MotorVariableID.Error]: () => {
+	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
+	[MotorVariable.Speed]: (buffer: Uint8Array) => new SetSpeedVariableCommand(buffer),
+	[MotorVariable.Error]: () => {
 		throw new Error('Error is a read-only variable');
 	}
 };
@@ -341,9 +341,9 @@ export class CalibrationCommand extends MotorCommand {
 
 export class GetVariableCommand extends MotorCommand {
 	constructor(buffer: Uint8Array);
-	constructor(srcAddr: number, destAddr: number, id: MotorVariableID);
+	constructor(srcAddr: number, destAddr: number, variable: MotorVariable);
 
-	constructor(srcAddr: number | Uint8Array, destAddr?: number, id?: MotorVariableID) {
+	constructor(srcAddr: number | Uint8Array, destAddr?: number, id?: MotorVariable) {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
@@ -355,7 +355,7 @@ export class GetVariableCommand extends MotorCommand {
 		}
 	}
 
-	get variableID(): MotorVariableID {
+	get variable(): MotorVariable {
 		return this.view.getUint8(2);
 	}
 
@@ -363,25 +363,19 @@ export class GetVariableCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${MotorVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }
 
 export class SetVariableCommand extends MotorCommand {
 	constructor(buffer: Uint8Array);
-	constructor(
-		srcAddr: number,
-		destAddr: number,
-		id: MotorVariableID,
-		value: number,
-		length: number
-	);
+	constructor(srcAddr: number, destAddr: number, id: MotorVariable, value: number, length: number);
 
 	constructor(
 		srcAddr: number | Uint8Array,
 		destAddr?: number,
-		id?: MotorVariableID,
+		variable?: MotorVariable,
 		value?: number,
 		length?: number
 	) {
@@ -393,7 +387,7 @@ export class SetVariableCommand extends MotorCommand {
 
 			const buffer = new Uint8Array(length);
 			const view = new DataView(buffer.buffer);
-			view.setUint8(0, id);
+			view.setUint8(0, variable);
 			for (let i = 1; i < length; ++i) {
 				view.setUint8(length - i, value);
 				value >>= 8;
@@ -403,7 +397,7 @@ export class SetVariableCommand extends MotorCommand {
 		}
 	}
 
-	get variableID(): MotorVariableID {
+	get variable(): MotorVariable {
 		return this.view.getUint8(2);
 	}
 
@@ -411,7 +405,7 @@ export class SetVariableCommand extends MotorCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${MotorVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }
@@ -424,7 +418,7 @@ export class SetOffsetVariableCommand extends SetVariableCommand {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr, destAddr, MotorVariableID.Offset, mod(offset, 4096), 2);
+			super(srcAddr, destAddr, MotorVariable.Offset, mod(offset, 4096), 2);
 		}
 	}
 
@@ -449,7 +443,7 @@ export class SetSpeedVariableCommand extends SetVariableCommand {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr, destAddr, MotorVariableID.Speed, speed, 1);
+			super(srcAddr, destAddr, MotorVariable.Speed, speed, 1);
 		}
 	}
 

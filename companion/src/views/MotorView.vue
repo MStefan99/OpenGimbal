@@ -125,6 +125,7 @@ import {delay} from '../scripts/util';
 import StatusIndicator from '../components/StatusIndicator.vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import {alert, PopupColor} from '../scripts/popups';
+import {Gimbal} from '../scripts/driver/Gimbal';
 
 const motors = ref<IMotor[]>([]);
 const enumerating = ref<boolean>(false);
@@ -143,6 +144,10 @@ const hapticDurations = ref<number[]>([]);
 const calibrations = ref<BitwiseRegister<CalibrationBits>[]>([]);
 
 async function enumerate(): Promise<void> {
+	if (connectedDevice.value instanceof Gimbal) {
+		await connectedDevice.value.disable();
+	}
+
 	enumerating.value = true;
 	motors.value = [];
 

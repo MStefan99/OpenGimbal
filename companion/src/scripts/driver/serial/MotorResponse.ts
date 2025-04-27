@@ -1,5 +1,5 @@
 import {SerialMessage} from './SerialMessage';
-import {MotorVariableID} from './MotorCommand';
+import {MotorVariable} from './MotorCommand';
 import {BitwiseRegister} from '../BitwiseRegister';
 import {CalibrationBits} from '../Motor';
 
@@ -16,14 +16,14 @@ export const motorResponses: Record<MotorResponseType, (buffer: Uint8Array) => M
 };
 
 export const variableResponses: Record<
-	MotorVariableID,
+	MotorVariable,
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {
-	[MotorVariableID.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
-	[MotorVariableID.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
-	[MotorVariableID.Position]: (buffer) => new ReturnPositionVariableResponse(buffer),
-	[MotorVariableID.Speed]: (buffer) => new ReturnSpeedVariableResponse(buffer),
-	[MotorVariableID.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
+	[MotorVariable.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
+	[MotorVariable.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
+	[MotorVariable.Position]: (buffer) => new ReturnPositionVariableResponse(buffer),
+	[MotorVariable.Speed]: (buffer) => new ReturnSpeedVariableResponse(buffer),
+	[MotorVariable.Error]: (buffer) => new ReturnErrorVariableResponse(buffer)
 };
 
 export class MotorResponse extends SerialMessage {
@@ -56,7 +56,7 @@ export class ReturnVariableResponse extends MotorResponse {
 		super(buffer);
 	}
 
-	get variableID(): MotorVariableID {
+	get variable(): MotorVariable {
 		return this.view.getUint8(2);
 	}
 
@@ -64,7 +64,7 @@ export class ReturnVariableResponse extends MotorResponse {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${MotorVariableID[this.variableID] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${MotorVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }

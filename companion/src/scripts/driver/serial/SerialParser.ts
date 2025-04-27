@@ -39,7 +39,7 @@ export class SerialParser implements ISerialParser {
 					const command = motorCommands[genericCommand.type](buffer);
 
 					if (command instanceof SetVariableCommand) {
-						return variableCommands[command.variableID](buffer);
+						return variableCommands[command.variable](buffer);
 					} else {
 						return command;
 					}
@@ -48,7 +48,7 @@ export class SerialParser implements ISerialParser {
 					const response = motorResponses[genericResponse.type](buffer);
 
 					if (response instanceof ReturnVariableResponse) {
-						return variableResponses[response.variableID](buffer);
+						return variableResponses[response.variable](buffer);
 					} else {
 						return response;
 					}
