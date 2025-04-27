@@ -60,12 +60,12 @@ const type = ref<'usb' | 'serial'>('usb');
 function connect(demo?: boolean): void {
 	connectDevice(type.value, demo)
 		.then(() => emit('close'))
-		.catch(() => {
-			alert(
-				'Failed to connect',
-				PopupColor.Red,
-				'An error occurred while trying to connect device'
-			);
+		.catch((e) => {
+			if (e.name === 'NotFoundError') {
+				return;
+			}
+
+			alert('Failed to connect', PopupColor.Red, e.message ?? 'Unknown error');
 			emit('close');
 		});
 }

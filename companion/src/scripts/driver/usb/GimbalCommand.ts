@@ -14,10 +14,9 @@ export enum GimbalCommandType {
 
 export enum GimbalVariable {
 	Orientation = 0x00,
-	InitialOrientation = 0x01,
-	HandleOrientation = 0x02,
-	Mode = 0x03,
-	BatteryVoltage = 0x04
+	HandleOrientation = 0x01,
+	Mode = 0x02,
+	BatteryVoltage = 0x03
 }
 
 export enum GimbalMode {
@@ -226,7 +225,7 @@ export class SetModeCommand extends SetVariableCommand {
 
 	get mode(): number {
 		// First byte is command type, second is variable ID
-		return this.view.getUint8(1);
+		return this.view.getUint8(2);
 	}
 
 	override toString(type?: 'hex'): string {

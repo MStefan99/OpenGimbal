@@ -1,20 +1,21 @@
 <template lang="pug">
 .control.w-fit.max-w-screen-lg.my-4.mx-auto.px-4
-	JoystickControl.mx-auto.mb-4(@move="update")
+	JoystickControl.mx-auto.mb-4(@move="update" ref="joystick")
 	p.text-accent.font-bold.border-b.border-accent.text-center Power
 	.flex.flex-row.justify-evenly.gap-4.my-4
 		button(@click="connectedDevice.enable()") Turn on
 		button(@click="connectedDevice.disable()") Turn off
 	p.text-accent.font-bold.border-b.border-accent.text-center Mode
 	.flex.flex-row.justify-evenly.gap-4.my-4
-		button(@click="connectedDevice.setMode(GimbalMode.Horizon)") Horizon
-		button(@click="connectedDevice.setMode(GimbalMode.Follow)") Follow
-		button(@click="connectedDevice.setMode(GimbalMode.FPV)") FPV
-		button(@click="connectedDevice.setMode(GimbalMode.Tilt)") Tilt
+		button(@click="setMode(GimbalMode.Horizon)") Horizon
+		button(@click="setMode(GimbalMode.Follow)") Follow
+		button(@click="setMode(GimbalMode.FPV)") FPV
+		button(@click="setMode(GimbalMode.Tilt)") Tilt
 	p.text-accent.font-bold.border-b.border-accent.text-center Move
 	.flex.flex-row.justify-evenly.gap-4.my-4
-		button(@click="connectedDevice.setMode(GimbalMode.Horizon)") Rotate
-		button(@click="connectedDevice.setMode(GimbalMode.Follow)") Flip
+		button(@click="reCenter()") Re-center
+		button(@click="rotate()") Rotate
+		button(@click="flip()") Flip
 </template>
 
 <script setup lang="ts">
@@ -22,29 +23,82 @@ import {connectedDevice} from '../scripts/driver/driver';
 import JoystickControl from '../components/JoystickControl.vue';
 import {Gimbal} from '../scripts/driver/Gimbal';
 import {GimbalMode} from '../scripts/driver/usb/GimbalCommand';
+import {ref} from 'vue';
+
+type Orientation = {yaw: number; pitch: number; roll: number};
+const joystick = ref();
 
 let lastCommandSent = 0;
-let initialYaw = 0;
-let initialRoll = 0;
+let currentMode: GimbalMode = GimbalMode.Follow;
+let orientation: Orientation = {yaw: 0, pitch: 0, roll: 0};
+let initialOrientation: Orientation = {yaw: 0, pitch: 0, roll: 0};
 
-function update(x: number, y: number): void {
+function setMode(mode: GimbalMode): Promise<void> {
 	if (!(connectedDevice.value instanceof Gimbal)) {
 		return;
 	}
 
+	currentMode = mode;
+
+	return connectedDevice.value.setMode(mode);
+}
+
+function move(): Promise<void> {
 	const now = Date.now();
 
 	if (now - lastCommandSent < 128) {
 		return;
 	}
 
-	connectedDevice.value.setOrientation(-x * Math.PI, -y * (Math.PI / 2), 0);
 	lastCommandSent = now;
+	if (!(connectedDevice.value instanceof Gimbal)) {
+		return;
+	}
+
+	return connectedDevice.value.setOrientation(
+		orientation.yaw + initialOrientation.yaw,
+		orientation.pitch + initialOrientation.pitch,
+		orientation.roll + initialOrientation.roll
+	);
 }
 
-function rotate(): void {}
+function update(x: number, y: number): Promise<void> {
+	if (currentMode !== GimbalMode.Tilt) {
+		orientation.yaw = -x * Math.PI;
+	} else {
+		orientation.roll = -x * Math.PI;
+	}
+	orientation.pitch = -y * (Math.PI / 2);
 
-function flip(): void {}
+	return move();
+}
+
+function reCenter(): Promise<void> {
+	orientation = {yaw: 0, pitch: 0, roll: 0};
+	joystick.value.reCenter();
+
+	return move();
+}
+
+function rotate(): Promise<void> {
+	initialOrientation.roll += Math.PI / 2;
+
+	if (initialOrientation.roll > Math.PI + 0.01) {
+		initialOrientation.roll = 0;
+	}
+
+	return move();
+}
+
+function flip(): Promise<void> {
+	initialOrientation.yaw += Math.PI;
+
+	if (initialOrientation.yaw > Math.PI + 0.01) {
+		initialOrientation.yaw = 0;
+	}
+
+	return move();
+}
 </script>
 
 <style scoped></style>

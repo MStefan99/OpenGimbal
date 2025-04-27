@@ -1,6 +1,6 @@
 <template lang="pug">
 .joystick(ref="joystick")
-	.joystick-control(ref="joystickControl")
+	.joystick-control(ref="joystickControl" :class="{centering}")
 </template>
 
 <script setup lang="ts">
@@ -8,14 +8,18 @@ import {onMounted, onUnmounted, ref} from 'vue';
 
 const emit = defineEmits<{(e: 'move', x: number, y: number): void}>();
 const props = defineProps<{
-	reCenter?: boolean;
+	autoCenter?: boolean;
 }>();
+defineExpose({
+	reCenter
+});
 
 type Vector2 = {
 	x: number;
 	y: number;
 };
 
+const centering = ref<boolean>(false);
 let isMoving = false;
 let moveOffset: Vector2 = {
 	x: 0,
@@ -31,6 +35,18 @@ onMounted((): void => {
 	joystickControl.value.style.left = `${joystickCenter.x}px`;
 	joystickControl.value.style.top = `${joystickCenter.y}px`;
 });
+
+function reCenter(): void {
+	const joystickCenter = getCenter(joystick.value);
+
+	joystickControl.value.style.left = `${joystickCenter.x}px`;
+	joystickControl.value.style.top = `${joystickCenter.y}px`;
+	centering.value = true;
+
+	setTimeout(() => {
+		centering.value = false;
+	}, 200);
+}
 
 function getCenter(element: Element): Vector2 & {width: number; height: number} {
 	const bounds = element.getBoundingClientRect();
@@ -91,11 +107,8 @@ function moveListener(e: MouseEvent): void {
 function upListener(e: MouseEvent): void {
 	isMoving = false;
 
-	if (props.reCenter) {
-		const joystickCenter = getCenter(joystick.value);
-
-		joystickControl.value.style.left = `${joystickCenter.x}px`;
-		joystickControl.value.style.top = `${joystickCenter.y}px`;
+	if (props.autoCenter) {
+		reCenter();
 	}
 }
 
@@ -126,5 +139,11 @@ onUnmounted(() => document.removeEventListener('mouseup', upListener));
 	left: 50%;
 	top: 50%;
 	position: absolute;
+}
+
+.joystick-control.centering {
+	transition:
+		left 0.2s ease,
+		top 0.2s ease;
 }
 </style>

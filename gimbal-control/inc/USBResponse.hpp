@@ -23,10 +23,9 @@ namespace USBCommand {
 
 	enum class Variable : uint8_t {
 		Orientation = 0x00,
-		InitialOrientation = 0x01,
-		HandleOrientation = 0x02,
-		Mode = 0x03,
-		BatteryVoltage = 0x04
+		HandleOrientation = 0x01,
+		Mode = 0x02,
+		BatteryVoltage = 0x03
 	};
 }
 
