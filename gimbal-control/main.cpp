@@ -356,6 +356,8 @@ int main() {
 	while (1) {
 		switch (powerMode) {
 			case (PowerMode::Active): {
+				auto startTime {util::getTime()};
+
 				LSM6DSO32::update();
 				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), deltaTime / 1000.0f);
 
@@ -431,7 +433,10 @@ int main() {
 					}
 				}
 
-				util::sleep(deltaTime);
+				auto elapsedTime {util::getTime() - startTime};
+				if (elapsedTime < deltaTime) {
+					util::sleep(deltaTime - elapsedTime);
+				}
 				break;
 			}
 			case (PowerMode::Idle):
@@ -442,7 +447,8 @@ int main() {
 					uart::disable();
 					wokenByUSB = false;
 				}
-				__WFI();
+
+				util::sleep(deltaTime);
 				break;
 			}
 			case (PowerMode::Sleep): {
@@ -455,6 +461,7 @@ int main() {
 					wokenByUSB = true;
 					break;
 				}
+
 				sleep();
 				break;
 			}
