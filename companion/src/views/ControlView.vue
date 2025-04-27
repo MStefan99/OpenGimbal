@@ -1,5 +1,7 @@
 <template lang="pug">
-.control.w-fit.max-w-screen-lg.my-4.mx-auto.px-4
+p.text-red.font-bold.m-4(v-if="!(connectedDevice instanceof Gimbal)").
+	This tool only works with a connected gimbal.
+.control.w-fit.max-w-screen-lg.my-4.mx-auto.px-4(v-else)
 	JoystickControl.mx-auto.mb-4(@move="update" ref="joystick")
 	p.text-accent.font-bold.border-b.border-accent.text-center Power
 	.flex.flex-row.justify-evenly.gap-4.my-4
