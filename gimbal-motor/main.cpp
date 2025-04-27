@@ -396,11 +396,6 @@ bool calibrate() {
 			}
 
 			if (timeout++ > 200) {  // Quit if the motor is stuck to avoid overheating
-				bldc::tone(294);
-				util::sleep(205);
-				bldc::tone(247);
-				util::sleep(205);
-				bldc::silent();
 				unwind(polePairs * fullRevolution + torqueAngle);
 				return false;
 			}
@@ -425,11 +420,6 @@ bool calibrate() {
 		 */
 		auto calibrationCheck {checkCalibration(phaseOffset, polePairs, direction > 0)};
 		if (calibrationCheck) {
-			bldc::tone(294);
-			util::sleep(205);
-			bldc::tone(247);
-			util::sleep(205);
-			bldc::silent();
 			unwind(calibrationCheck);
 			return false;
 		}

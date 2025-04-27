@@ -29,18 +29,11 @@ let moveOffset: Vector2 = {
 const joystick = ref();
 const joystickControl = ref();
 
-onMounted((): void => {
-	const joystickCenter = getCenter(joystick.value);
-
-	joystickControl.value.style.left = `${joystickCenter.x}px`;
-	joystickControl.value.style.top = `${joystickCenter.y}px`;
-});
-
 function reCenter(): void {
 	const joystickCenter = getCenter(joystick.value);
 
-	joystickControl.value.style.left = `${joystickCenter.x}px`;
-	joystickControl.value.style.top = `${joystickCenter.y}px`;
+	joystickControl.value.style.left = '50%';
+	joystickControl.value.style.top = '50%';
 	centering.value = true;
 
 	setTimeout(() => {
@@ -96,9 +89,10 @@ function moveListener(e: MouseEvent): void {
 	const distance = Math.sqrt(Math.pow(difference.x, 2) + Math.pow(difference.y, 2));
 	const maxDistance = (joystickCenter.width - controlCenter.width) / 2;
 	const cappedDistance = Math.min(distance, maxDistance);
+	const visualDistance = cappedDistance / (joystickCenter.width / 2);
 
-	joystickControl.value.style.left = `${joystickCenter.x + cappedDistance * Math.cos(angle)}px`;
-	joystickControl.value.style.top = `${joystickCenter.y + cappedDistance * Math.sin(angle)}px`;
+	joystickControl.value.style.left = `${visualDistance * Math.cos(angle) * 50 + 50}%`;
+	joystickControl.value.style.top = `${visualDistance * Math.sin(angle) * 50 + 50}%`;
 
 	const normalizedDistance = cappedDistance / maxDistance;
 	emit('move', Math.cos(-angle) * normalizedDistance, Math.sin(-angle) * normalizedDistance);
@@ -128,6 +122,7 @@ onUnmounted(() => document.removeEventListener('mouseup', upListener));
 	aspect-ratio: 1/1;
 	border-radius: 160px;
 	border: 0.1rem solid var(--color-accent);
+	position: relative;
 }
 
 .joystick-control {
@@ -138,7 +133,7 @@ onUnmounted(() => document.removeEventListener('mouseup', upListener));
 	border-radius: 32px;
 	left: 50%;
 	top: 50%;
-	position: absolute;
+	position: relative;
 }
 
 .joystick-control.centering {
