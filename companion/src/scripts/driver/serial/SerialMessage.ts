@@ -1,14 +1,46 @@
 import {clamp} from '../../util';
-import {MotorCommandType} from './MotorCommand';
 import {Message} from '../Message';
+
+export enum MotorCommandType {
+	Sleep = 0x0,
+	Idle = 0x1,
+	Wake = 0x2,
+	Move = 0x3,
+	Tone = 0x4,
+	Haptic = 0x5,
+	AdjustOffset = 0x6,
+	Calibrate = 0x7,
+	GetVariable = 0xe,
+	SetVariable = 0xf
+}
+
+export enum MotorResponseType {
+	ReturnVariable = 0xf
+}
+
+export enum MotorVariable {
+	Calibration = 0x0,
+	Offset = 0x1,
+	Position = 0x2
+}
+
+export enum CalibrationBits {
+	Zero = 0x0,
+	Pole = 0x1
+}
 
 export class SerialMessage extends Message {
 	constructor(buffer: Uint8Array);
-	constructor(srcAddr: number, destAddr: number, type: MotorCommandType, data?: Uint8Array);
+	constructor(
+		srcAddr: number,
+		destAddr: number,
+		type: MotorCommandType | MotorResponseType,
+		data?: Uint8Array
+	);
 	constructor(
 		srcAddr: number | Uint8Array,
 		destAddr?: number,
-		type?: MotorCommandType,
+		type?: MotorCommandType | MotorResponseType,
 		data: Uint8Array = new Uint8Array()
 	) {
 		if (srcAddr instanceof Uint8Array) {

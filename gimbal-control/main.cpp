@@ -1,5 +1,7 @@
 #include "main.hpp"
 
+#include "inc/usb.hpp"
+
 volatile static DisplayState displayState {DisplayState::GimbalMode};
 volatile static PowerMode    powerMode {PowerMode::Sleep};
 volatile static GimbalMode   gimbalMode {GimbalMode::Follow};
@@ -128,6 +130,46 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			break;
 		}
 		case (USBCommand::CommandType::GetVariable): {
+			switch (static_cast<USBCommand::Variable>(request.bData[0])) {
+				case (USBCommand::Variable::Orientation): {
+					int16_t data[3];
+					for (uint8_t i {0}; i < 3; ++i) {
+						data[i] = offsetAngles[i] * intScalingFactor;
+					}
+
+					auto response = USBReturnVariableResponse {
+					  USBResponse::Variable::Orientation,
+					  reinterpret_cast<uint8_t*>(data),
+					  sizeof(data)
+					};
+					usb::write(response.getBuffer(), response.getLength());
+					break;
+				}
+				case (USBCommand::Variable::HandleOrientation): {
+					int16_t    data[3];
+					Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
+					auto       handleAngles {handleOrientation.toEuler()};
+
+					for (uint8_t i {0}; i < 3; ++i) {
+						data[i] = handleAngles[i][0] * intScalingFactor;
+					}
+
+					auto response = USBReturnVariableResponse {
+					  USBResponse::Variable::HandleOrientation,
+					  reinterpret_cast<uint8_t*>(data),
+					  sizeof(data)
+					};
+					usb::write(response.getBuffer(), response.getLength());
+					break;
+				}
+				case (USBCommand::Variable::Mode): {
+					auto response = USBReturnVariableResponse {USBResponse::Variable::Mode, static_cast<uint8_t>(gimbalMode)};
+					usb::write(response.getBuffer(), response.getLength());
+					break;
+				}
+				default:
+					break;
+			}
 			break;
 		}
 		case (USBCommand::CommandType::SetVariable): {

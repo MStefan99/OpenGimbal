@@ -111,7 +111,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import type {IMotor} from '../scripts/driver/Motor';
-import {CalibrationBits} from '../scripts/driver/Motor';
 import RangeSlider from '../components/RangeSlider.vue';
 import {BitwiseRegister} from '../scripts/driver/BitwiseRegister';
 import {delay} from '../scripts/util';
@@ -119,6 +118,7 @@ import StatusIndicator from '../components/StatusIndicator.vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import {alert, PopupColor} from '../scripts/popups';
 import {Gimbal} from '../scripts/driver/Gimbal';
+import {CalibrationBits} from '../scripts/driver/serial/SerialMessage';
 
 const motors = ref<IMotor[]>([]);
 const enumerating = ref<boolean>(false);

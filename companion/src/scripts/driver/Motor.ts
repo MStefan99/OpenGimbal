@@ -11,7 +11,6 @@ import {
 	HapticCommand,
 	IdleCommand,
 	MotorCommand,
-	MotorVariable,
 	MoveCommand,
 	SetOffsetVariableCommand,
 	SleepCommand,
@@ -20,11 +19,7 @@ import {
 } from './serial/MotorCommand';
 import {ISerialInterface} from './serial/SerialInterface';
 import {resolveComponent} from 'vue';
-
-export enum CalibrationBits {
-	Zero = 0x0,
-	Pole = 0x1
-}
+import {CalibrationBits, MotorVariable} from './serial/SerialMessage';
 
 export interface IMotor {
 	get address(): number;

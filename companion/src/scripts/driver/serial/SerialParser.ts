@@ -1,13 +1,7 @@
-import {
-	motorCommands,
-	variableCommands,
-	MotorCommand,
-	MotorCommandType,
-	SetVariableCommand
-} from './MotorCommand';
+import {motorCommands, setVariableCommands, MotorCommand, SetVariableCommand} from './MotorCommand';
 import {
 	motorResponses,
-	variableResponses,
+	returnVariableResponses,
 	MotorResponse,
 	ReturnVariableResponse
 } from './MotorResponse';
@@ -39,7 +33,7 @@ export class SerialParser implements ISerialParser {
 					const command = motorCommands[genericCommand.type](buffer);
 
 					if (command instanceof SetVariableCommand) {
-						return variableCommands[command.variable](buffer);
+						return setVariableCommands[command.variable](buffer);
 					} else {
 						return command;
 					}
@@ -48,7 +42,7 @@ export class SerialParser implements ISerialParser {
 					const response = motorResponses[genericResponse.type](buffer);
 
 					if (response instanceof ReturnVariableResponse) {
-						return variableResponses[response.variable](buffer);
+						return returnVariableResponses[response.variable](buffer);
 					} else {
 						return response;
 					}

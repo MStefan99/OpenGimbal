@@ -1,8 +1,9 @@
-import {CalibrationBits, IMotor, Motor} from './Motor';
+import {IMotor, Motor} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './serial/SerialInterface';
 import {MotorCommand} from './serial/MotorCommand';
 import {MotorResponse} from './serial/MotorResponse';
+import {CalibrationBits} from './serial/SerialMessage';
 
 export interface IMotorControl {
 	get active(): IMotor[];

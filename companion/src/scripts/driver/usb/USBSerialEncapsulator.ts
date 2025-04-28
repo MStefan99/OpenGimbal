@@ -1,8 +1,7 @@
 import {SerialMessage} from '../serial/SerialMessage';
-import {USBMessage} from './USBMessage';
+import {GimbalCommandType, USBMessage} from './USBMessage';
 import {USBInterface} from './USBInterface';
 import {ISerialInterface} from '../serial/SerialInterface';
-import {GimbalCommandType} from './GimbalCommand';
 import {USBParser} from './USBParser';
 import {SerialParser} from '../serial/SerialParser';
 

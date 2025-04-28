@@ -1,11 +1,5 @@
-import {SerialMessage} from './SerialMessage';
-import {MotorVariable} from './MotorCommand';
+import {CalibrationBits, MotorResponseType, MotorVariable, SerialMessage} from './SerialMessage';
 import {BitwiseRegister} from '../BitwiseRegister';
-import {CalibrationBits} from '../Motor';
-
-export enum MotorResponseType {
-	ReturnVariable = 0xf
-}
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'
@@ -15,7 +9,7 @@ export const motorResponses: Record<MotorResponseType, (buffer: Uint8Array) => M
 	[MotorResponseType.ReturnVariable]: (buffer) => new ReturnVariableResponse(buffer)
 };
 
-export const variableResponses: Record<
+export const returnVariableResponses: Record<
 	MotorVariable,
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {

@@ -24,8 +24,8 @@ p.text-red.font-bold.m-4(v-if="!(connectedDevice instanceof Gimbal)").
 import {connectedDevice} from '../scripts/driver/driver';
 import JoystickControl from '../components/JoystickControl.vue';
 import {Gimbal} from '../scripts/driver/Gimbal';
-import {GimbalMode} from '../scripts/driver/usb/GimbalCommand';
 import {ref} from 'vue';
+import {GimbalMode} from '../scripts/driver/usb/USBMessage';
 
 type Orientation = {yaw: number; pitch: number; roll: number};
 const joystick = ref();

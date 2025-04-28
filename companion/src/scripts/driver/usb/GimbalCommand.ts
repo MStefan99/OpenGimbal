@@ -1,30 +1,8 @@
-import {USBMessage} from './USBMessage';
+import {GimbalCommandType, GimbalMode, GimbalVariable, USBMessage} from './USBMessage';
 import {exposeSerialMessage} from './USBSerialEncapsulator';
 import {MotorCommand} from '../serial/MotorCommand';
 import {RAD_TO_COUNTS} from '../../types';
 import {clamp} from '../../util';
-
-export enum GimbalCommandType {
-	Disable = 0x00,
-	Enable = 0x01,
-	SetVariable = 0xd,
-	GetVariable = 0xe,
-	MotorPassthrough = 0x0f
-}
-
-export enum GimbalVariable {
-	Orientation = 0x00,
-	HandleOrientation = 0x01,
-	Mode = 0x02,
-	BatteryVoltage = 0x03
-}
-
-export enum GimbalMode {
-	Horizon = 0x00,
-	Follow = 0x01,
-	FPV = 0x02,
-	Tilt = 0x03
-}
 
 export const gimbalCommandNames: Record<GimbalCommandType, string> = {
 	[GimbalCommandType.Disable]: 'Disable',
@@ -34,12 +12,26 @@ export const gimbalCommandNames: Record<GimbalCommandType, string> = {
 	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const getGimbalCommand: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
+export const gimbalCommands: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
 	[GimbalCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
 	[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
 	[GimbalCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
 	[GimbalCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
 	[GimbalCommandType.MotorPassthrough]: (buffer: Uint8Array) => new MotorPassthroughCommand(buffer)
+};
+
+export const setVariableCommands: Record<
+	GimbalVariable,
+	(buffer: Uint8Array) => SetVariableCommand
+> = {
+	[GimbalVariable.Orientation]: (buffer: Uint8Array) => new SetOrientationVariableCommand(buffer),
+	[GimbalVariable.HandleOrientation]: () => {
+		throw new Error('Handle orientation is a read-only variable');
+	},
+	[GimbalVariable.Mode]: (buffer) => new SetModeVariableCommand(buffer),
+	[GimbalVariable.BatteryVoltage]: () => {
+		throw new Error('Battery voltage is a read-only variable');
+	}
 };
 
 export class GimbalCommand extends USBMessage {
@@ -160,7 +152,7 @@ export class SetVariableCommand extends GimbalCommand {
 	}
 }
 
-export class SetOrientationCommand extends SetVariableCommand {
+export class SetOrientationVariableCommand extends SetVariableCommand {
 	constructor(buffer: Uint8Array);
 	constructor(yaw: number, pitch: number, roll: number);
 
@@ -206,7 +198,7 @@ export class SetOrientationCommand extends SetVariableCommand {
 	}
 }
 
-export class SetModeCommand extends SetVariableCommand {
+export class SetModeVariableCommand extends SetVariableCommand {
 	constructor(buffer: Uint8Array);
 	constructor(mode: GimbalMode);
 

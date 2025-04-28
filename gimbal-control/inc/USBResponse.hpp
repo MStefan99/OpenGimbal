@@ -37,7 +37,7 @@ public:
 	using Variable = USBCommand::Variable;
 
 	enum class ResponseType : uint8_t {
-		ReturnVariable = 0x0,
+		ReturnVariable = 0xe,
 		MotorPassthrough = 0xf
 	};
 
@@ -53,17 +53,33 @@ public:
 	};
 
 	USBResponse() = default;
-	USBResponse(ResponseType type, uint8_t* data = nullptr, uint8_t len = 0);
+	USBResponse(ResponseType type, uint8_t dataLength);
 
 	buffer_type& getBuffer();
 	size_type    getLength();
 
-	const buffer_type& getBuffer() const;
-	const size_type    getLength() const;
-
 protected:
 	buffer_type _buffer = {0};
+	size_type   _length {0};
 };
+
+class USBReturnVariableResponse: public USBResponse {
+public:
+	template <class T>
+	USBReturnVariableResponse(USBResponse::Variable variable, T value);
+	USBReturnVariableResponse(USBResponse::Variable variable, uint8_t* data = nullptr, uint8_t len = 0);
+};
+
+template <class T>
+USBReturnVariableResponse::USBReturnVariableResponse(USBResponse::Variable variable, T value):
+  USBResponse {ResponseType::ReturnVariable, 1 + sizeof(T)} {
+	this->_buffer[1] = static_cast<uint8_t>(variable);
+
+	for (size_type i {0}; i < sizeof(T); ++i) {
+		this->_buffer[sizeof(T) + 2 - i] = value;
+		value >>= 8;
+	}
+}
 
 
 #endif /* DATA_HPP */

@@ -28,6 +28,7 @@ import {connectedDevice} from '../scripts/driver/driver';
 import {SerialParser} from '../scripts/driver/serial/SerialParser';
 import {SerialMessage} from '../scripts/driver/serial/SerialMessage';
 import {
+	GetVariableCommand,
 	MotorCommand,
 	MotorCommandError,
 	motorErrorDescriptions
@@ -59,9 +60,14 @@ function bufferToString(buffer: Uint8Array): string {
 }
 
 function sendCommand(buffer: Uint8Array): void {
-	const command = new MotorCommand(buffer);
+	const command = parser.parse(buffer);
 
 	commandString.value = bufferToString(command.buffer);
+
+	if (!(command instanceof MotorCommand)) {
+		alert('Invalid command', PopupColor.Red, 'You are trying to send a motor response');
+		return;
+	}
 
 	if (command.error !== MotorCommandError.NoError) {
 		alert('Invalid command', PopupColor.Red, motorErrorDescriptions[command.error]);
@@ -77,20 +83,22 @@ function sendCommand(buffer: Uint8Array): void {
 
 	commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
 
-	connectedDevice.value.motors
-		.request(command)
-		.then((response: MotorResponse) => {
-			commandEntries.value.unshift({
-				time: Date.now(),
-				message: response,
-				id: lastID++
-			});
+	if (command instanceof GetVariableCommand) {
+		connectedDevice.value.motors
+			.request(command)
+			.then((response: MotorResponse) => {
+				commandEntries.value.unshift({
+					time: Date.now(),
+					message: response,
+					id: lastID++
+				});
 
-			while (commandEntries.value.length > historySize.value) {
-				commandEntries.value.pop();
-			}
-		})
-		.catch((): null => null);
+				commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
+			})
+			.catch((): null => null);
+	} else {
+		connectedDevice.value.motors.send(command);
+	}
 }
 
 function formatTime(time: number): string {

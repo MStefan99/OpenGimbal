@@ -1,5 +1,16 @@
-import {GimbalCommand, GimbalCommandType, MotorPassthroughCommand} from './GimbalCommand';
-import {GimbalResponse, GimbalResponseType, MotorPassthroughResponse} from './GimbalResponse';
+import {
+	GimbalCommand,
+	gimbalCommands,
+	MotorPassthroughCommand,
+	SetVariableCommand,
+	setVariableCommands
+} from './GimbalCommand';
+import {
+	gimbalResponses,
+	GimbalResponse,
+	ReturnVariableResponse,
+	returnVariableResponses
+} from './GimbalResponse';
 
 export interface IUSBParser {
 	parseCommand(data: Uint8Array): GimbalCommand | null;
@@ -13,10 +24,11 @@ export class USBParser implements IUSBParser {
 			return null;
 		}
 
-		const command = new GimbalCommand(data);
+		const genericCommand = new GimbalCommand(data);
+		const command = gimbalCommands[genericCommand.type](data);
 
-		if (command.type === GimbalCommandType.MotorPassthrough) {
-			return new MotorPassthroughCommand(data);
+		if (command instanceof SetVariableCommand) {
+			return setVariableCommands[command.variable](data);
 		} else {
 			return command;
 		}
@@ -27,10 +39,11 @@ export class USBParser implements IUSBParser {
 			return null;
 		}
 
-		const response = new GimbalResponse(data);
+		const genericResponse = new GimbalResponse(data);
+		const response = gimbalResponses[genericResponse.type](data);
 
-		if (response.type === GimbalResponseType.MotorPassthrough) {
-			return new MotorPassthroughResponse(data);
+		if (response instanceof ReturnVariableResponse) {
+			return returnVariableResponses[response.variable](data);
 		} else {
 			return response;
 		}

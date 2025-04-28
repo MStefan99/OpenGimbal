@@ -29,7 +29,7 @@ import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import RangeSlider from '../components/RangeSlider.vue';
 import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
-import {GimbalCommand} from '../scripts/driver/usb/GimbalCommand';
+import {GetVariableCommand, GimbalCommand} from '../scripts/driver/usb/GimbalCommand';
 import {USBMessage} from '../scripts/driver/usb/USBMessage';
 import {Gimbal} from '../scripts/driver/Gimbal';
 import {USBParser} from '../scripts/driver/usb/USBParser';
@@ -52,13 +52,21 @@ function stringToBuffer(str: string): Uint8Array {
 	);
 }
 
-function sendCommand(buffer: Uint8Array): void {
-	const command = new GimbalCommand(buffer);
-
-	commandString.value = new Array(buffer.length)
+function bufferToString(buffer: Uint8Array): string {
+	return new Array(buffer.length)
 		.fill(0)
 		.map((_, i) => buffer[i].toString(16).padStart(2, '0').toUpperCase())
 		.join(' ');
+}
+
+function sendCommand(buffer: Uint8Array): void {
+	commandString.value = bufferToString(buffer);
+
+	if (!(connectedDevice.value instanceof Gimbal)) {
+		return;
+	}
+
+	const command = parser.parseCommand(buffer);
 
 	commandEntries.value.unshift({
 		time: Date.now(),
@@ -68,7 +76,20 @@ function sendCommand(buffer: Uint8Array): void {
 
 	commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
 
-	if (connectedDevice.value instanceof Gimbal) {
+	if (command instanceof GetVariableCommand) {
+		connectedDevice.value
+			.request(command)
+			.then((response) => {
+				commandEntries.value.unshift({
+					time: Date.now(),
+					message: response,
+					id: lastID++
+				});
+
+				commandEntries.value.length = Math.min(commandEntries.value.length, historySize.value);
+			})
+			.catch((): null => null);
+	} else {
 		connectedDevice.value.send(command);
 	}
 }

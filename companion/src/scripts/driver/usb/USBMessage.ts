@@ -1,11 +1,37 @@
 import {Message} from '../Message';
-import {GimbalCommandType} from './GimbalCommand';
+
+export enum GimbalCommandType {
+	Disable = 0x00,
+	Enable = 0x01,
+	SetVariable = 0xd,
+	GetVariable = 0xe,
+	MotorPassthrough = 0x0f
+}
+
+export enum GimbalResponseType {
+	ReturnVariable = 0xe,
+	MotorPassthrough = 0xf
+}
+
+export enum GimbalVariable {
+	Orientation = 0x00,
+	HandleOrientation = 0x01,
+	Mode = 0x02,
+	BatteryVoltage = 0x03
+}
+
+export enum GimbalMode {
+	Horizon = 0x00,
+	Follow = 0x01,
+	FPV = 0x02,
+	Tilt = 0x03
+}
 
 export class USBMessage extends Message {
 	constructor(buffer: Uint8Array);
-	constructor(type: GimbalCommandType, data?: Uint8Array);
+	constructor(type: GimbalCommandType | GimbalResponseType, data?: Uint8Array);
 
-	constructor(buffer: Uint8Array | GimbalCommandType, data?: Uint8Array) {
+	constructor(buffer: Uint8Array | GimbalCommandType | GimbalResponseType, data?: Uint8Array) {
 		if (buffer instanceof Uint8Array) {
 			super(buffer);
 		} else {

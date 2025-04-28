@@ -1,15 +1,15 @@
 import {IUSBInterface} from './usb/USBInterface';
 import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
 import {USBSerialEncapsulator} from './usb/USBSerialEncapsulator';
+import {GimbalResponse} from './usb/GimbalResponse';
 import {
+	DisableCommand,
 	EnableCommand,
 	GimbalCommand,
-	DisableCommand,
-	SetOrientationCommand,
-	GimbalMode,
-	SetModeCommand
+	SetModeVariableCommand,
+	SetOrientationVariableCommand
 } from './usb/GimbalCommand';
-import {GimbalResponse} from './usb/GimbalResponse';
+import {GimbalMode} from './usb/USBMessage';
 
 export interface IGimbal extends IMotorManager {
 	get manufacturerName(): string;
@@ -63,11 +63,11 @@ export class Gimbal implements IGimbal {
 	}
 
 	setOrientation(yaw: number, pitch: number, roll: number): Promise<void> {
-		return this._hardwareInterface.send(new SetOrientationCommand(yaw, pitch, roll));
+		return this._hardwareInterface.send(new SetOrientationVariableCommand(yaw, pitch, roll));
 	}
 
 	setMode(mode: GimbalMode): Promise<void> {
-		return this._hardwareInterface.send(new SetModeCommand(mode));
+		return this._hardwareInterface.send(new SetModeVariableCommand(mode));
 	}
 
 	close(): Promise<void> {

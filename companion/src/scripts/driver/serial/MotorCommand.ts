@@ -1,26 +1,6 @@
 import {clamp, mod} from '../../util';
 import {BitwiseRegister} from '../BitwiseRegister';
-import {SerialMessage} from './SerialMessage';
-import {CalibrationBits} from '../Motor';
-
-export enum MotorCommandType {
-	Sleep = 0x0,
-	Idle = 0x1,
-	Wake = 0x2,
-	Move = 0x3,
-	Tone = 0x4,
-	Haptic = 0x5,
-	AdjustOffset = 0x6,
-	Calibrate = 0x7,
-	GetVariable = 0xe,
-	SetVariable = 0xf
-}
-
-export enum MotorVariable {
-	Calibration = 0x0,
-	Offset = 0x1,
-	Position = 0x2
-}
+import {CalibrationBits, MotorCommandType, MotorVariable, SerialMessage} from './SerialMessage';
 
 export enum MotorCommandError {
 	NoError,
@@ -56,13 +36,17 @@ export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => Mot
 	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
 };
 
-export const variableCommands: Partial<
-	Record<MotorVariable, (buffer: Uint8Array) => SetVariableCommand>
+export const setVariableCommands: Record<
+	MotorVariable,
+	(buffer: Uint8Array) => SetVariableCommand
 > = {
 	[MotorVariable.Calibration]: () => {
 		throw new Error('Calibration is a read-only variable');
 	},
-	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer)
+	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
+	[MotorVariable.Position]: () => {
+		throw new Error('Position is a read-only variable');
+	}
 };
 
 export const motorErrorDescriptions: Record<MotorCommandError, string> = {
