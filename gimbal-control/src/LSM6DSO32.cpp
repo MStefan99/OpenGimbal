@@ -11,11 +11,15 @@ static float rateOffsets[3] {0};
 static float accelerations[3] {0};
 static float angularRates[3] {0};
 
+static LSM6DSO32::UpdateCallback updateCallback {nullptr};
+
 void LSM6DSO32::enable(void (*cb)(bool success, const i2c::Transfer& transfer)) {
 	uint8_t ctrl1_xl {LSM6DSO32_CTRL1_XL_ODR_XL_104Hz};
 	uint8_t ctrl2_g {LSM6DSO32_CTRL2_G_ODR_G_104Hz | LSM6DSO32_CTRL2_G_FS_G_1000DPS};
+	uint8_t int1_ctrl {LSM6DSO32_INT1_CTRL_INT1_DRDY_XL(1)};
 	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL1_XL_ADDR, &ctrl1_xl, sizeof(ctrl1_xl));
-	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g, sizeof(ctrl2_g), cb);
+	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g, sizeof(ctrl2_g));
+	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_INT1_CTRL_ADDR, &int1_ctrl, sizeof(int1_ctrl), cb);
 }
 
 void LSM6DSO32::disable(void (*cb)(bool success, const i2c::Transfer& transfer)) {
@@ -25,7 +29,9 @@ void LSM6DSO32::disable(void (*cb)(bool success, const i2c::Transfer& transfer))
 	i2c::write(LSM6DSO32_ADDR_0, LSM6DSO32_CTRL2_G_ADDR, &ctrl2_g, sizeof(ctrl2_g), cb);
 }
 
-void LSM6DSO32::update() {
+void LSM6DSO32::update(UpdateCallback cb) {
+	updateCallback = cb;
+
 	i2c::read(LSM6DSO32_ADDR_0, LSM6DSO32_OUTX_L_A_ADDR, 6, [](bool success, const i2c::Transfer& transfer) {
 		for (uint8_t i {0}; i < 3; ++i) {
 			accelerations[i] = (rawAccelerations[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i]) * ACC_LSB;
@@ -34,6 +40,10 @@ void LSM6DSO32::update() {
 	i2c::read(LSM6DSO32_ADDR_0, LSM6DSO32_OUTX_L_G_ADDR, 6, [](bool success, const i2c::Transfer& transfer) {
 		for (uint8_t i {0}; i < 3; ++i) {
 			angularRates[i] = (rawAngularRates[i] = reinterpret_cast<const int16_t*>(transfer.buf)[i]) * ROT_LSB;
+		}
+
+		if (updateCallback) {
+			updateCallback();
 		}
 	});
 }

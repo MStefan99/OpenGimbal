@@ -16,11 +16,13 @@
 #include "util.hpp"
 
 namespace LSM6DSO32 {
+	using UpdateCallback = void (*)();
+
 	// I2C needs to be initialized first
 	void enable(void (*cb)(bool success, const i2c::Transfer& transfer) = nullptr);
 	void disable(void (*cb)(bool success, const i2c::Transfer& transfer) = nullptr);
 
-	void update();
+	void update(UpdateCallback = nullptr);
 
 	Vector3<int16_t, uint8_t> getRawAccelerations();
 	Vector3<int16_t, uint8_t> getRawAngularRates();

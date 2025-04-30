@@ -16,6 +16,9 @@ constexpr static float    maxVelocityPerStep {maxRestoringVelocity / updateRate}
 
 static Mahony mahony {};
 
+volatile static bool sensorReady {false};
+volatile static bool sensorDataReady {false};
+
 volatile static uint8_t  motorPositionRequest {0};
 volatile static uint32_t motorRequestTime {0};
 
@@ -238,6 +241,11 @@ Vector3<float, uint8_t> calculateAngles(const Vector3<float, uint8_t>& eulerAngl
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processSensor() {
+	sensorReady = true;
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processButtons(bool left, bool pressed) {
 	if (pressed && powerMode == PowerMode::Sleep) {
 		powerMode = PowerMode::Idle;
@@ -362,7 +370,7 @@ void sleep() {
 
 int main() {
 	util::init();
-	buttons::init();
+	eic::init();
 	adc::init();
 	pwm::init();
 	i2c::init();
@@ -370,7 +378,8 @@ int main() {
 	usb::init();
 
 	uart::setCallback(processMotorResponse);
-	buttons::setCallback(processButtons);
+	eic::setButtonCallback(processButtons);
+	eic::setSensor1Callback(processSensor);
 	usb::setCallback(processUSBCommand);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
@@ -400,7 +409,15 @@ int main() {
 			case (PowerMode::Active): {
 				auto startTime {util::getTime()};
 
-				LSM6DSO32::update();
+				LSM6DSO32::update([]() {
+					sensorDataReady = true;
+				});
+
+				while (!sensorDataReady && util::getTime() - startTime < deltaTime / 4) {
+					__WFI();
+				}
+				sensorDataReady = false;
+
 				mahony.updateIMU(LSM6DSO32::getAngularRates(), LSM6DSO32::getAccelerations(), deltaTime / 1000.0f);
 
 				joystick::update([](int16_t x, int16_t y) {
@@ -474,6 +491,11 @@ int main() {
 						motor::move(i + 1, util::mod(static_cast<int16_t>(motorAngles[i] * motorScalingFactor), fullRevolution));
 					}
 				}
+
+				while (!sensorReady && util::getTime() - startTime < deltaTime / 4) {
+					__WFI();
+				}
+				sensorReady = false;
 
 				auto elapsedTime {util::getTime() - startTime};
 				if (elapsedTime < deltaTime) {

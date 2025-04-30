@@ -13,7 +13,7 @@
 #include "device.h"
 
 #include "adc.hpp"
-#include "buttons.hpp"
+#include "eic.hpp"
 #include "i2c.hpp"
 #include "joystick.hpp"
 #include "LSM6DSO32.hpp"
