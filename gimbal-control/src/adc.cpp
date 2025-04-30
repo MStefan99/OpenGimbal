@@ -1,16 +1,29 @@
 #include "adc.hpp"
 
+struct queueEntry {
+	adc::Callback cb {nullptr};
+	uint16_t      input {};
+};
 
-static void (*callback)(uint16_t) {nullptr};
+static RingBuffer<queueEntry, uint8_t, 4> measureQueue {};
 
 
 extern "C" {
 	void ADC_Handler() {
-		if (callback) {
-			auto cb {callback};
+		if (measureQueue.size()) {
+			auto cb {measureQueue.front().cb};
 
-			callback = nullptr;
-			cb(ADC_REGS->ADC_RESULT);
+			if (cb) {
+				cb(ADC_REGS->ADC_RESULT);
+			}
+			measureQueue.pop_front();
+
+			if (measureQueue.size()) {
+				ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND     // Set GND as negative input
+				                        | measureQueue.front().input;  // Set temperature sensor as positive input
+
+				ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
+			}
 		}
 
 		ADC_REGS->ADC_INTFLAG = ADC_INTFLAG_Msk;
@@ -57,15 +70,14 @@ void adc::init() {
 }
 
 static void measure(void (*cb)(uint16_t), uint16_t input) {
-	if (callback) {
-		return;
+	measureQueue.push_back({cb, input});
+
+	if (measureQueue.size() == 1) {
+		ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND  // Set GND as negative input
+		                        | input;                    // Set temperature sensor as positive input
+
+		ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
 	}
-	callback = cb;
-
-	ADC_REGS->ADC_INPUTCTRL = ADC_INPUTCTRL_MUXNEG_GND  // Set GND as negative input
-	                        | input;                    // Set temperature sensor as positive input
-
-	ADC_REGS->ADC_SWTRIG = ADC_SWTRIG_START(1);
 }
 
 void adc::measureTemperature(void (*cb)(uint16_t)) {

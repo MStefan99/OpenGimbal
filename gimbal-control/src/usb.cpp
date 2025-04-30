@@ -37,7 +37,7 @@ static usb_device_endpoint1_request EP1REQ;
 static uint8_t* defaultData {nullptr};
 static uint8_t  defaultLen {0};
 
-static uint8_t            outBuffer[64];
+static uint8_t            outBuffer[80];
 static usb::callback_type callback {};
 
 

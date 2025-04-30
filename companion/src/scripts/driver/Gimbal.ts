@@ -1,15 +1,27 @@
 import {IUSBInterface} from './usb/USBInterface';
 import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
 import {USBSerialEncapsulator} from './usb/USBSerialEncapsulator';
-import {GimbalResponse} from './usb/GimbalResponse';
+import {
+	GimbalResponse,
+	ReturnBatteryVoltageVariableResponse,
+	ReturnModeVariableResponse,
+	ReturnOrientationVariableResponse
+} from './usb/GimbalResponse';
 import {
 	DisableCommand,
 	EnableCommand,
+	GetVariableCommand,
 	GimbalCommand,
 	SetModeVariableCommand,
 	SetOrientationVariableCommand
 } from './usb/GimbalCommand';
-import {GimbalMode} from './usb/USBMessage';
+import {GimbalMode, GimbalVariable} from './usb/USBMessage';
+
+export type Orientation = {
+	yaw: number;
+	pitch: number;
+	roll: number;
+};
 
 export interface IGimbal extends IMotorManager {
 	readonly usbVersionMajor: number;
@@ -125,8 +137,48 @@ export class Gimbal implements IGimbal {
 		return this._hardwareInterface.send(new SetOrientationVariableCommand(yaw, pitch, roll));
 	}
 
+	async getOrientation(): Promise<Orientation> {
+		const response = (await this._hardwareInterface.request(
+			new GetVariableCommand(GimbalVariable.Orientation)
+		)) as ReturnOrientationVariableResponse;
+
+		return {
+			yaw: response.yaw,
+			pitch: response.pitch,
+			roll: response.roll
+		};
+	}
+
+	async getHandleOrientation(): Promise<Orientation> {
+		const response = (await this._hardwareInterface.request(
+			new GetVariableCommand(GimbalVariable.HandleOrientation)
+		)) as ReturnOrientationVariableResponse;
+
+		return {
+			yaw: response.yaw,
+			pitch: response.pitch,
+			roll: response.roll
+		};
+	}
+
 	setMode(mode: GimbalMode): Promise<void> {
 		return this._hardwareInterface.send(new SetModeVariableCommand(mode));
+	}
+
+	async getMode(mode: GimbalMode): Promise<number> {
+		return (
+			(await this._hardwareInterface.request(
+				new SetModeVariableCommand(mode)
+			)) as ReturnModeVariableResponse
+		).mode;
+	}
+
+	async getVoltage(): Promise<number> {
+		return (
+			(await this._hardwareInterface.request(
+				new GetVariableCommand(GimbalVariable.BatteryVoltage)
+			)) as ReturnBatteryVoltageVariableResponse
+		).voltage;
 	}
 
 	close(): Promise<void> {

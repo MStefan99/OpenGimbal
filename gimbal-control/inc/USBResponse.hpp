@@ -76,7 +76,7 @@ USBReturnVariableResponse::USBReturnVariableResponse(USBResponse::Variable varia
 	this->_buffer[1] = static_cast<uint8_t>(variable);
 
 	for (size_type i {0}; i < sizeof(T); ++i) {
-		this->_buffer[sizeof(T) + 2 - i] = value;
+		this->_buffer[sizeof(T) + 1 - i] = value;
 		value >>= 8;
 	}
 }

@@ -11,6 +11,16 @@ export function mod(a: number, b: number): number {
 	return ((a % b) + b) % b;
 }
 
+export function scale(
+	value: number,
+	inMin: number,
+	inMax: number,
+	outMin: number,
+	outMax: number
+): number {
+	return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+}
+
 export async function interpolate(
 	startValue: number,
 	endValue: number,

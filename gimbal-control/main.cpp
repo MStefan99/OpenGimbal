@@ -137,7 +137,7 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 				case (USBCommand::Variable::Orientation): {
 					int16_t data[3];
 					for (uint8_t i {0}; i < 3; ++i) {
-						data[i] = offsetAngles[i] * intScalingFactor;
+						data[i] = __REV16(static_cast<int16_t>(offsetAngles[i] * intScalingFactor));
 					}
 
 					auto response = USBReturnVariableResponse {
@@ -154,7 +154,7 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 					auto       handleAngles {handleOrientation.toEuler()};
 
 					for (uint8_t i {0}; i < 3; ++i) {
-						data[i] = handleAngles[i][0] * intScalingFactor;
+						data[i] = __REV16(static_cast<int16_t>(handleAngles[i][0] * intScalingFactor));
 					}
 
 					auto response = USBReturnVariableResponse {
@@ -170,6 +170,21 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 					usb::write(response.getBuffer(), response.getLength());
 					break;
 				}
+				case (USBCommand::Variable::BatteryVoltage): {
+					adc::measureBattery([](uint16_t value) {
+						uint8_t voltage = util::scale(
+						    util::clamp(value, MIN_VOLTAGE, MAX_VOLTAGE),
+						    MIN_VOLTAGE,
+						    MAX_VOLTAGE,
+						    static_cast<uint16_t>(0),
+						    static_cast<uint16_t>(255)
+						);
+
+						auto response = USBReturnVariableResponse {USBResponse::Variable::BatteryVoltage, voltage};
+						usb::write(response.getBuffer(), response.getLength());
+					});
+					break;
+				}
 				default:
 					break;
 			}
@@ -179,8 +194,8 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			switch (static_cast<USBCommand::Variable>(request.bData[0])) {
 				case (USBCommand::Variable::Orientation): {
 					for (uint8_t i {0}; i < 3; ++i) {
-						offsetAngles[i] =
-						    static_cast<int16_t>((request.bData[2 * i + 1] << 8u) | request.bData[2 * i + 2]) / intScalingFactor;
+						offsetAngles[i] = static_cast<int16_t>(__REV16(reinterpret_cast<const int16_t*>(request.bData + 1)[i]))
+						                / intScalingFactor;
 					}
 					break;
 				}

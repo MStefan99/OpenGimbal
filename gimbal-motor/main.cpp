@@ -215,7 +215,7 @@ uint16_t measureAngle() {
 		__WFI();
 	}
 
-	return (currentAngle = util::switchEndianness(rawAngle));
+	return (currentAngle = __REV16(rawAngle));
 }
 
 int16_t normalize(int16_t difference) {

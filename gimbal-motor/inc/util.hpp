@@ -108,17 +108,6 @@ namespace util {
 	T interpolate(T p1, T p2, float t) {
 		return p1 + (p2 - p1) * util::clamp<float>(t, 0.0f, 1.0f);
 	}
-
-	template <class T>
-	T switchEndianness(T val) {
-		if (sizeof(T) == 2) {
-			return (val << 8u) | (val >> 8u & 0xff);
-		} else if (sizeof(T) == 4) {
-			return (val << 24u) | (val << 8u & 0x00ff0000) | (val >> 8u & 0x0000ff00) | (val >> 24u & 0x000000ff);
-		} else {
-			return val;
-		}
-	}
 }  // namespace util
 
 #endif /* UTIL_HPP */

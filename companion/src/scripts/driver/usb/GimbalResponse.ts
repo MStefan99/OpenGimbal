@@ -3,6 +3,7 @@ import {MotorCommand} from '../serial/MotorCommand';
 import {exposeSerialMessage} from './USBSerialEncapsulator';
 import {MotorResponse} from '../serial/MotorResponse';
 import {RAD_TO_COUNTS} from '../../types';
+import {scale} from '../../util';
 
 export const gimbalCommandNames: Record<GimbalResponseType, string> = {
 	[GimbalResponseType.ReturnVariable]: 'Return variable',
@@ -20,8 +21,7 @@ export const returnVariableResponses: Record<
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {
 	[GimbalVariable.Orientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
-	[GimbalVariable.HandleOrientation]: (buffer) =>
-		new ReturnHandleOrientationVariableResponse(buffer),
+	[GimbalVariable.HandleOrientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
 	[GimbalVariable.Mode]: (buffer) => new ReturnModeVariableResponse(buffer),
 	[GimbalVariable.BatteryVoltage]: (buffer) => new ReturnBatteryVoltageVariableResponse(buffer)
 };
@@ -92,8 +92,6 @@ export class ReturnOrientationVariableResponse extends ReturnVariableResponse {
 	}
 }
 
-export class ReturnHandleOrientationVariableResponse extends ReturnVariableResponse {}
-
 export class ReturnModeVariableResponse extends ReturnVariableResponse {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
@@ -112,7 +110,19 @@ export class ReturnModeVariableResponse extends ReturnVariableResponse {
 	}
 }
 
-export class ReturnBatteryVoltageVariableResponse extends ReturnVariableResponse {}
+export class ReturnBatteryVoltageVariableResponse extends ReturnVariableResponse {
+	get voltage(): number {
+		return scale(this.view.getUint8(2), 0, 255, 3, 4.2);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Voltage: ${this.voltage}`;
+		}
+	}
+}
 
 export class MotorPassthroughResponse extends GimbalResponse {
 	constructor(buffer: Uint8Array);

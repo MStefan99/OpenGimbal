@@ -104,17 +104,6 @@ namespace util {
 		return (val - minSrc) * (maxTgt - minTgt) / (maxSrc - minSrc) + minTgt;
 	}
 
-	template <class T>
-	T switchEndianness(T val) {
-		if (sizeof(T) == 2) {
-			return (val << 8u) | (val >> 8u & 0xff);
-		} else if (sizeof(T) == 4) {
-			return (val << 24u) | (val << 8u & 0x00ff0000) | (val >> 8u & 0x0000ff00) | (val >> 24u & 0x000000ff);
-		} else {
-			return val;
-		}
-	}
-
 	float invSqrt(float a);
 }  // namespace util
 

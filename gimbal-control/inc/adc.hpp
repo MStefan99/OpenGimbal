@@ -10,15 +10,19 @@
 
 #include "device.h"
 
+#include "RingBuffer.hpp"
+
 namespace adc {
+	using Callback = void (*)(uint16_t value);
+
 	void init();
 
-	void measureTemperature(void (*cb)(uint16_t value));
+	void measureTemperature(Callback cb);
 
-	void measureBattery(void (*cb)(uint16_t value));
+	void measureBattery(Callback cb);
 
-	void measureX(void (*cb)(uint16_t value));
-	void measureY(void (*cb)(uint16_t value));
+	void measureX(Callback cb);
+	void measureY(Callback cb);
 }
 
 #endif /* ADC_HPP */

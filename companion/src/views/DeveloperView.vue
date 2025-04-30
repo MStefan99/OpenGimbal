@@ -9,6 +9,8 @@ SubNavBar
 
 <script setup lang="ts">
 import SubNavBar from '../components/SubNavBar.vue';
+import {connectedDevice} from '../scripts/driver/driver';
+import {Gimbal} from '../scripts/driver/Gimbal';
 </script>
 
 <style scoped></style>

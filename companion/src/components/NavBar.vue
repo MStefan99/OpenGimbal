@@ -3,7 +3,9 @@
 	#title-bar
 		span#title OpenGimbal
 		nav
-			RouterLink(:to="{name: 'control'}") Control
+			RouterLink(
+				:to="{name: 'control'}"
+				v-if="connectedDevice instanceof Gimbal || appState.developerMode") Control
 			RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline
 			RouterLink(:to="{name: 'motors'}") Motors
 			RouterLink(:to="{name: 'developer'}" v-if="appState.developerMode") Developer
@@ -19,6 +21,7 @@
 import DeviceSelector from './DeviceSelector.vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import {appState} from '../scripts/store';
+import {Gimbal} from '../scripts/driver/Gimbal';
 import {ref} from 'vue';
 
 const deviceSelectorOpen = ref<boolean>(false);
