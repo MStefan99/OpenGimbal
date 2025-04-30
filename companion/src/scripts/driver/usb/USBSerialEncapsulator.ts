@@ -36,6 +36,14 @@ export class USBSerialEncapsulator implements ISerialInterface {
 		this._usbInterface = usbInterface;
 	}
 
+	get vendorId(): number | undefined {
+		return this._usbInterface.vendorId;
+	}
+
+	get productId(): number | undefined {
+		return this._usbInterface.productId;
+	}
+
 	get open(): Promise<void> {
 		return Promise.resolve();
 	}

@@ -4,7 +4,7 @@
 		div(v-if="connectedDevice")
 			span.bold.block Connected device
 			.device
-				span.cursor-pointer(@click="viewedDevice = connectedDevice") {{connectedDevice?.productName || 'Unknown'}}
+				span.cursor-pointer(@click="viewedDevice = connectedDevice") {{connectedDevice instanceof Gimbal ? connectedDevice.productName : 'Serial device'}}
 				.flex.flex-row.flex-wrap.gap-4.grow
 					button.red.grow(@click="disconnectDevice(connectedDevice)") Disconnect
 		div(v-else)

@@ -3,21 +3,20 @@ import {USBMessage} from './USBMessage';
 import {IUSBParser} from './USBParser';
 
 export interface IUSBInterface extends IHardwareInterface {
-	get productName(): string;
-
-	get manufacturerName(): string;
-
-	get usbVersionMajor(): number;
-
-	get usbVersionMinor(): number;
-
-	get usbVersionSubminor(): number;
-
-	get deviceVersionMajor(): number;
-
-	get deviceVersionMinor(): number;
-
-	get deviceVersionSubminor(): number;
+	readonly usbVersionMajor: number;
+	readonly usbVersionMinor: number;
+	readonly usbVersionSubminor: number;
+	readonly deviceClass: number;
+	readonly deviceSubclass: number;
+	readonly deviceProtocol: number;
+	readonly vendorId: number;
+	readonly productId: number;
+	readonly deviceVersionMajor: number;
+	readonly deviceVersionMinor: number;
+	readonly deviceVersionSubminor: number;
+	readonly manufacturerName?: string | undefined;
+	readonly productName?: string | undefined;
+	readonly serialNumber?: string | undefined;
 
 	send(message: USBMessage): Promise<void>;
 
@@ -38,14 +37,6 @@ export class USBInterface implements IHardwareInterface {
 		this._verbose = verbose;
 	}
 
-	get productName(): string {
-		return this._usbDevice.productName;
-	}
-
-	get manufacturerName(): string {
-		return this._usbDevice.manufacturerName;
-	}
-
 	get usbVersionMajor(): number {
 		return this._usbDevice.usbVersionMajor;
 	}
@@ -58,6 +49,26 @@ export class USBInterface implements IHardwareInterface {
 		return this._usbDevice.usbVersionSubminor;
 	}
 
+	get deviceClass(): number {
+		return this._usbDevice.deviceClass;
+	}
+
+	get deviceSubclass(): number {
+		return this._usbDevice.deviceSubclass;
+	}
+
+	get deviceProtocol(): number {
+		return this._usbDevice.deviceProtocol;
+	}
+
+	get vendorId(): number {
+		return this._usbDevice.vendorId;
+	}
+
+	get productId(): number {
+		return this._usbDevice.productId;
+	}
+
 	get deviceVersionMajor(): number {
 		return this._usbDevice.deviceVersionMajor;
 	}
@@ -68,6 +79,18 @@ export class USBInterface implements IHardwareInterface {
 
 	get deviceVersionSubminor(): number {
 		return this._usbDevice.deviceVersionSubminor;
+	}
+
+	get manufacturerName(): string {
+		return this._usbDevice.manufacturerName;
+	}
+
+	get productName(): string {
+		return this._usbDevice.productName;
+	}
+
+	get serialNumber(): string {
+		return this._usbDevice.serialNumber;
 	}
 
 	async send(message: USBMessage): Promise<void> {

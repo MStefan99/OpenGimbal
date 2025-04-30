@@ -6,6 +6,9 @@ import {MotorResponse} from './serial/MotorResponse';
 import {CalibrationBits} from './serial/SerialMessage';
 
 export interface IMotorControl {
+	readonly vendorId: number | undefined;
+	readonly productId: number | undefined;
+
 	get active(): IMotor[];
 
 	get all(): IMotor;
@@ -22,6 +25,9 @@ export interface IMotorControl {
 }
 
 export interface IMotorManager {
+	readonly vendorId: number | undefined;
+	readonly productId: number | undefined;
+
 	get motors(): IMotorControl;
 
 	close(): Promise<void>;
@@ -43,6 +49,14 @@ class MotorControl implements IMotorControl {
 			motor: new Motor(serialInterface, i + 1),
 			active: false
 		}));
+	}
+
+	get vendorId(): number | undefined {
+		return this._hardwareInterface.vendorId;
+	}
+
+	get productId(): number | undefined {
+		return this._hardwareInterface.productId;
 	}
 
 	get active(): Motor[] {
@@ -95,6 +109,14 @@ export class MotorManager implements IMotorManager {
 
 	constructor(serialInterface: ISerialInterface) {
 		this._control = new MotorControl(serialInterface);
+	}
+
+	get vendorId(): number | undefined {
+		return this._control.vendorId;
+	}
+
+	get productId(): number | undefined {
+		return this._control.productId;
 	}
 
 	get motors(): IMotorControl {

@@ -12,9 +12,20 @@ import {
 import {GimbalMode} from './usb/USBMessage';
 
 export interface IGimbal extends IMotorManager {
-	get manufacturerName(): string;
-
-	get productName(): string;
+	readonly usbVersionMajor: number;
+	readonly usbVersionMinor: number;
+	readonly usbVersionSubminor: number;
+	readonly deviceClass: number;
+	readonly deviceSubclass: number;
+	readonly deviceProtocol: number;
+	readonly vendorId: number;
+	readonly productId: number;
+	readonly deviceVersionMajor: number;
+	readonly deviceVersionMinor: number;
+	readonly deviceVersionSubminor: number;
+	readonly manufacturerName?: string | undefined;
+	readonly productName?: string | undefined;
+	readonly serialNumber?: string | undefined;
 
 	send(command: GimbalCommand): Promise<void>;
 
@@ -34,12 +45,60 @@ export class Gimbal implements IGimbal {
 		this.motorManager = new MotorManager(encapsulator);
 	}
 
-	get manufacturerName(): string {
+	get usbVersionMajor(): number {
+		return this._hardwareInterface.usbVersionMajor;
+	}
+
+	get usbVersionMinor(): number {
+		return this._hardwareInterface.usbVersionMinor;
+	}
+
+	get usbVersionSubminor(): number {
+		return this._hardwareInterface.usbVersionSubminor;
+	}
+
+	get deviceClass(): number {
+		return this._hardwareInterface.deviceClass;
+	}
+
+	get deviceSubclass(): number {
+		return this._hardwareInterface.deviceSubclass;
+	}
+
+	get deviceProtocol(): number {
+		return this._hardwareInterface.deviceProtocol;
+	}
+
+	get vendorId(): number {
+		return this._hardwareInterface.vendorId;
+	}
+
+	get productId(): number {
+		return this._hardwareInterface.productId;
+	}
+
+	get deviceVersionMajor(): number {
+		return this._hardwareInterface.deviceVersionMajor;
+	}
+
+	get deviceVersionMinor(): number {
+		return this._hardwareInterface.deviceVersionMinor;
+	}
+
+	get deviceVersionSubminor(): number {
+		return this._hardwareInterface.deviceVersionSubminor;
+	}
+
+	get manufacturerName(): string | undefined {
 		return this._hardwareInterface.manufacturerName;
 	}
 
-	get productName(): string {
+	get productName(): string | undefined {
 		return this._hardwareInterface.productName;
+	}
+
+	get serialNumber(): string | undefined {
+		return this._hardwareInterface.serialNumber;
 	}
 
 	get motors(): IMotorControl {

@@ -6,6 +6,9 @@ import {ISerialParser} from './SerialParser';
 const timeout = 20;
 
 export interface ISerialInterface extends IHardwareInterface {
+	readonly vendorId: number | undefined;
+	readonly productId: number | undefined;
+
 	get open(): Promise<void>;
 
 	send(message: SerialMessage, baudRate?: number): Promise<void>;
@@ -36,6 +39,14 @@ export class SerialInterface implements ISerialInterface {
 			stopBits: 1,
 			parity: 'odd'
 		});
+	}
+
+	get vendorId(): number | undefined {
+		return this._port.getInfo().usbVendorId;
+	}
+
+	get productId(): number | undefined {
+		return this._port.getInfo().usbProductId;
 	}
 
 	get open(): Promise<void> {
