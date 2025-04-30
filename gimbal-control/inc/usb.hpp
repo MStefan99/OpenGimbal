@@ -123,9 +123,9 @@ namespace usb {
 	} usb_descriptor_configuration;
 
 	typedef struct __attribute__((packed)) {
-		uint8_t        bLength;
-		uint8_t        bDescriptorType;  // 0x03
-		const char16_t bString[18];
+		uint8_t  bLength;
+		uint8_t  bDescriptorType;  // 0x03
+		char16_t bString[80];
 	} usb_descriptor_string;
 
 	typedef struct __attribute__((packed)) {
@@ -178,7 +178,7 @@ namespace usb {
 
 	extern usb_descriptor_device        DESCRIPTOR_DEVICE;
 	extern usb_descriptor_configuration DESCRIPTOR_CONFIGURATION[];
-	extern usb_descriptor_string        DESCRIPTOR_STRING[];
+	extern usb_descriptor_string        DESCRIPTOR_STRING[4];
 	extern usb_descriptor_bos           DESCRIPTOR_BOS;
 	extern usb_descriptor_ms_os_20      DESCRIPTOR_MS_OS_20;
 

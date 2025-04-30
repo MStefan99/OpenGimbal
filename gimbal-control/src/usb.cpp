@@ -125,7 +125,7 @@ static void standardRequestHandler() {
 					break;
 				case (uint8_t)DESCRIPTOR_TYPE::STRING: {
 					uint8_t idx = WVALUE_IDX(EP0REQ.wValue);
-					if (idx <= 2) {
+					if (idx <= sizeof(usb::DESCRIPTOR_STRING) / sizeof(usb::DESCRIPTOR_STRING[0])) {
 						EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t) & (DESCRIPTOR_STRING[idx]);
 						EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 						    USB_DEVICE_PCKSIZE_BYTE_COUNT(MIN(DESCRIPTOR_STRING[idx].bLength, EP0REQ.wLength))
@@ -186,7 +186,17 @@ static void enableEndpoints(uint8_t configurationNumber) {
 }
 
 void usb::init() {
-	uint32_t calibration = *((uint32_t*)0x00806020);
+	auto id = (reinterpret_cast<uint32_t*>(0x0080A00C));
+
+	usb::DESCRIPTOR_STRING[3].bLength = 66;
+	for (uint8_t i {0}; i < 4; ++i) {
+		uint32_t word {id[i]};
+		for (int8_t j {7}; j >= 0; --j) {
+			uint8_t c = word & 0xf;
+			usb::DESCRIPTOR_STRING[3].bString[8 * i + j] = c + (c < 0xa ? 0x0030 : 0x0037);
+			word = word >> 4u;
+		}
+	}
 
 	GCLK_REGS->GCLK_PCHCTRL[USB_GCLK_ID] = GCLK_PCHCTRL_CHEN(1)     // Enable USB clock
 	                                     | GCLK_PCHCTRL_GEN_GCLK1;  // Set GCLK1 as a clock source
@@ -198,9 +208,16 @@ void usb::init() {
 	PORT_REGS->GROUP[0].PORT_PMUX[12] = PORT_PMUX_PMUXE_G         // Mux pin 24 to USB
 	                                  | PORT_PMUX_PMUXO_G;        // Mux pin 25 to USB
 
-	USB_REGS->DEVICE.USB_PADCAL = USB_PADCAL_TRANSN(calibration >> 13u & 0x1f)
-	                            | USB_PADCAL_TRANSP(calibration >> 18u & 0x1f)
-	                            | USB_PADCAL_TRIM(calibration >> 23u & 0x7);        // USB pad calibration
+	USB_REGS->DEVICE.USB_PADCAL =
+	    USB_PADCAL_TRANSN(
+	        (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_USB_TRANSN_Msk) >> FUSES_OTP5_WORD_0_USB_TRANSN_Pos
+	    )
+	    | USB_PADCAL_TRANSP(
+	        (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_USB_TRANSP_Msk) >> FUSES_OTP5_WORD_0_USB_TRANSP_Pos
+	    )
+	    | USB_PADCAL_TRIM(
+	        (OTP5_FUSES_REGS->FUSES_OTP5_WORD_0 & FUSES_OTP5_WORD_0_USB_TRIM_Msk) >> FUSES_OTP5_WORD_0_USB_TRIM_Pos
+	    );                                                                          // USB pad calibration
 	USB_REGS->DEVICE.USB_CTRLA = USB_CTRLA_ENABLE(1)                                // Enable USB
 	                           | USB_CTRLA_MODE_DEVICE;                             // Enable in device mode
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPCFG = USB_DEVICE_EPCFG_EPTYPE0(0x1)   // Configure endpoint 0 as setup out

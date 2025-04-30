@@ -14,7 +14,7 @@ usb::usb_descriptor_device usb::DESCRIPTOR_DEVICE = {
   .bcdDevice = 0x0002,
   .iManufacturer = 1,
   .iProduct = 2,
-  .iSerialNumber = 0,
+  .iSerialNumber = 3,
   .bNumConfigurations = 1
 };
 
@@ -69,7 +69,8 @@ usb::usb_descriptor_configuration usb::DESCRIPTOR_CONFIGURATION[] = {
 usb::usb_descriptor_string usb::DESCRIPTOR_STRING[] = {
   {.bLength = 4, .bDescriptorType = (uint8_t)usb::DESCRIPTOR_TYPE::STRING, .bString = {0x0409}},
   {20,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"MStefan99"       },
-  {22,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"OpenGimbal"      }
+  {22,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"OpenGimbal"      },
+  {12,           (uint8_t)usb::DESCRIPTOR_TYPE::STRING,                    u"Error"           }
 };
 
 
