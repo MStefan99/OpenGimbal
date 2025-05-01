@@ -23,7 +23,10 @@ export async function connectUSBDevice(
 	} else {
 		const usbDevice = await navigator.usb.requestDevice({
 			filters: [
-				{vendorId: 0x0424} // TODO: add product ID(s)
+				{
+					vendorId: 0x0424,
+					productId: 0x0001
+				}
 			]
 		});
 
