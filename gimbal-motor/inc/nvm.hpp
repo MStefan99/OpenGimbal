@@ -1,5 +1,5 @@
 /*
- * File:   data.hpp
+ * File:   nvm.hpp
  * Author: Mikhail
  *
  * Created on June 22, 2023, 17:58 PM
@@ -49,7 +49,7 @@ namespace nvm {
 		extern const Rows rows;
 	}
 
-	extern const Options* options;
+	extern const Options& options;
 
 	void write();
 

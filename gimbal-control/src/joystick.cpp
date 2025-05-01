@@ -81,7 +81,7 @@ void joystick::updateCenter() {
 }
 
 void joystick::saveValues() {
-	nvm::edit(&nvm::options->xAxisPoints, axisPoints[0]);
-	nvm::edit(&nvm::options->yAxisPoints, axisPoints[1]);
+	nvm::edit(&nvm::options.xAxisPoints, axisPoints[0]);
+	nvm::edit(&nvm::options.yAxisPoints, axisPoints[1]);
 	nvm::write();
 }

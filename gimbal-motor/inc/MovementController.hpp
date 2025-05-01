@@ -46,8 +46,8 @@ protected:
 	static int32_t wrapValue(int32_t value);
 
 	uint16_t     _target {0};
-	int32_t      _offset {nvm::options->zeroOffset};
-	Interpolator _interpolator {nvm::options->zeroOffset};
+	int32_t      _offset {nvm::options.zeroOffset};
+	Interpolator _interpolator {nvm::options.zeroOffset};
 };
 
 #endif  // MOVEMENT_CONTROLLER_HPP

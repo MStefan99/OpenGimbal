@@ -7,7 +7,7 @@ constexpr static uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
 static Mode               mode {Mode::Idle};  // Start in idle for UART compatibility
-static uint8_t            calibrationMode = nvm::options->polePairs ? 0 : 3;
+static uint8_t            calibrationMode = nvm::options.polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
 static bool               poweredDown {mode == Mode::Sleep || mode == Mode::Idle};
 
@@ -125,7 +125,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 				movementController.adjustOffset(currentAngle, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
 				uint16_t offset = movementController.getOffset();
 				offsetAdjusted = true;
-				nvm::edit(&nvm::options->zeroOffset, offset);
+				nvm::edit(&nvm::options.zeroOffset, offset);
 				nvm::write();
 			}
 			break;
@@ -146,7 +146,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					    deviceAddress,
 					    buffer.buffer[1] >> 8u,
 					    Command::Variable::Calibration,
-					    static_cast<uint8_t>((!!nvm::options->polePairs << 1u) | (!!nvm::options->phaseOffset))
+					    static_cast<uint8_t>((!!nvm::options.polePairs << 1u) | (!!nvm::options.phaseOffset))
 					);
 					uart::send(response.getBuffer(), response.getLength());
 					break;
@@ -184,7 +184,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 				case (Command::Variable::Offset): {
 					movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
 					uint16_t offset = movementController.getOffset();
-					nvm::edit(&nvm::options->zeroOffset, offset);
+					nvm::edit(&nvm::options.zeroOffset, offset);
 					nvm::write();
 					break;
 				}
@@ -232,13 +232,13 @@ int16_t normalize(int16_t difference) {
 
 void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
 	// Calculate electrical angle from encoder reading
-	uint16_t eAngle = (nvm::options->polePairs * (fullRevolution + angle - nvm::options->phaseOffset)) % fullRevolution;
+	uint16_t eAngle = (nvm::options.polePairs * (fullRevolution + angle - nvm::options.phaseOffset)) % fullRevolution;
 	// Flip the angle if the motor polarity is reversed
-	uint16_t eAngleSigned = nvm::options->counterclockwise ? eAngle : fullRevolution - eAngle;
+	uint16_t eAngleSigned = nvm::options.counterclockwise ? eAngle : fullRevolution - eAngle;
 
 	bldc::applyTorque(
-	    counterclockwise == nvm::options->counterclockwise ? eAngleSigned + quarterRevolution
-	                                                       : eAngleSigned + (fullRevolution - quarterRevolution),
+	    counterclockwise == nvm::options.counterclockwise ? eAngleSigned + quarterRevolution
+	                                                      : eAngleSigned + (fullRevolution - quarterRevolution),
 	    power
 	);
 }
@@ -305,7 +305,7 @@ int16_t checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool countercl
 
 bool calibrate() {
 	uint16_t angle {0};
-	uint16_t phaseOffset {nvm::options->phaseOffset};
+	uint16_t phaseOffset {nvm::options.phaseOffset};
 	bldc::applyTorque(0, 255);
 	uint16_t timeout {0};
 
@@ -338,7 +338,7 @@ bool calibrate() {
 
 			WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
 		} while (samples < 10);  // Wait for a while to ensure the motor has settled
-		nvm::edit(&nvm::options->phaseOffset, phaseOffset);
+		nvm::edit(&nvm::options.phaseOffset, phaseOffset);
 	}
 
 	uint16_t torqueAngle {0};
@@ -410,8 +410,8 @@ bool calibrate() {
 		}
 
 		// Saving calibration
-		nvm::edit(&nvm::options->polePairs, polePairs);
-		nvm::edit(&nvm::options->counterclockwise, direction > 0);
+		nvm::edit(&nvm::options.polePairs, polePairs);
+		nvm::edit(&nvm::options.counterclockwise, direction > 0);
 	}
 
 	if (calibrationMode) {
@@ -469,7 +469,7 @@ int main() {
 				break;
 			}
 			case (Mode::Drive): {
-				if (!nvm::options->polePairs) {
+				if (!nvm::options.polePairs) {
 					bldc::applyTorque(0, 0);
 					mode = Mode::Idle;
 					continue;
