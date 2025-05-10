@@ -67,23 +67,43 @@ void showMode() {
 	}
 }
 
+void showBattery(uint16_t value) {
+	setLEDs(0);
+	stateChangeTime = util::getTime();
+	displayState = DisplayState::BatteryLevel;
+	voltageBars = util::scale(
+	                  util::clamp(value, MIN_VOLTAGE, MAX_VOLTAGE),
+	                  MIN_VOLTAGE,
+	                  MAX_VOLTAGE,
+	                  static_cast<uint16_t>(0),
+	                  static_cast<uint16_t>(65535)
+	              ) / (65535 / 8)
+	            + 1;
+}
+
 void enable() {
-	uart::enable();
-	displayState = DisplayState::GimbalMode;
-	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
-	joystick::updateCenter();
-	LSM6DSO32::enable();
-	powerMode = PowerMode::Active;
+	adc::measureBattery([](uint16_t value) {
+		if (value > MIN_VOLTAGE) {
+			uart::enable();
+			displayState = DisplayState::GimbalMode;
+			PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
+			joystick::updateCenter();
+			LSM6DSO32::enable();
+			powerMode = PowerMode::Active;
 
-	softStartActive = true;
-	softStartTime = util::getTime();
+			softStartActive = true;
+			softStartTime = util::getTime();
 
-	motor::wake(motor::all);
-	motorPositionRequest = 0;
-	motorRequestTime = util::getTime();
-	showMode();
+			motor::wake(motor::all);
+			motorPositionRequest = 0;
+			motorRequestTime = util::getTime();
+			showMode();
 
-	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
+			WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(1);
+		} else {
+			showBattery(value);
+		}
+	});
 }
 
 void disable() {
@@ -262,11 +282,14 @@ void processSensor() {
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processButtons(bool left, bool pressed) {
-	if (pressed && powerMode == PowerMode::Sleep) {
-		powerMode = PowerMode::Idle;
-	}
-
-	if (!pressed && util::getTime() - eventTime < MAX_PRESS_WAIT_TIME) {
+	if (pressed) {
+		if (powerMode == PowerMode::Sleep) {
+			powerMode = PowerMode::Idle;
+		} else if (displayState == DisplayState::BatteryLevel) {
+			displayState = DisplayState::GimbalMode;
+			showMode();
+		}
+	} else if (util::getTime() - eventTime < MAX_PRESS_WAIT_TIME) {
 		++shortPresses;
 	}
 
@@ -320,17 +343,7 @@ bool triggerAction() {
 				powerMode = PowerMode::Idle;
 			}
 
-			setLEDs(0);
-			displayState = DisplayState::BatteryLevel;
-			stateChangeTime = util::getTime();
-			voltageBars = util::scale(
-			                  util::clamp(value, MIN_VOLTAGE, MAX_VOLTAGE),
-			                  MIN_VOLTAGE,
-			                  MAX_VOLTAGE,
-			                  static_cast<uint16_t>(0),
-			                  static_cast<uint16_t>(65535)
-			              ) / (65535 / 8)
-			            + 1;
+			showBattery(value);
 		});
 	} else if (!isOff) {
 		if (leftButton) {
@@ -558,7 +571,7 @@ int main() {
 			uint8_t leds = voltageBars / 2;
 
 
-			if (step > 15 || buttonPressed) {
+			if (step > 15) {
 				displayState = DisplayState::GimbalMode;
 				showMode();
 				if (powerMode == PowerMode::Idle) {
