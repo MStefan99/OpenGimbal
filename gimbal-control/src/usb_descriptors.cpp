@@ -15,7 +15,7 @@ usb::usb_descriptor_device usb::DESCRIPTOR_DEVICE = {
   .iManufacturer = 1,
   .iProduct = 2,
   .iSerialNumber = 3,
-  .bNumConfigurations = 1
+  .bNumConfigurations = 2
 };
 
 
@@ -61,7 +61,16 @@ usb::usb_descriptor_configuration usb::DESCRIPTOR_CONFIGURATION[] = {
    .bConfigurationValue = 1,
    .iConfiguration = 0,
    .bmAttributes = 0x80,
-   .bMaxPower = 75,
+   .bMaxPower = 250,
+   .INTERFACES = {interface0}},
+  {.bLength = 9,
+   .bDescritptorType = (uint8_t)usb::DESCRIPTOR_TYPE::CONFIGURATION,
+   .wTotalLength = 32,
+   .bNumInterfaces = 1,
+   .bConfigurationValue = 2,
+   .iConfiguration = 0,
+   .bmAttributes = 0xc0,
+   .bMaxPower = 10,
    .INTERFACES = {interface0}}
 };
 

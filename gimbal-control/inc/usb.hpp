@@ -17,21 +17,21 @@
 
 namespace usb {
 	enum class REQ_DIRECTION : uint8_t {
-		HOST_TO_DEVICE = 0x00,
-		DEVICE_TO_HOST = 0x01
+		HOST_TO_DEVICE = 0x0,
+		DEVICE_TO_HOST = 0x1
 	};
 
 	enum class REQ_TYPE : uint8_t {
-		STANDARD = 0x00,
-		CLASS = 0x01,
-		VENDOR = 0x02
+		STANDARD = 0x0,
+		CLASS = 0x1,
+		VENDOR = 0x2
 	};
 
 	enum class REQ_RECIPIENT : uint8_t {
-		DEVICE = 0x00,
-		INTERFACE = 0x01,
-		ENDPOINT = 0x02,
-		OTHER = 0x03
+		DEVICE = 0x0,
+		INTERFACE = 0x1,
+		ENDPOINT = 0x2,
+		OTHER = 0x3
 	};
 
 	enum class DEVICE_REQ : uint8_t {

@@ -37,8 +37,9 @@ static usb_device_endpoint1_request EP1REQ;
 static uint8_t* defaultData {nullptr};
 static uint8_t  defaultLen {0};
 
-static uint8_t            outBuffer[80];
-static usb::callback_type callback {};
+static uint8_t outBuffer[80];
+
+static usb::callback_type       callback {nullptr};
 
 
 extern "C" {
@@ -72,12 +73,14 @@ extern "C" {
 static void controlHandler() {
 	if (USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPINTFLAG & USB_DEVICE_EPINTFLAG_RXSTP_Msk) {  // Process SETUP transfers
 		USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPINTFLAG = USB_DEVICE_EPINTFLAG_RXSTP(1);       // Clear pending interrupt
-		uint8_t type = BMREQUESTTYPE_TYPE(EP0REQ.bmRequestType);
-		switch (type) {
-			case (uint8_t)REQ_TYPE::STANDARD:
+		switch (static_cast<REQ_TYPE>(BMREQUESTTYPE_TYPE(EP0REQ.bmRequestType))) {
+			case REQ_TYPE::STANDARD:
 				standardRequestHandler();
 				break;
-			case (uint8_t)REQ_TYPE::VENDOR:
+			case REQ_TYPE::CLASS:
+				// TODO: Handle
+				break;
+			case REQ_TYPE::VENDOR:
 				vendorRequestHandler();
 				break;
 		}
@@ -99,61 +102,68 @@ static void controlHandler() {
 }
 
 static void standardRequestHandler() {
-	uint8_t descType = WVALUE_TYPE(EP0REQ.wValue);
-	switch (EP0REQ.bRequest) {
-		case (uint8_t)DEVICE_REQ::GET_DESCRIPTOR:
-			switch (descType) {
-				case (uint8_t)DESCRIPTOR_TYPE::DEVICE:
-					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)&DESCRIPTOR_DEVICE;
+	switch (static_cast<DEVICE_REQ>(EP0REQ.bRequest)) {
+		case DEVICE_REQ::GET_DESCRIPTOR:
+			switch (static_cast<DESCRIPTOR_TYPE>(WVALUE_TYPE(EP0REQ.wValue))) {
+				case DESCRIPTOR_TYPE::DEVICE:
+					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = reinterpret_cast<uint32_t>(&DESCRIPTOR_DEVICE);
 					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 					    USB_DEVICE_PCKSIZE_BYTE_COUNT(MIN(DESCRIPTOR_DEVICE.bLength, EP0REQ.wLength))
 					    | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 					break;
-				case (uint8_t)DESCRIPTOR_TYPE::BOS:
-					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)&DESCRIPTOR_BOS;
+				case DESCRIPTOR_TYPE::BOS:
+					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = reinterpret_cast<uint32_t>(&DESCRIPTOR_BOS);
 					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 					    USB_DEVICE_PCKSIZE_BYTE_COUNT(MIN(DESCRIPTOR_BOS.wTotalLength, EP0REQ.wLength))
 					    | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 					break;
-				case (uint8_t)DESCRIPTOR_TYPE::CONFIGURATION:
-					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)&DESCRIPTOR_CONFIGURATION + WVALUE_IDX(EP0REQ.wValue);
+				case DESCRIPTOR_TYPE::CONFIGURATION:
+					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR =
+					    reinterpret_cast<uint32_t>(&(DESCRIPTOR_CONFIGURATION[WVALUE_IDX(EP0REQ.wValue)]));
 					EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 					    USB_DEVICE_PCKSIZE_BYTE_COUNT(
 					        MIN(DESCRIPTOR_CONFIGURATION[WVALUE_IDX(EP0REQ.wValue)].wTotalLength, EP0REQ.wLength)
 					    )
 					    | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 					break;
-				case (uint8_t)DESCRIPTOR_TYPE::STRING: {
+				case DESCRIPTOR_TYPE::STRING: {
 					uint8_t idx = WVALUE_IDX(EP0REQ.wValue);
 					if (idx <= sizeof(usb::DESCRIPTOR_STRING) / sizeof(usb::DESCRIPTOR_STRING[0])) {
-						EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t) & (DESCRIPTOR_STRING[idx]);
+						EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = reinterpret_cast<uint32_t>(&(DESCRIPTOR_STRING[idx]));
 						EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 						    USB_DEVICE_PCKSIZE_BYTE_COUNT(MIN(DESCRIPTOR_STRING[idx].bLength, EP0REQ.wLength))
 						    | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 					} else {
 						USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPSTATUSSET = USB_DEVICE_EPSTATUSCLR_STALLRQ1(1);
 					}
-				} break;
-				case (uint8_t)DESCRIPTOR_TYPE::DEVICE_QUALIFIER:
+					break;
+				}
+				case DESCRIPTOR_TYPE::DEVICE_QUALIFIER:
 					USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPSTATUSSET = USB_DEVICE_EPSTATUSCLR_STALLRQ1(1);
+					break;
+				default:
+					// TODO: Handle
 					break;
 			}
 			USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPSTATUSSET = USB_DEVICE_EPSTATUS_BK1RDY(1);
 			break;
-		case (uint8_t)DEVICE_REQ::SET_ADDRESS:
+		case DEVICE_REQ::SET_ADDRESS:
 			USB_REGS->DEVICE.USB_DADD = WVALUE_ADD(EP0REQ.wValue);
 			EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE = USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 			break;
-		case (uint8_t)DEVICE_REQ::SET_CONFIGURATION:
+		case DEVICE_REQ::SET_CONFIGURATION:
 			EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE = USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 			enableEndpoints(EP0REQ.wValue);
+			break;
+		default:
+			// TODO: Handle
 			break;
 	}
 }
 
 static void vendorRequestHandler() {
 	if (EP0REQ.bRequest == 0x01) {
-		EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)&DESCRIPTOR_MS_OS_20;
+		EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_ADDR = reinterpret_cast<uint32_t>(&DESCRIPTOR_MS_OS_20);
 		EPDESCTBL[0].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 		    USB_DEVICE_PCKSIZE_BYTE_COUNT(MIN(DESCRIPTOR_MS_OS_20.wTotalLength, EP0REQ.wLength))
 		    | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
@@ -178,7 +188,7 @@ static void enableEndpoints(uint8_t configurationNumber) {
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPCFG =
 	    USB_DEVICE_EPCFG_EPTYPE0(0x4)     // Configure endpoint 1 bank 0 as interrupt out
 	    | USB_DEVICE_EPCFG_EPTYPE1(0x4);  // Configure endpoint 1 bank 1 as interrupt in
-	EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_ADDR = (uint32_t)&EP1REQ;
+	EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_ADDR = reinterpret_cast<uint32_t>(&EP1REQ);
 	EPDESCTBL[1].DEVICE_DESC_BANK[0].USB_PCKSIZE =
 	    USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(sizeof(EP1REQ)) | USB_DEVICE_PCKSIZE_SIZE(0x3);
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPINTENSET = USB_DEVICE_EPINTENSET_TRCPT0(1)  // Enable OUT endpoint interrupt
@@ -222,7 +232,7 @@ void usb::init() {
 	                           | USB_CTRLA_MODE_DEVICE;                             // Enable in device mode
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[0].USB_EPCFG = USB_DEVICE_EPCFG_EPTYPE0(0x1)   // Configure endpoint 0 as setup out
 	                                              | USB_DEVICE_EPCFG_EPTYPE1(0x1);  // Configure endpoint 0 as setup in
-	USB_REGS->DEVICE.USB_DESCADD = (uint32_t)&EPDESCTBL;                            // Setting endpoint descriptor address
+	USB_REGS->DEVICE.USB_DESCADD = reinterpret_cast<uint32_t>(&EPDESCTBL);          // Setting endpoint descriptor address
 	USB_REGS->DEVICE.USB_CTRLB = USB_DEVICE_CTRLB_DETACH(0);                        // Attach to host
 	USB_REGS->DEVICE.USB_INTENSET = USB_DEVICE_INTENSET_EORST(1)                    // Enable end-of-reset interrupt
 	                              | USB_DEVICE_INTENSET_WAKEUP(1);                  // Enable wakeup interrupt
@@ -244,7 +254,7 @@ void usb::writeDefault(uint8_t* data, uint8_t len) {
 
 void usb::write(const uint8_t* data, uint8_t len) {
 	util::copy(outBuffer, data, len);
-	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_ADDR = (uint32_t)outBuffer;
+	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_ADDR = reinterpret_cast<uint32_t>(outBuffer);
 	EPDESCTBL[1].DEVICE_DESC_BANK[1].USB_PCKSIZE =
 	    USB_DEVICE_PCKSIZE_BYTE_COUNT(len) | USB_DEVICE_PCKSIZE_SIZE(0x3) | USB_DEVICE_PCKSIZE_AUTO_ZLP(1);
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPSTATUSSET = USB_DEVICE_EPSTATUS_BK1RDY(1);
