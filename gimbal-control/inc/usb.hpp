@@ -188,12 +188,15 @@ namespace usb {
 	} usb_device_endpoint1_request;
 
 	using callback_type = void (*)(const usb_device_endpoint1_request&, uint16_t len);
+	using suspend_callback_type = void (*)(bool suspended);
 
 	void init();
 	bool isActive();
 
 	void writeDefault(uint8_t* data, uint8_t len);
 	void write(const uint8_t* data, uint8_t len);
+
+	void setSuspendCallback(suspend_callback_type cb);
 	void setCallback(callback_type cb);
 }  // namespace usb
 

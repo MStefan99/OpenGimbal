@@ -410,8 +410,18 @@ int main() {
 	eic::setSensor1Callback(processSensor);
 	usb::setCallback(processUSBCommand);
 
-	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 << 27u;
+	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 | (0x1 << 27u);
 	WDT_REGS->WDT_CONFIG = WDT_CONFIG_PER_CYC64;
+
+	usb::setSuspendCallback([](bool suspended) {
+		if (suspended) {
+			powerMode = PowerMode::Idle;
+			disable();
+		} else {
+			uart::enable();
+			wokenByUSB = true;
+		}
+	});
 
 	{
 		uint8_t steps {150};
@@ -535,7 +545,6 @@ int main() {
 			default: {
 				if (!usb::isActive() && wokenByUSB) {
 					powerMode = PowerMode::Sleep;
-					PORT_REGS->GROUP[0].PORT_OUTCLR = 0x1 << 27u;
 					uart::disable();
 					wokenByUSB = false;
 				}
@@ -548,7 +557,6 @@ int main() {
 				motor::sleep();
 				if (usb::isActive()) {
 					powerMode = PowerMode::Idle;
-					PORT_REGS->GROUP[0].PORT_OUTSET = 0x1 << 27u;
 					uart::enable();
 					wokenByUSB = true;
 					break;

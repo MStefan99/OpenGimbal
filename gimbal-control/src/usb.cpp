@@ -39,13 +39,24 @@ static uint8_t  defaultLen {0};
 
 static uint8_t outBuffer[80];
 
-static usb::callback_type       callback {nullptr};
+static usb::suspend_callback_type suspendCallback {nullptr};
+static usb::callback_type         callback {nullptr};
 
 
 extern "C" {
 	void USB_Handler() {
-		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_WAKEUP_Msk) {  // Process USB reset
+		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_SUSPEND_Msk) {  // Process USB reset
+			USB_REGS->DEVICE.USB_INTFLAG = USB_DEVICE_INTFLAG_SUSPEND(1);       // Clear pending interrupt
+			if (suspendCallback) {
+				suspendCallback(true);
+			}
+		}
+
+		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_WAKEUP_Msk) {  // Process USB wakeup
 			USB_REGS->DEVICE.USB_INTFLAG = USB_DEVICE_INTFLAG_WAKEUP(1);       // Clear pending interrupt
+			if (suspendCallback) {
+				suspendCallback(false);
+			}
 		}
 
 		if (USB_REGS->DEVICE.USB_INTFLAG & USB_DEVICE_INTFLAG_EORST_Msk) {  // Process USB reset
@@ -235,7 +246,8 @@ void usb::init() {
 	USB_REGS->DEVICE.USB_DESCADD = reinterpret_cast<uint32_t>(&EPDESCTBL);          // Setting endpoint descriptor address
 	USB_REGS->DEVICE.USB_CTRLB = USB_DEVICE_CTRLB_DETACH(0);                        // Attach to host
 	USB_REGS->DEVICE.USB_INTENSET = USB_DEVICE_INTENSET_EORST(1)                    // Enable end-of-reset interrupt
-	                              | USB_DEVICE_INTENSET_WAKEUP(1);                  // Enable wakeup interrupt
+	                              | USB_DEVICE_INTENSET_WAKEUP(1)                   // Enable wakeup interrupt
+	                              | USB_DEVICE_INTENSET_SUSPEND(1);                 // Enable suspend interrupt
 }
 
 bool usb::isActive() {
@@ -260,6 +272,10 @@ void usb::write(const uint8_t* data, uint8_t len) {
 	USB_REGS->DEVICE.DEVICE_ENDPOINT[1].USB_EPSTATUSSET = USB_DEVICE_EPSTATUS_BK1RDY(1);
 }
 
-void usb::setCallback(usb::callback_type cb) {
+void usb::setSuspendCallback(suspend_callback_type cb) {
+	suspendCallback = cb;
+}
+
+void usb::setCallback(callback_type cb) {
 	callback = cb;
 }
