@@ -99,8 +99,12 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		case (Command::CommandType::Move): {
 			mode = Mode::Drive;
 			powerUp();
-			auto time {util::getTime()};
-			movementController.extrapolate(time - lastTargetTime, ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3]);
+			auto     time {util::getTime()};
+			uint16_t position = ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3];
+			if (invertDirection) {
+				position = fullRevolution - position;
+			}
+			movementController.extrapolate(time - lastTargetTime, position);
 			if (offsetAdjusted) {
 				offsetAdjusted = false;
 				prevDAngle = 0.0f;
@@ -162,14 +166,15 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 					break;
 				}
 				case (Command::Variable::Position): {
+					uint16_t position = currentAngle - movementController.getOffset();
+					if (invertDirection) {
+						position = fullRevolution - position;
+					}
 					auto response = ReturnVariableResponse(
 					    deviceAddress,
 					    buffer.buffer[1] >> 8u,
 					    Command::Variable::Position,
-					    static_cast<int16_t>(util::mod(
-					        static_cast<int32_t>(currentAngle - movementController.getOffset()),
-					        static_cast<int32_t>(fullRevolution)
-					    ))
+					    static_cast<int16_t>(util::mod(static_cast<int32_t>(position), static_cast<int32_t>(fullRevolution)))
 					);
 					uart::send(response.getBuffer(), response.getLength());
 					break;

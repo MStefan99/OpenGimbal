@@ -25,6 +25,8 @@ constexpr static uint8_t  idleTorque {140};
 constexpr static uint8_t  hapticCycleDuration {25};
 // Device address
 constexpr static uint8_t  deviceAddress {1};
+// Invert motor direction if PCB is flipped
+constexpr static bool     invertDirection {false};
 
 
 // Full state feedback gain matrix
