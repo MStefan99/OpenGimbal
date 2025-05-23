@@ -94,7 +94,8 @@ void enable() {
 			softStartActive = true;
 			softStartTime = util::getTime();
 
-			motor::wake(motor::all);
+			motor::wake();
+			motor::tone();  // In case tone was previously set
 			motorPositionRequest = 0;
 			motorRequestTime = util::getTime();
 			showMode();

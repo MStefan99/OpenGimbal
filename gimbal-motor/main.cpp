@@ -9,6 +9,7 @@ static MovementController movementController {};
 static Mode               mode {Mode::Idle};  // Start in idle for UART compatibility
 static uint8_t            calibrationMode = nvm::options.polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
+static uint32_t           lastCommandReceived {0};
 static bool               poweredDown {mode == Mode::Sleep || mode == Mode::Idle};
 
 static bool offsetAdjusted {false};
@@ -74,6 +75,8 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 	if (address != deviceAddress && address != 0xf) {
 		return;  // Command intended for another device
 	}
+
+	lastCommandReceived = util::getTime();
 
 	switch (static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) {  // Switch command type
 		case (Command::CommandType::Sleep): {
@@ -520,6 +523,10 @@ int main() {
 				__WFI();
 				break;
 			}
+		}
+
+		if (util::getTime() - lastCommandReceived > 60000 && !maxTorque && !poweredDown) {
+			powerDown();
 		}
 
 		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
