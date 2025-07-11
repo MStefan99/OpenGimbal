@@ -61,6 +61,14 @@ void powerUp() {
 	poweredDown = false;
 }
 
+void enterSleep() {
+	mode = Mode::Sleep;
+	maxTorque = 0;
+	powerDown();
+	uart::disable();
+	eic::enable();
+}
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processWakeup() {
 	uart::enable();
@@ -80,11 +88,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 
 	switch (static_cast<Command::CommandType>(buffer.buffer[1] & 0x0f)) {  // Switch command type
 		case (Command::CommandType::Sleep): {
-			mode = Mode::Sleep;
-			maxTorque = 0;
-			powerDown();
-			uart::disable();
-			eic::enable();
+			enterSleep();
 			break;
 		}
 		case (Command::CommandType::Idle): {
@@ -525,8 +529,10 @@ int main() {
 			}
 		}
 
-		if (util::getTime() - lastCommandReceived > 60000 && !maxTorque && !poweredDown) {
-			powerDown();
+		if (!poweredDown
+		    && ((activeCommandTimeout && util::getTime() - lastCommandReceived > activeCommandTimeout && !maxTorque)
+		        || (idleCommandTimeout && util::getTime() - lastCommandReceived > activeCommandTimeout))) {
+			enterSleep();
 		}
 
 		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;

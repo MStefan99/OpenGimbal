@@ -1,6 +1,5 @@
 #include "main.hpp"
 
-#include "inc/usb.hpp"
 
 volatile static DisplayState displayState {DisplayState::GimbalMode};
 volatile static PowerMode    powerMode {PowerMode::Sleep};
