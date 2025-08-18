@@ -25,7 +25,7 @@ usb::usb_descriptor_endpoint endpoint1 = {
   .bEndpointAddress = 0x01,
   .bmAttributes = 0x3,
   .wMaxPacketSize = 64,
-  .bInterval = 200
+  .bInterval = 20
 };
 
 
@@ -35,7 +35,7 @@ usb::usb_descriptor_endpoint endpoint2 = {
   .bEndpointAddress = 0x81,
   .bmAttributes = 0x3,
   .wMaxPacketSize = 64,
-  .bInterval = 10
+  .bInterval = 20
 };
 
 
