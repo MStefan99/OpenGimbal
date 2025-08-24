@@ -1,8 +1,32 @@
-@use 'variables';
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+	--color-white: white;
+	--color-gray: #555;
+	--color-black: black;
+
+	--color-muted: #888;
+	--color-light: #ccc;
+
+	--color-accent: #6e5e9a;
+	--color-accent-bright: #9e8bd9;
+
+	--color-red: #b43114;
+	--color-orange: #8f6a09;
+	--color-yellow: #727706;
+	--color-green: #1c7c15;
+	--color-blue: #5170ac;
+
+	--color-red-bright: #d75662;
+	--color-orange-bright: #ffb27a;
+	--color-yellow-bright: #fde570;
+	--color-green-bright: #6abe60;
+	--color-blue-bright: #90b3ff;
+
+	--color-overlay: #0008;
+	--color-popup: #fff8;
+	--color-shadow: #0001;
+}
 
 html {
 	font-family: sans-serif;
@@ -81,8 +105,7 @@ a {
 }
 
 .card.accent {
-	@apply text-white;
-	background-image: linear-gradient(135deg, var(--color-accent), var(--color-gradient));
+	@apply text-white bg-accent;
 }
 
 /* Forms */
@@ -258,51 +281,53 @@ input[type='checkbox']:active:before {
 	background-color: var(--color-yellow-bright);
 }
 
-//input:not([type='checkbox']).red,
-//textarea.red,
-//select.red,
-//button.red,
-//.btn.red {
-//	@apply text-rose-700 border-rose-700;
-//}
-//
-//button.red:hover,
-//.btn.red:hover {
-//	@apply text-white bg-rose-700;
-//}
+input:not([type='checkbox']).red,
+textarea.red,
+select.red,
+button.red,
+.btn.red {
+	@apply text-rose-700 border-rose-700;
+}
 
-//button,
-//input:not([type='range']) {
-//	padding: 0.5em 1.5ch;
-//	border-radius: 8px;
-//}
+button.red:hover,
+.btn.red:hover {
+	@apply text-white bg-rose-700;
+}
 
-@each $color in variables.$colors {
-	button.#{$color},
-	input.#{$color} {
-		background-color: var(--color-#{$color});
-		color: var(--color-white);
-		border: 1px solid var(--color-#{$color});
-	}
+button,
+input:not([type='range']) {
+	padding: 0.5em 1.5ch;
+	border-radius: 8px;
+}
 
-	button.#{$color}:not([disabled]):hover,
-	input.#{$color}:not([disabled]):hover {
-		background-color: var(--color-#{$color}-bright);
-		border-color: var(--color-#{$color}-bright);
-		color: var(--color-white);
-	}
+button.accent:not(.outline),
+input.accent:not(.outline) {
+	@apply bg-accent text-white;
+}
 
-	button.#{$color}-outline,
-	input.#{$color}-outline {
-		color: var(--color-#{$color});
-		border: 1px solid var(--color-#{$color});
-	}
+button.red:not(.outline),
+input.red:not(.outline) {
+	@apply bg-red text-white;
+}
 
-	button.#{$color}-outline:hover:not(:disabled),
-	input.#{$color}-outline:hover:not(:disabled) {
-		color: var(--color-background);
-		background-color: var(--color-#{$color});
-	}
+button.orange:not(.outline),
+input.orange:not(.outline) {
+	@apply bg-orange text-white;
+}
+
+button.yellow:not(.outline),
+input.yellow:not(.outline) {
+	@apply bg-yellow text-white;
+}
+
+button.green:not(.outline),
+input.green:not(.outline) {
+	@apply bg-green text-white;
+}
+
+button.blue:not(.outline),
+input.blue:not(.outline) {
+	@apply bg-blue text-white;
 }
 
 /* Main styles */

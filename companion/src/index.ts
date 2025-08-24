@@ -1,6 +1,6 @@
 'use strict';
 
-import './assets/style.scss';
+import './assets/style.css';
 
 import {createApp} from 'vue';
 import App from './App.vue';

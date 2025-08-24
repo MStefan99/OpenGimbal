@@ -24,6 +24,8 @@ const percentage = computed(() => scale(props.value, props.min, props.max, 0, 10
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .meter {
 	position: relative;
 	height: 1.5em;

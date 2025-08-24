@@ -97,7 +97,7 @@ export class USBInterface implements IHardwareInterface {
 		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, message.buffer))
+			.then(() => this._usbDevice.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>))
 			.catch((err) => {
 				console.error('Send failed:', err);
 				return Promise.reject(err);
@@ -109,7 +109,7 @@ export class USBInterface implements IHardwareInterface {
 		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, message.buffer))
+			.then(() => this._usbDevice.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>))
 			.then(() => this._usbDevice.transferIn(1, 0xff))
 			.then((r) => {
 				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer));

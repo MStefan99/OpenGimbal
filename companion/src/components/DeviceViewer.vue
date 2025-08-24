@@ -43,6 +43,8 @@ defineEmits<{(e: 'close'): void}>();
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .popup-wrapper {
 	background-color: unset;
 }

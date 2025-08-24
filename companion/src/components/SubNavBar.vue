@@ -10,6 +10,8 @@
 <script setup lang="ts"></script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .subnavbar {
 	background-color: var(--color-accent);
 	color: var(--color-background);

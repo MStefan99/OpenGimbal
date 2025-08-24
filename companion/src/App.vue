@@ -73,6 +73,8 @@ document.addEventListener('keydown', (event: KeyboardEvent) => {
 </script>
 
 <style>
+@import './assets/style.css';
+
 .no-device {
 	@apply flex flex-row-reverse flex-wrap justify-between;
 	margin: 16px;

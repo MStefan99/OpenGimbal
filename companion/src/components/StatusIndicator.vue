@@ -20,6 +20,8 @@ const props = withDefaults(
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .status-indicator {
 	@apply inline;
 }

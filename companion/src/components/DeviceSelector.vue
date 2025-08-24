@@ -18,7 +18,7 @@
 					v-model="type"
 					:checked="'usb' in navigator"
 					:disabled="!('usb' in navigator)")
-				label(for="usb-radio") USB
+				label.mr-2(for="usb-radio") USB
 				input#serial-radio(
 					type="radio"
 					name="type"
@@ -72,6 +72,8 @@ function connect(demo?: boolean): void {
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .device-selector {
 	position: fixed;
 	right: 30px;

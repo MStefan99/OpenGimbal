@@ -116,6 +116,8 @@ onUnmounted(() => document.removeEventListener('mouseup', upListener));
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 .joystick {
 	width: min(100%, 320px);
 	height: auto;

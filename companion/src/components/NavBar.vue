@@ -28,6 +28,8 @@ const deviceSelectorOpen = ref<boolean>(false);
 </script>
 
 <style scoped>
+@import '../assets/style.css';
+
 #title-bar {
 	@apply flex flex-row flex-nowrap justify-between items-center;
 	background-color: var(--color-accent);

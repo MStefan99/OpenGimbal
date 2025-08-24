@@ -15,8 +15,8 @@
 			:max="max"
 			:step="step")
 		.track
-		.value.short {{formatShortValue(value)}}
-		.value.long {{scale !== undefined ? Math.round((value / scale) * 100) + '%' : formatShortValue(value)}}
+		.value.short {{formatShortValue(value / scale)}}
+		.value.long {{Math.round((value / scale) * 100)}}%
 </template>
 
 <script setup lang="ts">
@@ -38,11 +38,11 @@ const props = withDefaults(
 	{
 		vertical: true,
 		max: 1000,
+		scale: 1000,
 		step: 1
 	}
 );
 defineEmits<{(e: 'update:modelValue', value: number): void; (e: 'change', value: number): void}>();
-
 watch(
 	() => props.modelValue,
 	() => (sliderModel.value = props.modelValue?.toString() ?? '0')
@@ -66,8 +66,8 @@ function formatShortValue(value: number): string {
 }
 </script>
 
-<style lang="scss" scoped>
-@use '../assets/variables';
+<style scoped>
+@import '../assets/style.css';
 
 .bar {
 	position: relative;
@@ -119,14 +119,44 @@ function formatShortValue(value: number): string {
 	transition: height 0.5s ease;
 }
 
-@each $color in variables.$colors {
-	.slider.color-#{$color} .bar:after {
-		border-color: var(--color-#{$color});
-	}
+.slider.red .bar:after {
+	@apply border-red;
+}
 
-	.slider.color-#{$color} .track {
-		background-color: var(--color-#{$color});
-	}
+.slider.red .track {
+	@apply bg-red;
+}
+
+.slider.orange .bar:after {
+	@apply border-orange;
+}
+
+.slider.orange .track {
+	@apply bg-orange;
+}
+
+.slider.yellow .bar:after {
+	@apply border-yellow;
+}
+
+.slider.yellow .track {
+	@apply bg-yellow;
+}
+
+.slider.green .bar:after {
+	@apply border-green;
+}
+
+.slider.green .track {
+	@apply bg-green;
+}
+
+.slider.blue .bar:after {
+	@apply border-blue;
+}
+
+.slider.blue .track {
+	@apply bg-blue;
 }
 
 input:disabled + .track {

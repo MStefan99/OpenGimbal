@@ -111,7 +111,6 @@ export default [
 	},
 	...compat.extends(
 		'eslint:recommended',
-		'plugin:prettier/recommended',
 		'plugin:@typescript-eslint/recommended',
 		'plugin:vue/vue3-essential',
 		'plugin:vue-pug/vue3-recommended'
@@ -131,7 +130,6 @@ export default [
 		},
 
 		rules: {
-			'prettier/prettier': 'warn',
 			'@typescript-eslint/no-unused-vars': 'off',
 			'@typescript-eslint/no-inferrable-types': 'off',
 			'@typescript-eslint/explicit-function-return-type': 'error',
