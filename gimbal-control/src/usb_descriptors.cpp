@@ -88,17 +88,18 @@ usb::usb_descriptor_bos usb::DESCRIPTOR_BOS = {
   .bDescriptorType = (uint8_t)usb::DESCRIPTOR_TYPE::BOS,
   .wTotalLength = 33,
   .bNumDeviceCaps = 1,
-  .dev_capability =
-      {.bLength = 28,
-                       .bDescriptorType = (uint8_t)usb::DESCRIPTOR_TYPE::DEVICE_CAPABILITY,
-                       .bDevCapabilityType = 0x05,  // Platform capability descriptor type
-       .bReserved = 0,
-                       .PlatformCapabilityUUID =
-           {0xDF, 0x60, 0xDD, 0xD8, 0x89, 0x45, 0xC7, 0x4C, 0x9C, 0xD2, 0x65, 0x9D, 0x9E, 0x64, 0x8A, 0x9F},
-                       .dwWindowsVersion = 0x06030000,
-                       .wMSOSDescriptorSetTotalLength = 158,
-                       .bMS_VendorCode = 0x01,
-                       .bAltEnumCode = 0},
+  .dev_capability = {
+                     .bLength = 28,
+                     .bDescriptorType = (uint8_t)usb::DESCRIPTOR_TYPE::DEVICE_CAPABILITY,
+                     .bDevCapabilityType = 0x05,  // Platform capability descriptor type
+    .bReserved = 0,
+                     .PlatformCapabilityUUID =
+        {0xDF, 0x60, 0xDD, 0xD8, 0x89, 0x45, 0xC7, 0x4C, 0x9C, 0xD2, 0x65, 0x9D, 0x9E, 0x64, 0x8A, 0x9F},
+                     .dwWindowsVersion = 0x06030000,
+                     .wMSOSDescriptorSetTotalLength = 158,
+                     .bMS_VendorCode = 0x01,
+                     .bAltEnumCode = 0
+  },
 };
 
 usb::usb_descriptor_compatible_id compatible_id = {

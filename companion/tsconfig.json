@@ -15,6 +15,6 @@
 		"types": ["vite/client", "@types/w3c-web-usb", "@types/w3c-web-serial"],
 		"lib": ["ESNext", "dom"]
 	},
-	"exclude": ["node_modules"],
+	"exclude": ["node_modules", "docs/.vitepress"],
 	"include": ["src/**/*.ts"]
 }
