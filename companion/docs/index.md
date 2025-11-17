@@ -8,17 +8,17 @@ hero:
   tagline: My great project tagline
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Build your own
+      link: /build
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: Learn more
+      link: /learn
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Hackable
+    details: Add as many motors as you want, use with your own hardware over UART and mount it anywhere you like.
+  - title: Ready to use
+    details: Between firmware and software, PCB designs and 3D-printable parts, everything is ready to go.
+  - title: Small but mighty
+    details: Film for 10 hours on a single charge, enjoy 30 watts of peak power and standby time measured in years.
 ---
