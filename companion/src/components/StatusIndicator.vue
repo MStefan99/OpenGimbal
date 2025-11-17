@@ -27,7 +27,7 @@ const props = withDefaults(
 }
 
 .status {
-	@apply px-2 inline-block text-white rounded-md;
+	@apply px-2 inline-block text-white rounded;
 }
 
 .status.inactive {

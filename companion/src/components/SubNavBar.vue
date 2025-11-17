@@ -13,13 +13,12 @@
 @import '../assets/style.css';
 
 .subnavbar {
-	background-color: var(--color-accent);
+	@apply m-2;
 	color: var(--color-background);
 }
 
 .subnavbar nav {
-	display: flex;
-	flex-flow: row wrap;
+	@apply flex flex-row flex-wrap my-2 rounded-lg shadow-md;
 	color: var(--color-white);
 	background-color: var(--color-accent);
 	border-top: 1px solid var(--color-background);
@@ -36,9 +35,7 @@
 }
 
 .subnavbar nav :deep(a) {
-	padding: 0.3em 1ch;
-	display: block;
-	transition: background-color 0.2s ease;
+	@apply m-2 px-2 rounded block transition-colors;
 }
 
 @media screen and (min-width: 768px) {

@@ -31,7 +31,7 @@ const deviceSelectorOpen = ref<boolean>(false);
 @import '../assets/style.css';
 
 #title-bar {
-	@apply flex flex-row flex-nowrap justify-between items-center;
+	@apply flex flex-row m-2 rounded-lg shadow-md flex-nowrap justify-between items-center;
 	background-color: var(--color-accent);
 	color: var(--color-white);
 }
@@ -64,12 +64,12 @@ const deviceSelectorOpen = ref<boolean>(false);
 }
 
 nav {
-	@apply flex items-center;
+	@apply flex items-center my-2 gap-2;
 	align-self: stretch;
 }
 
 nav a {
-	@apply flex items-center font-bold;
+	@apply flex items-center font-bold rounded-lg;
 	padding: 0 1ch 0;
 	height: 100%;
 	transition: background-color 0.2s;

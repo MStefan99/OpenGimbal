@@ -2,7 +2,8 @@ import {BitwiseRegister} from './BitwiseRegister';
 import {
 	MotorResponse,
 	ReturnCalibrationVariableResponse,
-	ReturnOffsetVariableResponse
+	ReturnOffsetVariableResponse,
+	ReturnPositionVariableResponse
 } from './serial/MotorResponse';
 import {
 	AdjustOffsetCommand,
@@ -69,6 +70,8 @@ export interface IMotor {
 	getOffset(): Promise<number>;
 
 	setOffset(offset: number): Promise<void>;
+
+	getPosition(): Promise<number>;
 }
 
 export class Motor implements IMotor {
@@ -160,5 +163,14 @@ export class Motor implements IMotor {
 
 	setOffset(offset: number): Promise<void> {
 		return this._hardwareInterface.send(new SetOffsetVariableCommand(0, this._address, offset));
+	}
+
+	getPosition(): Promise<number> {
+		return new Promise<number>((resolve, reject) =>
+			this._hardwareInterface
+				.request(new GetVariableCommand(0, this._address, MotorVariable.Position))
+				.then((res) => resolve((res as ReturnPositionVariableResponse).position))
+				.catch((err) => reject(err))
+		);
 	}
 }
