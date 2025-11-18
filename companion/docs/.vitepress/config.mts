@@ -8,19 +8,23 @@ export default defineConfig({
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
 			{text: 'Home', link: '/'},
-			{text: 'Examples', link: '/markdown-examples'}
+			{text: 'Get started', link: '/intro'},
+            {text: 'Companion', link: '/companion'}
 		],
 
 		sidebar: [
 			{
-				text: 'Examples',
+				text: 'Getting started',
 				items: [
-					{text: 'Markdown Examples', link: '/markdown-examples'},
-					{text: 'Runtime API Examples', link: '/api-examples'}
+					{text: 'Introduction', link: '/intro'},
+					{text: 'Hardware', link: '/hardware'},
+                    {text: 'Software', link: '/software'},
+                    {text: 'Build yours', link: '/build'}
 				]
 			}
 		],
 
 		socialLinks: [{icon: 'github', link: 'https://github.com/MStefan99/OpenGimbal'}]
-	}
+	},
+    cleanUrls: true
 });
