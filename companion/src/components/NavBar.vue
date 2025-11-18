@@ -36,13 +36,12 @@ const deviceSelectorOpen = ref<boolean>(false);
 	color: var(--color-white);
 }
 
-#title-bar > :not(nav) {
-	padding: 0.5em 1em;
+#title-bar {
+	@apply px-2;
 }
 
 #title-bar #title {
-	font-size: 1.5em;
-	font-weight: bold;
+	@apply mx-2 text-2xl font-bold;
 }
 
 @media screen and (max-width: 768px) {
@@ -69,10 +68,7 @@ nav {
 }
 
 nav a {
-	@apply flex items-center font-bold rounded-lg;
-	padding: 0 1ch 0;
-	height: 100%;
-	transition: background-color 0.2s;
+	@apply flex px-2 items-center rounded-lg h-full transition-colors;
 }
 
 nav a:hover {
