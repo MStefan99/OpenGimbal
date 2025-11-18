@@ -1,81 +1,40 @@
-OpenGimbal
-==========
+# OpenGimbal
 
-*A modular brushless gimbal platform*
+## Smooth footage made hackable
 
-Overview
---------
-
-* **Modularity**: Each board is designed to be modular, allowing you to replace or integrate them into other projects as needed. This modularity also enables users to customize their gimbal setup.
-* **Customizability**: With well-defined UART APIs, each part can be controlled independently, giving you the flexibility to tailor your gimbal's behavior to specific applications.
+#### Open source gimbal you can build, tweak and extend to match all your filming needs
 
 
-Key Features
-------------
+## Highlights
+### Hackable
+Add as many motors as you like, control them over USB or UART and mount it anywhere you like. Use it as is or integrate it into your own project.
 
-* **Modularity**: Each board is designed to be modular, allowing you to replace or integrate them into other projects as needed. This modularity also enables users to customize their gimbal setup.
-* **Customizability**: With well-defined UART APIs, each part can be controlled independently, giving you the flexibility to tailor your gimbal's behavior to specific applications.
-* **Ease of Use**: Simple settings and built-in calibrations eliminate the need for manual adjustments, making it easy to get started with OpenGimbal.
+### Ready to use
+Between firmware and software, PCB designs and 3D-printable parts, everything is ready for you to go.
+Built-in calibrations and checks get the headache out of the setup process.
 
-
-Motor Controller Board
-----------------------
-
-* **Precise Control**: From a complete stop to thousands of RPM (depending on the motor), the board features sinusoidal control for smooth and accurate movements.
-* **Torque Control**: The movement will be as gentle or strong as the motor allows, giving you unparalleled precision and control.
-* **Feedback**: Use the motors themselves to generate tones and precise haptic feedback, providing extra degrees of feedback for a more immersive experience.
+### Small but mighty
+Film for 10 hours on a single charge, enjoy 15 watts of peak power and standby time measured in years.
 
 
-IMU (Inertial Measurement Unit) Board
--------------------------------------
+## Introduction
 
-The IMU Board measures the gimbal's orientation and controls multiple motors for stabilization. This board is designed to be highly accurate, ensuring smooth and stable video capture.
+A gimbal is a device that lets you shoot smooth video by canceling out unwanted camera movements. They come in many shapes and sizes, from tiny ones with integrated cameras to heavy-duty
+devices for DSLRs or film cameras, often mounted on drones or cranes.
 
+OpenGimbal can be all of those! The philosophy behind OpenGimbal is to make every single part customizable and extensible for your own needs.
+The provided designs allow you to get started with a small but powerful smartphone gimbal in a few hours, but you can always adapt them to your own needs.
 
-User Interface Board
---------------------
+OpenGimbal is not just handy for gimbals, though. Grab included designs and firmware for brushless motor controllers and make anything you want move!
 
-The User Interface Board allows users to interact with the gimbal through a simple and intuitive interface. With well-defined UART APIs, you can control the gimbal from any device that supports serial communication.
+## Features
 
-
-CAD Models and 3D Printed Gimbal Models
----------------------------------------
-
-* **Customizable CAD Models**: CAD models are fully customizable, allowing you to tailor them to your specific needs.
-* **3D Printed Gimbal Models**: Included 3D printed gimbal models can be assembled and customized as needed.
-
-
-MATLAB Script for Inverse Kinematics
-------------------------------------
-
-For users who want to create custom gimbal geometries, an included MATLAB script can derive the inverse kinematics equations. This allows you to simulate and optimize your gimbal's performance before building it.
-
-
-Compatibility
--------------
-
-OpenGimbal is designed to support a wide range of cameras and smartphones, including:
-
-* Any smartphone or camera weighing up to 250 grams (with a custom mount)
-* Heavier cameras by upgrading the motors and plastic arms with stronger variants
-
-
-Power and Battery Life
-----------------------
-
-OpenGimbal runs on two 18650 batteries, providing an impressive battery life:
-
-* 24 hours of average continuous use
-* Several months in standby mode
-
-
-Firmware and Software
----------------------
-
-The OpenGimbal firmware is written in C and C++, with no third-party libraries used. The companion web app is made with TypeScript and Vue, just needing a browser with WebSerial and WebUSB support.
-
-
-Get Started
------------
-
-With OpenGimbal, you can start building your own custom gimbal today! Whether you're a seasoned developer or just starting out, our open-source project provides everything you need to get started.
+- Includes everything you need to get started: PCB designs, 3D models, firmware, software and documentation.
+- Film for 10 hours on a single 18650 battery or add more capacity!
+- Enjoy 15 watts of peak power with the provided controller or bring your own for up to 22 watts per motor!
+- Stop worrying about the battery with USB-C charging and standby time measured in years.
+- Every part can be customized, left out or replaced with your own designs to fit your needs.
+- Can be easily controlled by your own software or hardware over USB or UART.
+- Stock or custom, just point and shoot instantly without worrying about math with the fast IK solver.
+- Easily customizable firmware with ready-made drivers, simple API and extensive documentation.
+- Completely open source!
