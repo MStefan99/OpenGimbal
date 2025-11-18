@@ -1,7 +1,7 @@
 <template lang="pug">
 .navbar
 	#title-bar
-		span#title OpenGimbal
+		a#title(href="..") OpenGimbal
 		nav
 			RouterLink(
 				:to="{name: 'control'}"
@@ -81,7 +81,12 @@ nav a:hover {
 
 nav a.router-link-active {
 	background-color: var(--color-background);
-	color: var(--color-accent);
+}
+
+@media not (prefers-color-scheme: dark) {
+	nav a.router-link-active {
+		color: var(--color-accent);
+	}
 }
 
 .navbar input[type='checkbox'].hidden {

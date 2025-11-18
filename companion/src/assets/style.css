@@ -172,7 +172,6 @@ button:not([disabled]):not(:active),
 .btn:not([disabled]):not(:active),
 input[type='radio']:not([disabled]):not(:active) + label {
 	@apply cursor-pointer;
-	//background-color: var(--color-background);
 }
 
 button:not([disabled]):active,

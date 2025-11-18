@@ -29,30 +29,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: './companion/package-lock.json'
       - name: Install dependencies
         working-directory: ./companion
         run: npm install
-      - name: Build
+      - name: Build docs
+        env:
+          VITE_CRASH_COURSE_URL: https://crash-course.apps.mstefan99.com/api
+          VITE_CRASH_COURSE_KEY: d7696a5c0866f796
+        working-directory: ./companion
+        run: npm run docs:build
+      - name: Build companion
         env:
           VITE_CRASH_COURSE_URL: https://crash-course.apps.mstefan99.com/api
           VITE_CRASH_COURSE_KEY: d7696a5c0866f796
           VITE_ROUTER: hash
         working-directory: ./companion
         run: npm run build
+      - name: Move files
+        run: |
+          mkdir ./dist/companion -p
+          mv ./companion/docs/.vitepress/dist/* ./dist
+          mv ./companion/dist/assets/* ./dist/assets
+          mv ./companion/dist/* ./dist/companion
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist repository
-          path: './companion/dist'
+          path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
