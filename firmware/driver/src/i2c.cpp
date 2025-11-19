@@ -30,8 +30,7 @@ extern "C" {
 		} else if (SERCOM_REGS->I2CM.SERCOM_INTFLAG & SERCOM_I2CM_INTFLAG_MB_Msk) {  // Master on bus
 			if (!transfer.flags.read) {
 				if (transfer.transferred < transfer.length) {
-					SERCOM_REGS->I2CM.SERCOM_DATA = SERCOM_I2CM_DATA_DATA(
-					    transfer.buf[transfer.transferred++]
+					SERCOM_REGS->I2CM.SERCOM_DATA = SERCOM_I2CM_DATA_DATA(transfer.buf[transfer.transferred++]
 					);  // Send bytes (1st - register address, then data)
 				} else {
 					SERCOM_REGS->I2CM.SERCOM_CTRLB = SERCOM_I2CM_CTRLB_CMD(3);

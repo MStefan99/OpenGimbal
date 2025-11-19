@@ -41,13 +41,13 @@ namespace i2c {
 	    uint8_t  regAddr,
 	    uint8_t* buf,
 	    uint8_t  size = 1,
-	    void     (*cb)(bool success, const Transfer& transfer) = nullptr
+	    void (*cb)(bool success, const Transfer& transfer) = nullptr
 	);
 	void read(
 	    uint8_t devAddr,
 	    uint8_t regAddr,
 	    uint8_t size = 1,
-	    void    (*cb)(bool success, const Transfer& transfer) = nullptr
+	    void (*cb)(bool success, const Transfer& transfer) = nullptr
 	);
 	bool busy();
 }

@@ -11,7 +11,7 @@ template <class size_type, size_type C>
 class TaskScheduler {
 public:
 	using timestamp_type = uint32_t;
-	using task_type = void     (*)();
+	using task_type = void (*)();
 	constexpr static size_type intervalMask {1u << (sizeof(size_type) * 8 - 1)};
 	constexpr static size_type delayMask {~intervalMask};
 

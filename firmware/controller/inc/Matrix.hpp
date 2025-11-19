@@ -271,8 +271,8 @@ constexpr Matrix<scalar, size_type, h, w> Matrix<scalar, size_type, h, w>::opera
 }
 
 template <class scalar, class size_type, size_type h, size_type w>
-constexpr Matrix<scalar, size_type, h, w>
-    Matrix<scalar, size_type, h, w>::multiplyComponents(const Matrix& matrix) const {
+constexpr Matrix<scalar, size_type, h, w> Matrix<scalar, size_type, h, w>::multiplyComponents(const Matrix& matrix
+) const {
 	Matrix<scalar, size_type, h, w> result {};
 
 	for (size_type j {0}; j < h; ++j) {
