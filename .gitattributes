@@ -1,0 +1,7 @@
+firmware/controller/inc/regs/** linguist-generated
+firmware/controller/src/config/** linguist-generated
+firmware/controller/src/packs/** linguist-generated
+
+firmware/driver/inc/regs/** linguist-generated
+firmware/driver/src/config/** linguist-generated
+firmware/driver/src/packs/** linguist-generated
