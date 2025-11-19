@@ -106,7 +106,8 @@ export default [
 			'**/test/',
 			'**/package-lock.json',
 			'**/*.css',
-			'**/docs/.vitepress/'
+			'docs/.vitepress/cache',
+			'docs/.vitepress/dist'
 		]
 	},
 	...compat.extends(
