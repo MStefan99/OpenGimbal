@@ -2,7 +2,10 @@
 
 ## Smooth footage made hackable
 
-#### Open source gimbal you can build, tweak and extend to match all your filming needs
+**Open source gimbal you can build, tweak and extend to match all your filming needs**
+
+Note: OpenGimbal is undergoing final preparations before the first public release. Documentation is still being written
+and hardware designs are undergoing final testing and will be published shortly.
 
 
 ## Highlights

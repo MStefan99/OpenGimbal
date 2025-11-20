@@ -1,5 +1,10 @@
 # Introduction
 
+::: warning
+OpenGimbal is undergoing final preparations before the first public release. Documentation is still being written
+and hardware designs are undergoing final testing and will be published shortly.
+:::
+
 A gimbal is a device that lets you shoot smooth video by canceling out unwanted camera movements. They come in many shapes and sizes, from tiny ones with integrated cameras to heavy-duty
 devices for DSLRs or film cameras, often mounted on drones or cranes.
 
