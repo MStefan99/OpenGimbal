@@ -16,9 +16,11 @@ hero:
 
 features:
   - title: Hackable
-    details: Add as many motors as you like, control them over USB or UART and mount it anywhere you like.
-  - title: Ready to use
-    details: Between firmware and software, PCB designs and 3D-printable parts, everything is ready for you to go.
+    details: Add as many motors as you like, control them over USB or UART and mount it anywhere you want.
+  - title: Butter smooth
+    details: Don't let a stutter ruin your shot with refresh rates of up to 7000Hz
+  - title: Lightning fast
+    details: Shoot lag-free thanks to 4ms end-to-end latency and predictive oversampling
   - title: Small but mighty
     details: Film for 10 hours on a single charge, enjoy 15 watts of peak power and standby time measured in years.
 ---
