@@ -8,11 +8,10 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
-#include <cmath>
-
 #include "device.h"
 
 #include "adc.hpp"
+#include "AnalyticIKSolver.hpp"
 #include "eic.hpp"
 #include "i2c.hpp"
 #include "joystick.hpp"
