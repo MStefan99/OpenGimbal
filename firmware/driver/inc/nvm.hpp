@@ -29,8 +29,13 @@
 
 namespace nvm {
 	struct __attribute__((packed)) Options {
-		uint8_t  polePairs {0};
-		bool     counterclockwise {true};
+		uint8_t polePairs {0};
+
+		struct {
+			bool clockwise: 1;
+			bool inverted : 1;
+		} flags;
+
 		uint16_t phaseOffset {0};
 		uint16_t zeroOffset {0};
 	};
@@ -39,7 +44,7 @@ namespace nvm {
 		extern uint8_t        rowCopy[FLASH_ROW_SIZE];  // Copy of the row
 		extern const uint8_t* modifiedRow;              // Original address of the data
 
-		struct __attribute__((packed)) Rows {
+		struct Rows {
 			union {
 				Options options {};
 				uint8_t pad[FLASH_ROW_SIZE];

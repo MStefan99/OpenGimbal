@@ -1,5 +1,4 @@
-import {CalibrationBits, MotorResponseType, MotorVariable, SerialMessage} from './SerialMessage';
-import {BitwiseRegister} from '../BitwiseRegister';
+import {MotorResponseType, MotorVariable, SerialMessage} from './SerialMessage';
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'
@@ -13,7 +12,7 @@ export const returnVariableResponses: Record<
 	MotorVariable,
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {
-	[MotorVariable.Calibration]: (buffer) => new ReturnCalibrationVariableResponse(buffer),
+	[MotorVariable.Options]: (buffer) => new ReturnOptionsVariableResponse(buffer),
 	[MotorVariable.Offset]: (buffer) => new ReturnOffsetVariableResponse(buffer),
 	[MotorVariable.Position]: (buffer) => new ReturnPositionVariableResponse(buffer)
 };
@@ -61,13 +60,21 @@ export class ReturnVariableResponse extends MotorResponse {
 	}
 }
 
-export class ReturnCalibrationVariableResponse extends ReturnVariableResponse {
+export class ReturnOptionsVariableResponse extends ReturnVariableResponse {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
 	}
 
-	get calibrationMode(): BitwiseRegister<CalibrationBits> {
-		return new BitwiseRegister<CalibrationBits>(this.view.getUint8(3));
+	get calibrated(): boolean {
+		return !!(this.view.getUint8(3) & 0x01);
+	}
+
+	get inverted(): boolean {
+		return !!(this.view.getUint8(3) & 0x02);
+	}
+
+	get highVoltageCompatible(): boolean {
+		return !!(this.view.getUint8(3) & 0x04);
 	}
 
 	override toString(type?: 'hex'): string {
@@ -76,13 +83,9 @@ export class ReturnCalibrationVariableResponse extends ReturnVariableResponse {
 		} else {
 			return (
 				super.toString() +
-				`\n  Mode: ${
-					Object.entries(CalibrationBits)
-						.map((e) => ({bit: +e[0], name: e[1]}))
-						.filter((e) => Number.isInteger(e.bit) && this.calibrationMode.has(e.bit))
-						.map((e) => e.name)
-						.join(', ') || 'Not calibrated'
-				}`
+				`\n  ${this.calibrated ? 'Calibrated' : 'Not calibrated'}` +
+				`\n  ${this.inverted ? 'Direction inverted' : 'Direction not inverted'}` +
+				`\n  High voltage ${this.highVoltageCompatible ? 'compatible' : 'not compatible'}`
 			);
 		}
 	}

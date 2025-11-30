@@ -1,9 +1,8 @@
-import {IMotor, Motor} from './Motor';
+import {IMotor, Motor, MotorOptions} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './serial/SerialInterface';
 import {MotorCommand} from './serial/MotorCommand';
 import {MotorResponse} from './serial/MotorResponse';
-import {CalibrationBits} from './serial/SerialMessage';
 
 export interface IMotorControl {
 	readonly vendorId: number | undefined;
@@ -21,7 +20,7 @@ export interface IMotorControl {
 
 	enumerate(): Promise<IMotor[]>;
 
-	getInitialCalibration(address?: IMotor['address']): BitwiseRegister<CalibrationBits>;
+	getInitialOptions(address?: IMotor['address']): MotorOptions;
 }
 
 export interface IMotorManager {
@@ -36,7 +35,7 @@ export interface IMotorManager {
 export type MotorEntry = {
 	motor: Motor;
 	active: boolean;
-	initialCalibration?: BitwiseRegister<CalibrationBits>;
+	initialOptions?: MotorOptions;
 };
 
 class MotorControl implements IMotorControl {
@@ -82,9 +81,9 @@ class MotorControl implements IMotorControl {
 	async enumerate(): Promise<Motor[]> {
 		for (const entry of this._motorEntries) {
 			try {
-				entry.initialCalibration = await entry.motor.getCalibration();
+				entry.initialOptions = await entry.motor.getOptions();
 				// Motor responded
-				entry.active = true;
+				entry.active = entry.initialOptions !== null;
 			} catch (e) {
 				// Motor did not respond
 				entry.active = false;
@@ -93,10 +92,8 @@ class MotorControl implements IMotorControl {
 		return this.active;
 	}
 
-	getInitialCalibration(address: Motor['address'] = 1): BitwiseRegister<CalibrationBits> {
-		return (
-			this._motorEntries[address - 1].initialCalibration ?? new BitwiseRegister<CalibrationBits>()
-		);
+	getInitialOptions(address: Motor['address'] = 1): MotorOptions {
+		return this._motorEntries[address - 1].initialOptions;
 	}
 
 	close(): Promise<void> {

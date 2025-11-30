@@ -1,6 +1,5 @@
 import {clamp, mod} from '../../util';
-import {BitwiseRegister} from '../BitwiseRegister';
-import {CalibrationBits, MotorCommandType, MotorVariable, SerialMessage} from './SerialMessage';
+import {MotorCommandType, MotorVariable, SerialMessage} from './SerialMessage';
 
 export enum MotorCommandError {
 	NoError,
@@ -18,7 +17,6 @@ export const motorCommandNames: Record<MotorCommandType, string> = {
 	[MotorCommandType.Tone]: 'Tone',
 	[MotorCommandType.Haptic]: 'Haptic',
 	[MotorCommandType.AdjustOffset]: 'AdjustOffset',
-	[MotorCommandType.Calibrate]: 'Calibration',
 	[MotorCommandType.GetVariable]: 'Get variable',
 	[MotorCommandType.SetVariable]: 'Set variable'
 };
@@ -31,7 +29,6 @@ export const motorCommands: Record<MotorCommandType, (buffer: Uint8Array) => Mot
 	[MotorCommandType.Tone]: (buffer: Uint8Array) => new ToneCommand(buffer),
 	[MotorCommandType.Haptic]: (buffer: Uint8Array) => new HapticCommand(buffer),
 	[MotorCommandType.AdjustOffset]: (buffer: Uint8Array) => new AdjustOffsetCommand(buffer),
-	[MotorCommandType.Calibrate]: (buffer: Uint8Array) => new CalibrationCommand(buffer),
 	[MotorCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
 	[MotorCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer)
 };
@@ -40,9 +37,7 @@ export const setVariableCommands: Record<
 	MotorVariable,
 	(buffer: Uint8Array) => SetVariableCommand
 > = {
-	[MotorVariable.Calibration]: () => {
-		throw new Error('Calibration is a read-only variable');
-	},
+	[MotorVariable.Options]: (buffer: Uint8Array) => new SetOptionsVariableCommand(buffer),
 	[MotorVariable.Offset]: (buffer: Uint8Array) => new SetOffsetVariableCommand(buffer),
 	[MotorVariable.Position]: () => {
 		throw new Error('Position is a read-only variable');
@@ -275,48 +270,6 @@ export class AdjustOffsetCommand extends MotorCommand {
 	}
 }
 
-export class CalibrationCommand extends MotorCommand {
-	constructor(buffer: Uint8Array);
-	constructor(srcAddr: number, destAddr: number, mode: BitwiseRegister<CalibrationBits>);
-
-	constructor(
-		srcAddr: number | Uint8Array,
-		destAddr?: number,
-		mode?: BitwiseRegister<CalibrationBits>
-	) {
-		if (srcAddr instanceof Uint8Array) {
-			super(srcAddr);
-		} else {
-			const buffer = new Uint8Array(1);
-			const view = new DataView(buffer.buffer);
-			view.setUint8(0, mode.value);
-
-			super(srcAddr, destAddr, MotorCommandType.Calibrate, buffer);
-		}
-	}
-
-	get calibrationMode(): BitwiseRegister<CalibrationBits> {
-		return new BitwiseRegister<CalibrationBits>(this.view.getUint8(2));
-	}
-
-	override toString(type?: 'hex'): string {
-		if (type === 'hex') {
-			return super.toString(type);
-		} else {
-			return (
-				super.toString() +
-				`\n  Mode: ${
-					Object.entries(CalibrationBits)
-						.map((e) => ({bit: +e[0], name: e[1]}))
-						.filter((e) => Number.isInteger(e.bit) && this.calibrationMode.has(e.bit))
-						.map((e) => e.name)
-						.join(', ') || 'Not calibrated'
-				}`
-			);
-		}
-	}
-}
-
 export class GetVariableCommand extends MotorCommand {
 	constructor(buffer: Uint8Array);
 	constructor(srcAddr: number, destAddr: number, variable: MotorVariable);
@@ -384,6 +337,52 @@ export class SetVariableCommand extends MotorCommand {
 			return super.toString(type);
 		} else {
 			return super.toString() + `\n  Variable: ${MotorVariable[this.variable] ?? 'unknown'}`;
+		}
+	}
+}
+
+export class SetOptionsVariableCommand extends SetVariableCommand {
+	constructor(buffer: Uint8Array);
+	constructor(srcAddr: number, destAddr: number, calibration: boolean, inverted?: boolean);
+
+	constructor(
+		srcAddr: number | Uint8Array,
+		destAddr?: number,
+		calibration?: boolean,
+		inverted?: boolean
+	) {
+		if (srcAddr instanceof Uint8Array) {
+			super(srcAddr);
+		} else {
+			let options = 0;
+			if (calibration) {
+				options |= 0x01;
+			}
+			if (inverted) {
+				options |= 0x02;
+			}
+
+			super(srcAddr, destAddr, MotorVariable.Options, options, 1);
+		}
+	}
+
+	get calibrated(): boolean {
+		return !!(this.view.getUint8(3) & 0x01);
+	}
+
+	get inverted(): boolean {
+		return !!(this.view.getUint8(3) & 0x01);
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return (
+				super.toString() +
+				`\n  ${this.calibrated ? 'Start' : 'Clear'} calibration` +
+				`\n  ${this.inverted ? 'Direction inverted' : 'Direction not inverted'}`
+			);
 		}
 	}
 }

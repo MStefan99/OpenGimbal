@@ -9,7 +9,6 @@ export enum MotorCommandType {
 	Tone = 0x4,
 	Haptic = 0x5,
 	AdjustOffset = 0x6,
-	Calibrate = 0x7,
 	GetVariable = 0xe,
 	SetVariable = 0xf
 }
@@ -19,14 +18,9 @@ export enum MotorResponseType {
 }
 
 export enum MotorVariable {
-	Calibration = 0x0,
+	Options = 0x0,
 	Offset = 0x1,
 	Position = 0x2
-}
-
-export enum CalibrationBits {
-	Zero = 0x0,
-	Pole = 0x1
 }
 
 export class SerialMessage extends Message {

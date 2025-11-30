@@ -7,7 +7,6 @@ constexpr static uint16_t quarterRevolution {fullRevolution / 4};
 
 static MovementController movementController {};
 static Mode               mode {Mode::Idle};  // Start in idle for UART compatibility
-static uint8_t            calibrationMode = nvm::options.polePairs ? 0 : 3;
 static uint32_t           lastTargetTime {0};
 static uint32_t           lastCommandReceived {0};
 static bool               poweredDown {mode == Mode::Sleep || mode == Mode::Idle};
@@ -108,7 +107,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			powerUp();
 			auto     time {util::getTime()};
 			uint16_t position = ((buffer.buffer[2] & 0x0f) << 8u) | buffer.buffer[3];
-			if (invertDirection) {
+			if (nvm::options.flags.inverted) {
 				position = fullRevolution - position;
 			}
 			movementController.extrapolate(time - lastTargetTime, position);
@@ -141,23 +140,17 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 			}
 			break;
 		}
-		case (Command::CommandType::Calibrate): {
-			mode = Mode::Calibrate;
-			powerUp();
-			calibrationMode = buffer.buffer[2];
-			break;
-		}
 		case (Command::CommandType::GetVariable): {
 			if (address == 0xf) {  // Get variable commands cannot be issued to all devices at once
 				break;
 			}
 			switch (static_cast<Command::Variable>(buffer.buffer[2])) {  // Switch variable
-				case (Command::Variable::Calibration): {
+				case (Command::Variable::Options): {
 					auto response = ReturnVariableResponse(
 					    deviceAddress,
 					    buffer.buffer[1] >> 8u,
-					    Command::Variable::Calibration,
-					    static_cast<uint8_t>((!!nvm::options.polePairs << 1u) | (!!nvm::options.phaseOffset))
+					    Command::Variable::Options,
+					    static_cast<uint8_t>(0x04 | (nvm::options.flags.inverted << 1u) | !!nvm::options.polePairs)
 					);
 					uart::send(response.getBuffer(), response.getLength());
 					break;
@@ -174,7 +167,7 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 				}
 				case (Command::Variable::Position): {
 					uint16_t position = currentAngle - movementController.getOffset();
-					if (invertDirection) {
+					if (nvm::options.flags.inverted) {
 						position = fullRevolution - position;
 					}
 					auto response = ReturnVariableResponse(
@@ -193,6 +186,22 @@ void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
 		}
 		case (Command::CommandType::SetVariable): {
 			switch (static_cast<Command::Variable>(buffer.buffer[2])) {  // Switch variable
+				case (Command::Variable::Options): {
+					if (buffer.buffer[3] & 0x01) {  // Start calibration
+						if (!nvm::options.polePairs) {
+							mode = Mode::Calibrate;
+							powerUp();
+						}
+					} else {  // Clear calibration
+						nvm::edit(&nvm::options.polePairs, static_cast<uint8_t>(0));
+					}
+					auto flags = nvm::options.flags;
+
+					flags.inverted = buffer.buffer[3] & 0x02;
+					nvm::edit(&nvm::options.flags, flags);
+					nvm::write();
+					break;
+				}
 				case (Command::Variable::Offset): {
 					movementController.setOffset((buffer.buffer[3] << 8u) | buffer.buffer[4]);
 					uint16_t offset = movementController.getOffset();
@@ -246,11 +255,11 @@ void applyTorque(uint16_t angle, uint8_t power, bool counterclockwise = true) {
 	// Calculate electrical angle from encoder reading
 	uint16_t eAngle = (nvm::options.polePairs * (fullRevolution + angle - nvm::options.phaseOffset)) % fullRevolution;
 	// Flip the angle if the motor polarity is reversed
-	uint16_t eAngleSigned = nvm::options.counterclockwise ? eAngle : fullRevolution - eAngle;
+	uint16_t eAngleSigned = nvm::options.flags.clockwise ? fullRevolution - eAngle : eAngle;
 
 	bldc::applyTorque(
-	    counterclockwise == nvm::options.counterclockwise ? eAngleSigned + quarterRevolution
-	                                                      : eAngleSigned + (fullRevolution - quarterRevolution),
+	    counterclockwise == nvm::options.flags.clockwise ? eAngleSigned + (fullRevolution - quarterRevolution)
+	                                                     : eAngleSigned + quarterRevolution,
 	    power
 	);
 }
@@ -264,7 +273,7 @@ void moveToTarget(uint16_t target) {
 	prevDAngle = dAngle;
 
 	// Calculating and applying torque
-	float torque = torqueFilter.process(dAngle * K[0][0] + velocity * K[0][1]);
+	float torque = torqueFilter.process(util::clamp(static_cast<int>(dAngle * K[0][0]), -255, 255) + velocity * K[0][1]);
 	float absTorque = util::min(
 	    static_cast<uint16_t>(util::abs(torque) + util::min(idleTorque, maxTorque)),
 	    static_cast<uint16_t>(maxTorque)
@@ -321,114 +330,110 @@ bool calibrate() {
 	bldc::applyTorque(0, 255);
 	uint16_t timeout {0};
 
-	if (calibrationMode) {
-		uint16_t samples {0};
-		/* Phase offset calibration
-		 *
-		 * The purpose of this step is to determine the angle between the
-		 * magnet's north pole (when encoder reads zero) and any of the motor phases
-		 * (when the motor's electrical angle is zero).
-		 *
-		 * This is achieved by moving the motor into the zero position
-		 * and reading the encoder value.
-		 */
-		do {
-			util::sleep(20);
-			phaseOffset = angle;
-			angle = measureAngle();
+	uint16_t samples {0};
+	/* Phase offset calibration
+	 *
+	 * The purpose of this step is to determine the angle between the
+	 * magnet's north pole (when encoder reads zero) and any of the motor phases
+	 * (when the motor's electrical angle is zero).
+	 *
+	 * This is achieved by moving the motor into the zero position
+	 * and reading the encoder value.
+	 */
+	do {
+		util::sleep(20);
+		phaseOffset = angle;
+		angle = measureAngle();
 
-			if (phaseOffset == angle) {
-				++samples;
-			} else {
-				samples = 0;
-			}
+		if (phaseOffset == angle) {
+			++samples;
+		} else {
+			samples = 0;
+		}
 
-			if (timeout++ > 100) {  // Quit after a while to avoid overheating the motor
-				bldc::applyTorque(0, 0);
-				return false;
-			}
-
-			WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
-		} while (samples < 10);  // Wait for a while to ensure the motor has settled
-		nvm::edit(&nvm::options.phaseOffset, phaseOffset);
-	}
-
-	uint16_t torqueAngle {0};
-
-	if (calibrationMode & (1 << static_cast<uint8_t>(Command::CalibrationMode::Pole))) {
-		uint8_t  polePairs {0};
-		uint16_t lastPoleAngle {angle};
-		int8_t   direction {0};
-		uint16_t checkpoint {angle};
-		timeout = 0;
-
-		/* Pole pair calibration
-		 *
-		 * The purpose of this step is to determine how many pole pairs the motor has.
-		 *
-		 * The motor is rotated through one full revolution and the zero phase
-		 * passes are counted (how many times the motor passes through the
-		 * zero electrical angle)
-		 */
-		do {
-			torqueAngle += 8;
-
-			if (torqueAngle >= fullRevolution) {  // One full electrical revolution, starting another one
-				torqueAngle = 0;
-				if (angle > lastPoleAngle) {
-					++direction;
-				} else {
-					--direction;
-				}
-				lastPoleAngle = angle;
-				++polePairs;
-			}
-
-			bldc::applyTorque(torqueAngle, 255);
-			angle = measureAngle();
-
-			if (util::abs(normalize(angle - checkpoint)) > fullRevolution / 32) {
-				checkpoint = angle;
-				timeout = 0;
-			}
-
-			if (timeout++ > 200) {  // Quit if the motor is stuck to avoid overheating
-				unwind(polePairs * fullRevolution + torqueAngle);
-				return false;
-			}
-
-			util::sleep(1);
-			WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
-		} while (util::abs(angle - phaseOffset) > 10 || !polePairs);
-
-		// Adding the last pole if we're close enough
-		polePairs += torqueAngle / halfRevolution;
-
-		/* Calibration check
-		 *
-		 * The purpose of this step is to determine if calibration
-		 * is successful and it can be saved
-		 *
-		 * During the check the motor has to track a moving target. If the
-		 * motor deviates from the target too much, the check is failed.
-		 *
-		 * The target moves one full revolution in the opposite direction
-		 * than that of pole pair calibration step to untangle the wires.
-		 */
-		auto calibrationCheck {checkCalibration(phaseOffset, polePairs, direction > 0)};
-		if (calibrationCheck) {
-			unwind(calibrationCheck);
+		if (timeout++ > 100) {  // Quit after a while to avoid overheating the motor
+			bldc::applyTorque(0, 0);
 			return false;
 		}
 
-		// Saving calibration
-		nvm::edit(&nvm::options.polePairs, polePairs);
-		nvm::edit(&nvm::options.counterclockwise, direction > 0);
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
+	} while (samples < 10);  // Wait for a while to ensure the motor has settled
+	nvm::edit(&nvm::options.phaseOffset, phaseOffset);
+
+	uint16_t torqueAngle {0};
+
+	uint8_t  polePairs {0};
+	uint16_t lastPoleAngle {angle};
+	int8_t   direction {0};
+	uint16_t checkpoint {angle};
+	timeout = 0;
+
+	/* Pole pair calibration
+	 *
+	 * The purpose of this step is to determine how many pole pairs the motor has.
+	 *
+	 * The motor is rotated through one full revolution and the zero phase
+	 * passes are counted (how many times the motor passes through the
+	 * zero electrical angle)
+	 */
+	do {
+		torqueAngle += 8;
+
+		if (torqueAngle >= fullRevolution) {  // One full electrical revolution, starting another one
+			torqueAngle = 0;
+			if (angle > lastPoleAngle) {
+				++direction;
+			} else {
+				--direction;
+			}
+			lastPoleAngle = angle;
+			++polePairs;
+		}
+
+		bldc::applyTorque(torqueAngle, 255);
+		angle = measureAngle();
+
+		if (util::abs(normalize(angle - checkpoint)) > fullRevolution / 32) {
+			checkpoint = angle;
+			timeout = 0;
+		}
+
+		if (timeout++ > 200) {  // Quit if the motor is stuck to avoid overheating
+			unwind(polePairs * fullRevolution + torqueAngle);
+			return false;
+		}
+
+		util::sleep(1);
+		WDT_REGS->WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
+	} while (util::abs(angle - phaseOffset) > 10 || !polePairs);
+
+	// Adding the last pole if we're close enough
+	polePairs += torqueAngle / halfRevolution;
+
+	/* Calibration check
+	 *
+	 * The purpose of this step is to determine if calibration
+	 * is successful and it can be saved
+	 *
+	 * During the check the motor has to track a moving target. If the
+	 * motor deviates from the target too much, the check is failed.
+	 *
+	 * The target moves one full revolution in the opposite direction
+	 * than that of pole pair calibration step to untangle the wires.
+	 */
+	auto calibrationCheck {checkCalibration(phaseOffset, polePairs, direction > 0)};
+	if (calibrationCheck) {
+		unwind(calibrationCheck);
+		return false;
 	}
 
-	if (calibrationMode) {
-		nvm::write();
-	}
+	// Saving calibration
+	auto flags = nvm::options.flags;
+	flags.clockwise = direction < 0;
+
+	nvm::edit(&nvm::options.polePairs, polePairs);
+	nvm::edit(&nvm::options.flags, flags);
+	nvm::write();
 
 	bldc::applyTorque(0, 0);
 	return true;

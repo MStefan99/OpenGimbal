@@ -1,26 +1,31 @@
 import {BitwiseRegister} from './BitwiseRegister';
 import {
 	MotorResponse,
-	ReturnCalibrationVariableResponse,
+	ReturnOptionsVariableResponse,
 	ReturnOffsetVariableResponse,
 	ReturnPositionVariableResponse
 } from './serial/MotorResponse';
 import {
 	AdjustOffsetCommand,
-	CalibrationCommand,
 	GetVariableCommand,
 	HapticCommand,
 	IdleCommand,
 	MotorCommand,
 	MoveCommand,
 	SetOffsetVariableCommand,
+	SetOptionsVariableCommand,
 	SleepCommand,
 	ToneCommand,
 	WakeCommand
 } from './serial/MotorCommand';
 import {ISerialInterface} from './serial/SerialInterface';
-import {resolveComponent} from 'vue';
-import {CalibrationBits, MotorVariable} from './serial/SerialMessage';
+import {MotorVariable} from './serial/SerialMessage';
+
+export type MotorOptions = {
+	calibrated: boolean;
+	inverted: boolean;
+	highVoltageCompatible: boolean;
+};
 
 export interface IMotor {
 	get address(): number;
@@ -63,9 +68,9 @@ export interface IMotor {
 	 */
 	adjustOffset(targetPosition?: number): Promise<void>;
 
-	calibrate(mode?: BitwiseRegister<CalibrationBits>): Promise<void>;
+	setOptions(calibrated?: boolean, inverted?: boolean): Promise<void>;
 
-	getCalibration(): Promise<BitwiseRegister<CalibrationBits>>;
+	getOptions(): Promise<MotorOptions>;
 
 	getOffset(): Promise<number>;
 
@@ -135,19 +140,25 @@ export class Motor implements IMotor {
 		return this._hardwareInterface.send(new AdjustOffsetCommand(0, this._address, targetPosition));
 	}
 
-	calibrate(
-		mode: BitwiseRegister<CalibrationBits> = new BitwiseRegister<CalibrationBits>().set(
-			CalibrationBits.Zero
-		)
-	): Promise<void> {
-		return this._hardwareInterface.send(new CalibrationCommand(0, this._address, mode));
+	setOptions(calibrated?: boolean, inverted?: boolean): Promise<void> {
+		return this._hardwareInterface.send(
+			new SetOptionsVariableCommand(0, this._address, calibrated, inverted)
+		);
 	}
 
-	getCalibration(): Promise<BitwiseRegister<CalibrationBits>> {
-		return new Promise<BitwiseRegister<CalibrationBits>>((resolve, reject) =>
+	getOptions(): Promise<MotorOptions> {
+		return new Promise<MotorOptions>((resolve, reject) =>
 			this._hardwareInterface
-				.request(new GetVariableCommand(0, this._address, MotorVariable.Calibration))
-				.then((res) => resolve((res as ReturnCalibrationVariableResponse).calibrationMode))
+				.request(new GetVariableCommand(0, this._address, MotorVariable.Options))
+				.then((res) => {
+					const options = res as ReturnOptionsVariableResponse;
+
+					return resolve({
+						calibrated: options.calibrated,
+						inverted: options.inverted,
+						highVoltageCompatible: options.highVoltageCompatible
+					});
+				})
 				.catch((err) => reject(err))
 		);
 	}
