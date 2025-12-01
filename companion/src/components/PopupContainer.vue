@@ -3,26 +3,23 @@
 	.alerts
 		TransitionGroup(name="popup")
 			.alert(v-for="alert in activeAlerts" :key="alert.title" :class="alert.type")
-				.title(:class="alert.type") {{alert.title}}
+				.title {{alert.title}}
 				.details {{alert.details}}
 	Transition(name="popup")
 		.confirm(v-if="activeConfirm" :class="activeConfirm.confirm.type")
 			.title {{activeConfirm.confirm.title}}
 			.details {{activeConfirm.confirm.details}}
 			.mt-4
-				button.mr-4(@click="resolveConfirm(true)" :class="activeConfirm.confirm.type + '-outline'") Yes
+				button.mr-4(@click="resolveConfirm(true)") Yes
 				button(@click="resolveConfirm(false)") No
 	Transition(name="popup")
 		.prompt(v-if="activePrompt" :class="activePrompt.prompt.type")
 			.title {{activePrompt.prompt.title}}
 			.details {{activePrompt.prompt.details}}
 			form.flex.mt-4(@submit.prevent="resolvePrompt()")
-				input.mr-4.flex-grow(
-					type="text"
-					v-model="promptValue"
-					:class="activePrompt.prompt.type + '-outline'")
+				input.mr-4.flex-grow(type="text" v-model="promptValue")
 				button.mr-4(type="button" @click="rejectPrompt()") Cancel
-				button(type="submit" :class="activePrompt.prompt.type") Submit
+				button(type="submit") Submit
 </template>
 
 <script setup lang="ts">
@@ -47,75 +44,85 @@ function rejectPrompt(): void {
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .popups {
-	position: fixed;
-	left: 0;
-	right: 0;
-	top: 5vh;
-}
-
-.alerts {
-	position: absolute;
-	right: 5vw;
-	margin: 2em;
+	@apply mx-4 fixed left-0 right-0 top-20 pointer-events-none;
 }
 
 .confirm,
 .prompt {
-	position: relative;
-	width: min(768px, 90vw);
-	margin: 0 auto;
-	@apply shadow-xl;
+	@apply relative max-w-full mx-auto shadow-xl pointer-events-auto;
 }
 
 .alert,
 .confirm,
 .prompt {
-	border: 6px solid var(--color-accent);
-	color: var(--color-accent);
-	background-color: var(--color-popup);
-	-webkit-backdrop-filter: blur(1em);
-	backdrop-filter: blur(1em);
-	border-radius: 1ch;
-	padding: 1em;
-	margin-bottom: 2em;
+	@apply max-w-2xl mx-auto p-4 mb-4 border font-semibold rounded-xl right-0 m-4 shadow-xl backdrop-blur-lg
+	text-accent dark:text-accent-bright border-accent/50 bg-accent/5 dark:bg-accent/30;
 }
 
 .title {
-	font-weight: bold;
-	@apply text-xl mb-6;
-}
-
-.green {
-	border-color: var(--color-green);
-	color: var(--color-green);
-}
-
-.yellow {
-	border-color: var(--color-yellow);
-	color: var(--color-yellow);
+	@apply text-xl mb-6 font-bold;
 }
 
 .red {
-	border-color: var(--color-red);
-	color: var(--color-red);
+	@apply text-red-800 dark:text-red-300 border-red-800/50 bg-red-800/5 dark:bg-red-800/30;
+}
+
+.yellow {
+	@apply text-yellow-800 dark:text-yellow-300 border-yellow-800/50 bg-yellow-800/5 dark:bg-yellow-800/30;
+}
+
+.green {
+	@apply text-green-800 dark:text-green-300 border-green-800/50 bg-green-800/5 dark:bg-green-800/30;
+}
+
+button {
+	@apply hover:bg-accent-bright dark:hover:bg-accent-bright;
+}
+
+.red button {
+	@apply text-red-800 dark:text-red-300 border border-red-800 dark:border-red-300 transition-colors;
+}
+
+.red button:hover {
+	@apply bg-red-800 dark:bg-red-300 text-zinc-50;
+}
+
+.yellow button {
+	@apply text-yellow-800 dark:text-yellow-300 border border-yellow-800 dark:border-yellow-300 transition-colors;
+}
+
+.yellow button:hover {
+	@apply bg-yellow-800 dark:bg-yellow-300 text-zinc-50;
+}
+
+.green button {
+	@apply text-green-800 dark:text-green-300 border border-green-800 dark:border-green-300 transition-colors;
+}
+
+.green button:hover {
+	@apply bg-green-800 dark:bg-green-300 text-zinc-50;
 }
 
 form input {
-	display: inline-block;
+	@apply inline-block font-medium w-0 bg-transparent grow;
 }
 
-.move,
-.popup-enter-active,
-.popup-leave-active {
-	transition: all 0.5s ease;
+.red form input {
+	@apply border-red-800 dark:border-red-300 outline-red-800 dark:outline-red-300;
 }
 
-.popup-enter-from,
-.popup-leave-to {
-	transform: translateY(-50%);
-	opacity: 0;
+.yellow form input {
+	@apply border-yellow-800 dark:border-yellow-300 outline-yellow-800 dark:outline-yellow-300;
+}
+
+.green form input {
+	@apply border-green-800 dark:border-green-300 outline-green-800 dark:outline-green-300;
+}
+
+input:focus {
+	@apply outline-2;
 }
 </style>

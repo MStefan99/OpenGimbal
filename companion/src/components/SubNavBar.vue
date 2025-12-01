@@ -10,37 +10,13 @@
 <script setup lang="ts"></script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
+
+.subnavbar-layout {
+	@apply my-4;
+}
 
 .subnavbar {
-	@apply m-2;
-	color: var(--color-background);
-}
-
-.subnavbar nav {
-	@apply flex flex-row flex-wrap my-2 rounded-lg shadow-md;
-	color: var(--color-white);
-	background-color: var(--color-accent);
-	border-top: 1px solid var(--color-background);
-}
-
-.subnavbar nav :deep(a:hover) {
-	background-color: var(--color-background);
-	color: var(--color-accent);
-}
-
-.subnavbar nav :deep(a.router-link-active) {
-	background-color: var(--color-background);
-	color: var(--color-accent);
-}
-
-.subnavbar nav :deep(a) {
-	@apply m-2 px-2 rounded block transition-colors;
-}
-
-@media screen and (min-width: 768px) {
-	nav {
-		font-size: 1.2em;
-	}
+	@apply flex flex-wrap items-center py-2 mb-4 px-4 gap-4 bg-accent text-white rounded-xl;
 }
 </style>

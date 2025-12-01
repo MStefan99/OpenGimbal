@@ -1,6 +1,6 @@
 <template lang="pug">
-.popup-wrapper(@click.self="$emit('close')")
-	.device-viewer.usb.popup(v-if="device instanceof Gimbal")
+.viewer-wrapper(@click.self="$emit('close')")
+	.device-viewer(v-if="device instanceof Gimbal")
 		h2.text-xl Device information
 		p Vendor:
 			|
@@ -13,7 +13,7 @@
 		p Serial number:
 			|
 			|
-			b {{device.serialNumber}}
+			b.wrap-break-word {{device.serialNumber}}
 		p Device version:
 			|
 			|
@@ -22,7 +22,7 @@
 			|
 			|
 			b {{device.usbVersionMajor}}.{{device.usbVersionMinor}}.{{device.usbVersionSubminor}}
-	.device-viewer.serial.popup(v-else)
+	.device-viewer(v-else)
 		h2.text-xl Device information
 		p Vendor ID:
 			|
@@ -43,24 +43,17 @@ defineEmits<{(e: 'close'): void}>();
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
-.popup-wrapper {
-	background-color: unset;
-}
-
-.popup {
-	position: absolute;
+.viewer-wrapper {
+	@apply fixed p-4 left-0 top-0 right-0 bottom-0;
 }
 
 .device-viewer {
-	color: var(--color-foreground);
-	background-color: var(--color-background);
+	@apply relative card mx-auto max-w-fit top-1/2 -translate-y-1/2 shadow-xl backdrop-blur-lg dark:border-zinc-500 bg-white/70  dark:bg-zinc-500/60;
 }
 
-@media screen and (prefers-color-scheme: dark) {
-	.device-viewer {
-		border: 1px solid var(--color-foreground);
-	}
+b {
+	@apply text-accent dark:text-accent-bright;
 }
 </style>

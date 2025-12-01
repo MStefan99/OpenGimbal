@@ -24,23 +24,14 @@ const percentage = computed(() => scale(props.value, props.min, props.max, 0, 10
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .meter {
-	position: relative;
-	height: 1.5em;
-	border-radius: 500px;
-	overflow: hidden;
-	background-color: var(--color-background);
-	border: 1px solid var(--color-accent);
+	@apply relative h-4 rounded-full overflow-hidden border-accent;
 }
 
 .meter .meter-bar {
-	position: absolute;
-	left: 0;
+	@apply absolute left-0 h-full bg-accent transition-all;
 	width: v-bind(percentage);
-	height: 100%;
-	background-color: var(--color-accent);
-	transition: inline-size 0.1s linear;
 }
 </style>

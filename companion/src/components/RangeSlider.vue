@@ -67,13 +67,11 @@ function formatShortValue(value: number): string {
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .bar {
-	position: relative;
-	margin: auto -8px;
-	transition: width 0.5s ease;
-	--width: calc(4ch + 16px);
+	@apply relative my-auto -mx-4 transition-all;
+	--width: calc(4ch + var(--spacing) * 8);
 	--height: 1.2em;
 	width: var(--width);
 }
@@ -88,75 +86,58 @@ function formatShortValue(value: number): string {
 }
 
 .bar:after {
-	content: '';
-	position: absolute;
-	pointer-events: none;
-	top: 0;
-	bottom: 0;
-	left: 8px;
-	right: 8px;
-	border: 1px solid var(--color-accent);
-	border-radius: 4px;
+	@apply content-[''] absolute pointer-events-none top-0 bottom-0 left-4 right-4 border border-accent rounded;
 }
 
 .bar input[type='range'] {
-	vertical-align: middle;
+	@apply align-middle opacity-0 transition-all;
 	height: var(--height);
 	width: var(--width);
-	opacity: 0;
-	transition: height 0.5s ease;
 }
 
 .track {
-	border-radius: 4px;
-	position: absolute;
-	pointer-events: none;
-	left: 8px;
-	bottom: 0;
-	width: max(8px, calc((100% - 16px) * v-bind(percentage)));
-	height: 100%;
-	background-color: var(--color-accent);
-	transition: height 0.5s ease;
+	@apply absolute rounded pointer-events-none left-4 bottom-0 h-full bg-accent;
+	width: max(8px, calc((100% - var(--spacing) * 8) * v-bind(percentage)));
 }
 
 .slider.red .bar:after {
-	@apply border-red;
+	@apply border-red-500;
 }
 
 .slider.red .track {
-	@apply bg-red;
+	@apply bg-red-500;
 }
 
 .slider.orange .bar:after {
-	@apply border-orange;
+	@apply border-orange-500;
 }
 
 .slider.orange .track {
-	@apply bg-orange;
+	@apply bg-orange-500;
 }
 
 .slider.yellow .bar:after {
-	@apply border-yellow;
+	@apply border-yellow-500;
 }
 
 .slider.yellow .track {
-	@apply bg-yellow;
+	@apply bg-yellow-500;
 }
 
 .slider.green .bar:after {
-	@apply border-green;
+	@apply border-green-500;
 }
 
 .slider.green .track {
-	@apply bg-green;
+	@apply bg-green-500;
 }
 
 .slider.blue .bar:after {
-	@apply border-blue;
+	@apply border-blue-500;
 }
 
 .slider.blue .track {
-	@apply bg-blue;
+	@apply bg-blue-500;
 }
 
 input:disabled + .track {
@@ -164,13 +145,7 @@ input:disabled + .track {
 }
 
 .value {
-	position: absolute;
-	pointer-events: none;
-	font-weight: bold;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	transition: opacity 0.2s ease;
+	@apply absolute font-bold pointer-events-none left-1/2 top-1/2 -translate-1/2 transition-all;
 }
 
 .bar:not(:hover) .value.long,

@@ -1,405 +1,51 @@
 @import 'tailwindcss';
 
 @theme {
-	--color-white: white;
-	--color-gray: #555;
-	--color-black: black;
-
-	--color-muted: #888;
-	--color-light: #ccc;
-
 	--color-accent: #6e5e9a;
 	--color-accent-bright: #9e8bd9;
-
-	--color-red: #b43114;
-	--color-orange: #8f6a09;
-	--color-yellow: #727706;
-	--color-green: #1c7c15;
-	--color-blue: #5170ac;
-
-	--color-red-bright: #d75662;
-	--color-orange-bright: #ffb27a;
-	--color-yellow-bright: #fde570;
-	--color-green-bright: #6abe60;
-	--color-blue-bright: #90b3ff;
-
-	--color-overlay: #0008;
-	--color-popup: #fff8;
-	--color-shadow: #0001;
 }
 
 html {
-	font-family: sans-serif;
-	scroll-behavior: smooth;
-
-	--color-white: white;
-	--color-gray: #555;
-	--color-black: black;
-
-	--color-background: var(--color-white);
-	--color-foreground: var(--color-black);
-	--color-muted: #888;
-	--color-light: #ccc;
-
-	--color-accent: #6e5e9a;
-	--color-accent-bright: #9e8bd9;
-
-	--color-red: #b43114;
-	--color-orange: #8f6a09;
-	--color-yellow: #727706;
-	--color-green: #1c7c15;
-	--color-blue: #5170ac;
-
-	--color-red-bright: #d75662;
-	--color-orange-bright: #ffb27a;
-	--color-yellow-bright: #fde570;
-	--color-green-bright: #6abe60;
-	--color-blue-bright: #90b3ff;
-
-	--color-overlay: #0008;
-	--color-popup: #fff8;
-	--color-shadow: #0001;
-
-	color: var(--color-foreground);
-	background-color: var(--color-background);
+	@apply font-sans scroll-smooth h-full bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100;
 }
 
-@media (prefers-color-scheme: dark) {
-	html {
-		--color-background: var(--color-black);
-		--color-foreground: #ccc;
-		--color-muted: #666;
-		--color-light: #444;
+body {
+	@apply h-full;
+}
 
-		--color-overlay: #000a;
-		--color-popup: #0008;
-		--color-shadow: #0001;
+@utility card {
+	@apply rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 shadow-md;
+}
+
+@layer base {
+	#app {
+		@apply p-4 flex flex-col h-full;
+	}
+
+	main {
+		@apply grow;
+	}
+
+	footer {
+		@apply flex gap-4 justify-between rounded-xl mt-4 py-2 px-4 font-semibold shadow-sm bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400;
 	}
 }
 
-/* Utility styles */
-a {
-	color: inherit;
-	text-decoration: none;
+@layer components {
+	button,
+	input[type='text'] {
+		@apply py-2 px-4 cursor-pointer rounded-xl font-semibold text-accent dark:text-accent-bright border border-accent dark:border-accent-bright transition-colors;
+	}
+
+	button:hover {
+		@apply bg-accent dark:bg-accent-bright outline-accent dark:outline-accent-bright text-zinc-50;
+	}
+
+	input[type='text']:focus {
+		@apply outline-2;
+	}
 }
 
-.hidden {
-	display: none;
-}
-
-.bold {
-	font-weight: bold;
-}
-
-.clickable {
-	cursor: pointer;
-	border-bottom: 0 solid;
-	display: inline-block;
-}
-
-.card {
-	border-radius: 1rem;
-	padding: 1rem 2ch;
-	border: 1px solid var(--color-shadow);
-	box-shadow: 0 0.25rem 0.5rem var(--color-shadow);
-}
-
-.card.accent {
-	@apply text-white bg-accent;
-}
-
-/* Forms */
-textarea {
-	display: block;
-}
-
-input {
-	background-color: inherit;
-}
-
-input,
-button,
-.btn {
-	transition:
-		color 0.1s ease,
-		background-color 0.1s ease;
-}
-
-input,
-textarea,
-button,
-.btn,
-input[type='radio'] + label {
-	@apply rounded-xl shadow;
-	border: 0.1rem solid var(--color-accent);
-	color: var(--color-foreground);
-	background-color: var(--color-background);
-	padding: 0.5rem 1rem;
-	transition:
-		transform 0.1s ease,
-		color 0.1s ease,
-		background-color 0.1s ease;
-}
-
-button:active,
-.btn:active {
-	transform: scale(92%);
-}
-
-input:not([type='checkbox']):active,
-textarea:active,
-button.w-full:active,
-.btn.w-full:active {
-	transform: scale(98.5%);
-}
-
-input.w-full,
-button.w-full,
-textarea.w-full {
-	display: inline-block;
-}
-
-input[type='button'],
-input[type='submit'],
-button,
-.btn,
-input[type='radio'] + label {
-	color: var(--color-accent);
-	user-select: none;
-}
-
-button:not([disabled]):not(:active),
-.btn:not([disabled]):not(:active),
-input[type='radio']:not([disabled]):not(:active) + label {
-	@apply cursor-pointer;
-}
-
-button:not([disabled]):active,
-.btn:not([disabled]):active,
-input[type='radio']:not([disabled]):active + label {
-	@apply shadow-inner;
-}
-
-button:not([disabled]):hover,
-.btn:not([disabled]):hover,
-input[type='radio']:not([disabled]):hover + label {
-	background-color: var(--color-accent);
-	color: var(--color-background);
-}
-
-button[disabled],
-.btn[disabled],
-input[type='radio'][disabled] + label {
-	@apply text-muted bg-light border-muted cursor-not-allowed;
-}
-
-input[type='file'] {
-	display: none;
-}
-
-button.green,
-.btn.green {
-	color: var(--color-green);
-	border-color: var(--color-green);
-}
-
-button.green:not([disabled]):hover,
-.btn.green:not([disabled]):hover {
-	background-color: var(--color-green);
-}
-
-button.yellow,
-.btn.yellow {
-	color: var(--color-yellow);
-	border-color: var(--color-yellow);
-}
-
-button.yellow:not([disabled]):hover,
-.btn.yellow:not([disabled]):hover {
-	background-color: var(--color-yellow);
-}
-
-button.red,
-.btn.red {
-	color: var(--color-red);
-	border-color: var(--color-red);
-}
-
-button.red:not([disabled]):hover,
-.btn.red:not([disabled]):hover {
-	background-color: var(--color-red);
-}
-
-.fab,
-.fab:not([disabled]):not(:hover) {
-	position: sticky;
-	bottom: 2rem;
-	left: 100%;
-	margin: 1rem 2rem 0 0;
-	background-color: var(--color-accent);
-	color: var(--color-white);
-	border-radius: 20rem;
-	vertical-align: bottom;
-}
-
-input[type='checkbox'] {
-	appearance: none;
-	width: 6ch;
-	padding: 0.2rem;
-	line-height: 0;
-	--handle-size: 2ch;
-	@apply mb-1;
-}
-
-input[type='checkbox']:active {
-	--handle-size: 100%;
-}
-
-input[type='checkbox']:before {
-	position: relative;
-	vertical-align: middle;
-	display: inline-block;
-	content: '';
-	height: 0.75rem;
-	width: var(--handle-size);
-	left: 0;
-	background-color: var(--color-red-bright);
-	border-radius: 10px;
-	transition:
-		left 0.2s cubic-bezier(0, 0, 0, 1.3),
-		width 0.2s cubic-bezier(0, 0, 0, 1.3),
-		background-color 0.1s ease;
-}
-
-input[type='checkbox']:checked:before {
-	left: calc(100% - var(--handle-size));
-	background-color: var(--color-green-bright);
-}
-
-input[type='checkbox']:active:before {
-	background-color: var(--color-yellow-bright);
-}
-
-input:not([type='checkbox']).red,
-textarea.red,
-select.red,
-button.red,
-.btn.red {
-	@apply text-rose-700 border-rose-700;
-}
-
-button.red:hover,
-.btn.red:hover {
-	@apply text-white bg-rose-700;
-}
-
-button,
-input:not([type='range']) {
-	padding: 0.5em 1.5ch;
-	border-radius: 8px;
-}
-
-button.accent:not(.outline),
-input.accent:not(.outline) {
-	@apply bg-accent text-white;
-}
-
-button.red:not(.outline),
-input.red:not(.outline) {
-	@apply bg-red text-white;
-}
-
-button.orange:not(.outline),
-input.orange:not(.outline) {
-	@apply bg-orange text-white;
-}
-
-button.yellow:not(.outline),
-input.yellow:not(.outline) {
-	@apply bg-yellow text-white;
-}
-
-button.green:not(.outline),
-input.green:not(.outline) {
-	@apply bg-green text-white;
-}
-
-button.blue:not(.outline),
-input.blue:not(.outline) {
-	@apply bg-blue text-white;
-}
-
-/* Main styles */
-body {
-	margin: 0;
-	min-height: 100vh;
-}
-
-#app {
-	display: flex;
-	flex-flow: column nowrap;
-	justify-content: space-between;
-	min-height: inherit;
-}
-
-main {
-	flex-grow: 1;
-}
-
-.popup-enter-active,
-.popup-leave-active {
-	transition:
-		transform 0.2s cubic-bezier(0, 0.7, 0.8, 0.9),
-		opacity 0.2s cubic-bezier(0, 0.7, 0.8, 0.9);
-}
-
-.popup-enter-from,
-.popup-leave-to {
-	transform: scale(0.95);
-	opacity: 0;
-}
-
-footer {
-	display: flex;
-	flex-flow: row wrap;
-	justify-content: space-between;
-	padding: 1rem min(2rem, 5%);
-	background-color: var(--color-shadow);
-	@apply text-muted;
-}
-
-/* Popups */
-.popup-wrapper {
-	position: fixed;
-	left: 0;
-	top: 0;
-	right: 0;
-	min-height: 100vh;
-	background-color: var(--color-overlay);
-	box-shadow: 0 0 3rem var(--color-shadow);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
-}
-
-.popup-wrapper .popup-wrapper {
-	background-color: unset;
-	-webkit-backdrop-filter: unset;
-	backdrop-filter: unset;
-}
-
-.popup-wrapper .popup {
-	position: relative;
-	left: 50%;
-	top: 50%;
-	max-width: min(768px, 90vw);
-	transform: translate(-50%, -50%);
-	padding: 4rem min(4rem, 10%);
-	border-radius: 1rem;
-	background-color: var(--color-overlay);
-	box-shadow: 0 1rem 3rem var(--color-shadow);
-}
-
-/* Default transition */
 .v-enter-active,
 .v-leave-active {
 	transition: opacity 0.2s ease;

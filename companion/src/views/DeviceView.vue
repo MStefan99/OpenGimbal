@@ -48,7 +48,7 @@ onUnmounted(() => clearInterval(intervalHandle));
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .device {
 	@apply m-4 flex flex-col;

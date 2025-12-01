@@ -20,7 +20,7 @@ const props = withDefaults(
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .status-indicator {
 	@apply inline;
@@ -31,10 +31,10 @@ const props = withDefaults(
 }
 
 .status.inactive {
-	@apply bg-red;
+	@apply bg-red-500;
 }
 
 .status.active {
-	@apply bg-green;
+	@apply bg-green-500;
 }
 </style>

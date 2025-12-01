@@ -3,17 +3,17 @@ p.text-red.font-bold.m-4(v-if="!(connectedDevice instanceof Gimbal)").
 	This tool only works with a connected gimbal.
 .control.w-fit.max-w-screen-lg.my-4.mx-auto.px-4(v-else)
 	JoystickControl.mx-auto.mb-4(@move="update" ref="joystick")
-	p.text-accent.font-bold.border-b.border-accent.text-center Power
+	p Power
 	.flex.flex-row.justify-evenly.gap-4.my-4
 		button(@click="connectedDevice.enable()") Turn on
 		button(@click="connectedDevice.disable()") Turn off
-	p.text-accent.font-bold.border-b.border-accent.text-center Mode
+	p Mode
 	.flex.flex-row.justify-evenly.gap-4.my-4
 		button(@click="setMode(GimbalMode.Horizon)") Horizon
 		button(@click="setMode(GimbalMode.Follow)") Follow
 		button(@click="setMode(GimbalMode.FPV)") FPV
 		button(@click="setMode(GimbalMode.Tilt)") Tilt
-	p.text-accent.font-bold.border-b.border-accent.text-center Move
+	p Move
 	.flex.flex-row.justify-evenly.gap-4.my-4
 		button(@click="reCenter()") Re-center
 		button(@click="rotate()") Rotate
@@ -103,4 +103,10 @@ function flip(): Promise<void> {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+@reference '../assets/style.css';
+
+p {
+	@apply text-accent dark:text-accent-bright font-bold border-b border-accent dark:border-accent-bright text-center;
+}
+</style>

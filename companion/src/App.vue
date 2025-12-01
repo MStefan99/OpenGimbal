@@ -2,9 +2,7 @@
 NavBar
 main
 	RouterView(v-if="connectedDevice")
-	.no-device(v-else)
-		p.mb-4 Start by clicking here ↑
-		p Connect a device to start using OpenGimbal Companion
+	p.font-semibold.text-lg.text-zinc-500(v-else class="dark:text-zinc-400") Connect a device to start using OpenGimbal Companion
 	PopupContainer
 
 footer
@@ -72,14 +70,4 @@ document.addEventListener('keydown', (event: KeyboardEvent) => {
 });
 </script>
 
-<style>
-@import './assets/style.css';
-
-.no-device {
-	@apply flex flex-row-reverse flex-wrap justify-between;
-	margin: 16px;
-	color: var(--color-accent);
-	font-weight: bold;
-	font-size: 1.2em;
-}
-</style>
+<style scoped></style>

@@ -116,31 +116,18 @@ onUnmounted(() => document.removeEventListener('mouseup', upListener));
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
 .joystick {
 	width: min(100%, 320px);
-	height: auto;
-	aspect-ratio: 1/1;
-	border-radius: 160px;
-	border: 0.1rem solid var(--color-accent);
-	position: relative;
+	@apply relative aspect-square rounded-full border border-accent dark:border-accent-bright;
 }
 
 .joystick-control {
-	width: 64px;
-	height: 64px;
-	background-color: var(--color-accent);
-	transform: translate(-50%, -50%);
-	border-radius: 32px;
-	left: 50%;
-	top: 50%;
-	position: relative;
+	@apply relative w-20 h-20 rounded-full bg-accent dark:bg-accent-bright left-1/2 top-1/2 -translate-1/2;
 }
 
 .joystick-control.centering {
-	transition:
-		left 0.2s ease,
-		top 0.2s ease;
+	@apply transition-all;
 }
 </style>

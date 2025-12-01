@@ -1,5 +1,5 @@
 <template lang="pug">
-.motors.max-w-screen-lg.my-4.mx-auto.px-4
+.motors.max-w-screen-lg.mx-auto
 	datalist#ranges
 		option(value="0")
 		option(value="1024")
@@ -13,10 +13,10 @@
 	.flex.flex-wrap.gap-2
 		.motor.min-w-48.card(v-for="motor in motors" :key="motor.address")
 			.border-b.border-accent.pt-2
-				p.text-accent.text-lg(v-if="motor.address < 15") Motor {{motor.address}}
-				p.text-accent.text-lg(v-else) All motors
+				p.accent.text-lg(v-if="motor.address < 15") Motor {{motor.address}}
+				p.accent.text-lg(v-else) All motors
 			.border-b.border-accent.pt-2
-				p.text-accent.font-bold Movement
+				p.accent.font-bold Movement
 				p Position
 				RangeSlider.mb-2(
 					:min="extendedRanges ? -4096 : -2048"
@@ -33,7 +33,7 @@
 					@update:model-value="motor.move(positions[motor.address], torques[motor.address])")
 				button.block.mb-2(@click="motor.move(positions[motor.address], torques[motor.address])") Move
 			.border-b.border-accent.pt-2
-				p.text-accent.font-bold Haptic
+				p.accent.font-bold Haptic
 				p Haptic intensity
 				RangeSlider.mb-2(:min="0" :max="15" :scale="15" v-model="hapticIntensities[motor.address]")
 				p Haptic duration
@@ -45,7 +45,7 @@
 				button.mb-2(
 					@click="motor.haptic(hapticIntensities[motor.address], hapticDurations[motor.address])") Start
 			.border-b.border-accent.pt-2
-				p.text-accent.font-bold Sound
+				p.accent.font-bold Sound
 				p Tone frequency
 				RangeSlider.mb-2(
 					:min="50"
@@ -55,7 +55,7 @@
 					@update:model-value="motor.tone(toneFrequencies[motor.address])")
 				button.block.mb-2(@click="toneFrequencies[motor.address] = 25000; motor.silent()") Silent
 			.border-b.border-accent.pt-2
-				p.text-accent.font-bold Setup
+				p.accent.font-bold Setup
 				p Offset
 				RangeSlider.mb-2(
 					:min="0"
@@ -65,13 +65,13 @@
 					@update:model-value="motor.setOffset(offsets[motor.address])")
 				button.mb-2(@click="adjustOffset(motor)") Adjust offset
 			.border-b.border-accent.pt-2
-				p.text-accent.font-bold Power
+				p.accent.font-bold Power
 				button.block.mb-2(@click="motor.disable()") Disable
 				button.block.mb-2(@click="motor.idle()") Idle
 				button.block.mb-2(@click="motor.sleep()") Sleep
 				button.block.mb-2(@click="motor.wake()") Wake
 			.pt-2
-				p.text-accent.font-bold Properties
+				p.accent.font-bold Properties
 				template(v-if="motor.address < 15")
 					.mb-2
 						span Calibrated
@@ -95,9 +95,9 @@
 								:value="options[motor.address].highVoltageCompatible"
 								active-text="Yes"
 								inactive-text="No")
-					p.text-zinc-500 Click options to toggle them
-				p.text-zinc-500(v-else) See individual motors
-		p.text-zinc-600(v-if="enumerating") Looking for motors, please wait...
+					p.text-zinc-400 Click options to toggle them
+				p.text-zinc-400(v-else) See individual motors
+		p(v-if="enumerating") Looking for motors, please wait...
 		p.text-red.bold(v-else-if="!motors.length") No motors found. Please check the connection and try again.
 </template>
 
@@ -229,4 +229,10 @@ async function invert(motor: IMotor): Promise<void> {
 onMounted(enumerate);
 </script>
 
-<style scoped></style>
+<style scoped>
+@reference '../assets/style.css';
+
+.accent {
+	@apply text-accent dark:text-accent-bright border-accent dark:border-accent-bright;
+}
+</style>

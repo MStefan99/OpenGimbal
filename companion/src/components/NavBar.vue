@@ -1,17 +1,16 @@
 <template lang="pug">
 .navbar
-	#title-bar
-		a#title(href="..") OpenGimbal
-		nav
-			RouterLink(
-				:to="{name: 'control'}"
-				v-if="connectedDevice instanceof Gimbal || appState.developerMode") Control
-			RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline
-			RouterLink(:to="{name: 'motors'}") Motors
-			RouterLink(:to="{name: 'developer'}" v-if="appState.developerMode") Developer
-		label#device-status.connected(v-if="connectedDevice" for="device-toggle") Connected
-		label#device-status(v-else for="device-toggle") Not connected
-		input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")
+	a.title(href="..") OpenGimbal
+	nav(v-if="connectedDevice")
+		RouterLink(:to="{name: 'control'}" v-if="connectedDevice instanceof Gimbal") Control
+		RouterLink(:to="{name: 'motors'}") Motors
+		RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline
+		RouterLink(:to="{name: 'developer'}" v-if="appState.developerMode") Developer
+	span.grow.text-right(v-else)
+		span.mr-2.grow.text-right.text-zinc-300 Click to connect →
+		label#device-status(for="device-toggle") Not connected
+	label#device-status.connected(v-if="connectedDevice" for="device-toggle") Connected
+	input#device-toggle.hidden(type="checkbox" v-model="deviceSelectorOpen")
 	Teleport(to="body")
 		Transition
 			DeviceSelector(v-if="deviceSelectorOpen" @close="deviceSelectorOpen = false")
@@ -28,70 +27,29 @@ const deviceSelectorOpen = ref<boolean>(false);
 </script>
 
 <style scoped>
-@import '../assets/style.css';
+@reference '../assets/style.css';
 
-#title-bar {
-	@apply flex flex-row m-2 rounded-lg shadow-md flex-nowrap justify-between items-center;
-	background-color: var(--color-accent);
-	color: var(--color-white);
+.navbar {
+	@apply flex flex-wrap items-center py-2 mb-4 px-4 gap-4 shadow-md bg-accent text-white rounded-xl;
 }
 
-#title-bar {
-	@apply px-2;
-}
-
-#title-bar #title {
-	@apply mx-2 text-2xl font-bold;
-}
-
-@media screen and (max-width: 768px) {
-	#title-bar #title {
-		display: none;
-	}
-}
-
-#device-status {
-	font-weight: bold;
-	cursor: pointer;
-	margin-left: auto;
-	user-select: none;
-	color: var(--color-light);
-}
-
-#device-status.connected {
-	color: var(--color-white);
+.title {
+	@apply md:text-2xl font-bold;
 }
 
 nav {
-	@apply flex items-center my-2 gap-2;
-	align-self: stretch;
+	@apply grow flex flex-wrap gap-4;
 }
 
 nav a {
-	@apply flex px-2 items-center rounded-lg h-full transition-colors;
-}
-
-nav a:hover {
-	background-color: var(--color-accent-bright);
+	@apply p-2 md:text-lg font-semibold rounded-xl;
 }
 
 nav a.router-link-active {
-	background-color: var(--color-background);
+	@apply bg-zinc-50 text-accent;
 }
 
-@media not (prefers-color-scheme: dark) {
-	nav a.router-link-active {
-		color: var(--color-accent);
-	}
-}
-
-.navbar input[type='checkbox'].hidden {
-	display: none;
-}
-
-@media screen and (min-width: 768px) {
-	nav a {
-		font-size: 1.2em;
-	}
+label {
+	@apply font-semibold cursor-pointer;
 }
 </style>
