@@ -13,6 +13,8 @@
 #include "adc.hpp"
 #include "AnalyticIKSolver.hpp"
 #include "eic.hpp"
+#include "host.hpp"
+#include "HostResponse.hpp"
 #include "i2c.hpp"
 #include "joystick.hpp"
 #include "LSM6DSO32.hpp"

@@ -14,13 +14,14 @@
 
 namespace eic {
 	using ButtonCallback = void (*)(bool left, bool pressed);
-	using Callback = void (*)();
+	using Callback = void       (*)();
 
 	void init();
 
 	void setButtonCallback(ButtonCallback cb);
 	void setSensor1Callback(Callback cb);
 	void setSensor2Callback(Callback cb);
+	void setHostCallback(Callback cb);
 }
 
 #endif /* EIC_HPP */

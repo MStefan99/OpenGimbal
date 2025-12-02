@@ -1,19 +1,19 @@
 /*
- * File:   uart.hpp
- * Author: mikha
+ * File:   host.hpp
+ * Author: mstefan99
  *
- * Created on November 20, 2021, 7:55 PM
+ * Created on December 2, 2025, 11:58 AM
  */
 
-#ifndef UART_HPP
-#define UART_HPP
+#ifndef HOST_HPP
+#define HOST_HPP
 
 #include "device.h"
 
 #include "RingBuffer.hpp"
 #include "util.hpp"
 
-namespace uart {
+namespace host {
 	template <class size_type, size_type C>
 	struct Buffer {
 		uint8_t   buffer[C] {};
@@ -29,7 +29,7 @@ namespace uart {
 	};
 
 	using DefaultCallback = Callback<uint8_t, 16>;
-	using DefaultQueue = RingBuffer<uart::Buffer<uint8_t, 16>, uint8_t, 4>;
+	using DefaultQueue = RingBuffer<Buffer<uint8_t, 16>, uint8_t, 4>;
 
 	void init();
 	void enable();
@@ -40,5 +40,4 @@ namespace uart {
 	bool busy();
 }
 
-
-#endif /* UART_HPP */
+#endif /* HOST_HPP */

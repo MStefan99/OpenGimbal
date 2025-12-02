@@ -29,7 +29,6 @@
         <logicalFolder name="regs" displayName="regs" projectFiles="true">
           <itemPath>../inc/regs/AS5600_regs.h</itemPath>
         </logicalFolder>
-        <itemPath>../inc/as5600.hpp</itemPath>
         <itemPath>../inc/bldc.hpp</itemPath>
         <itemPath>../inc/i2c.hpp</itemPath>
         <itemPath>../inc/Kalman.hpp</itemPath>
@@ -45,6 +44,7 @@
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/eic.hpp</itemPath>
         <itemPath>../inc/bldc.h</itemPath>
+        <itemPath>../inc/AS5600.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -228,10 +228,10 @@
         <targetDevice>ATSAML21E16B</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>pk4hybrid</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>5.00</languageToolchainVersion>
-        <platform>3</platform>
+        <platform>2</platform>
       </toolsSet>
       <packs>
         <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
@@ -291,7 +291,6 @@
       <C32>
         <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="cast-align" value="false"/>
         <property key="code-model" value="default"/>
         <property key="const-model" value="default"/>
@@ -370,7 +369,6 @@
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
         <property key="allocate-dinit" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="code-dinit" value="false"/>
         <property key="ebase-addr" value=""/>
         <property key="enable-check-sections" value="false"/>
@@ -416,7 +414,6 @@
       <C32CPP>
         <property key="additional-warnings" value="true"/>
         <property key="addresss-attribute-use" value="false"/>
-        <property key="appendMe" value=""/>
         <property key="check-new" value="false"/>
         <property key="eh-specs" value="false"/>
         <property key="enable-app-io" value="false"/>

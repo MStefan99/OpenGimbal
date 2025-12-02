@@ -45,11 +45,12 @@
         <itemPath>../inc/usb.hpp</itemPath>
         <itemPath>../inc/util.hpp</itemPath>
         <itemPath>../inc/pwm.hpp</itemPath>
-        <itemPath>../inc/USBResponse.hpp</itemPath>
         <itemPath>../inc/eic.hpp</itemPath>
         <itemPath>../inc/AnalyticIKSolver.hpp</itemPath>
         <itemPath>../inc/IKSolver.hpp</itemPath>
         <itemPath>../inc/NumericIKSolver.hpp</itemPath>
+        <itemPath>../inc/host.hpp</itemPath>
+        <itemPath>../inc/HostResponse.hpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="packs" projectFiles="true">
         <logicalFolder name="f1" displayName="ATSAML21E16B_DFP" projectFiles="true">
@@ -222,10 +223,11 @@
         <itemPath>../src/usb_descriptors.cpp</itemPath>
         <itemPath>../src/util.cpp</itemPath>
         <itemPath>../src/pwm.cpp</itemPath>
-        <itemPath>../src/USBResponse.cpp</itemPath>
         <itemPath>../src/eic.cpp</itemPath>
         <itemPath>../src/AnalyticIKSolver.cpp</itemPath>
         <itemPath>../src/NumericIKSolver.cpp</itemPath>
+        <itemPath>../src/host.cpp</itemPath>
+        <itemPath>../src/HostResponse.cpp</itemPath>
       </logicalFolder>
       <itemPath>../main.cpp</itemPath>
     </logicalFolder>
@@ -241,10 +243,10 @@
         <targetDevice>ATSAML21E16B</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>pk4hybrid</platformTool>
         <languageToolchain>XC32</languageToolchain>
         <languageToolchainVersion>5.00</languageToolchainVersion>
-        <platform>3</platform>
+        <platform>2</platform>
       </toolsSet>
       <packs>
         <pack name="CMSIS" vendor="ARM" version="5.4.0"/>

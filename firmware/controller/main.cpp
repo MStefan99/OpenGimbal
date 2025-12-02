@@ -37,8 +37,8 @@ volatile static uint32_t eventTime {0};
 volatile static bool     buttonPressed {false};
 volatile static bool     leftButton {true};
 
-volatile static bool     usbPassthrough {false};
-volatile static uint32_t usbPassthroughTime {0};
+volatile static bool     motorPassthrough {false};
+volatile static uint32_t motorPassthroughTime {0};
 
 volatile static bool wokenByUSB {false};
 
@@ -115,17 +115,34 @@ void disable() {
 	showMode();
 }
 
+void sendToHost(const uint8_t* buffer, uint8_t len) {
+	uint8_t buf[len + 1];
+	buf[0] = len;
+	util::copy(buf + 1, buffer, len);
+
+	host::send(buf, len + 1);
+	usb::write(buf + 1, len);
+}
+
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
-	if (usbPassthrough) {
+void processMotorMessage(const uart::DefaultCallback::buffer_type& buffer) {
+	if (motorPassthrough) {
 		uint8_t buf[20];
-		buf[0] = static_cast<uint8_t>(USBResponse::ResponseType::MotorPassthrough);
+		buf[0] = static_cast<uint8_t>(HostResponse::ResponseType::MotorPassthrough);
 		util::copy(buf + 1, buffer.buffer, buffer.transferred);
 
-		usb::write(buf, buffer.transferred + 1);
+		sendToHost(buf, buffer.transferred + 1);
 
-		usbPassthrough = false;
+		motorPassthrough = false;
 		return;
+	}
+
+	if ((buffer.buffer[1] & 0xf0) == 0xf0) {  // Discovery command
+		if ((buffer.buffer[0] & 0xf) == 0xf) {
+			MotorCommand command {0xf, 0x0, static_cast<MotorCommand::CommandType>(1)};
+
+			host::send(command.getBuffer(), command.getLength());
+		}
 	}
 
 	if ((buffer.buffer[0] & 0xf) != 0) {
@@ -142,33 +159,33 @@ void processMotorResponse(const uart::DefaultCallback::buffer_type& buffer) {
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_t len) {
-	switch (static_cast<USBCommand::CommandType>(request.bRequest)) {
-		case (USBCommand::CommandType::Enable): {
+void processHostCommand(const uint8_t* buf, uint8_t len) {
+	switch (static_cast<HostCommand::CommandType>(buf[0])) {
+		case (HostCommand::CommandType::Enable): {
 			enable();
 			break;
 		}
-		case (USBCommand::CommandType::Disable): {
+		case (HostCommand::CommandType::Disable): {
 			disable();
 			break;
 		}
-		case (USBCommand::CommandType::GetVariable): {
-			switch (static_cast<USBCommand::Variable>(request.bData[0])) {
-				case (USBCommand::Variable::Orientation): {
+		case (HostCommand::CommandType::GetVariable): {
+			switch (static_cast<HostCommand::Variable>(buf[1])) {
+				case (HostCommand::Variable::Orientation): {
 					int16_t data[3];
 					for (uint8_t i {0}; i < 3; ++i) {
 						data[i] = __REV16(static_cast<int16_t>(offsetAngles[i] * intScalingFactor));
 					}
 
-					auto response = USBReturnVariableResponse {
-					  USBResponse::Variable::Orientation,
+					auto response = HostReturnVariableResponse {
+					  HostResponse::Variable::Orientation,
 					  reinterpret_cast<uint8_t*>(data),
 					  sizeof(data)
 					};
-					usb::write(response.getBuffer(), response.getLength());
+					sendToHost(response.getBuffer(), response.getLength());
 					break;
 				}
-				case (USBCommand::Variable::HandleOrientation): {
+				case (HostCommand::Variable::HandleOrientation): {
 					int16_t    data[3];
 					Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
 					auto       handleAngles {handleOrientation.toEuler()};
@@ -177,20 +194,20 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 						data[i] = __REV16(static_cast<int16_t>(handleAngles[i][0] * intScalingFactor));
 					}
 
-					auto response = USBReturnVariableResponse {
-					  USBResponse::Variable::HandleOrientation,
+					auto response = HostReturnVariableResponse {
+					  HostResponse::Variable::HandleOrientation,
 					  reinterpret_cast<uint8_t*>(data),
 					  sizeof(data)
 					};
-					usb::write(response.getBuffer(), response.getLength());
+					sendToHost(response.getBuffer(), response.getLength());
 					break;
 				}
-				case (USBCommand::Variable::Mode): {
-					auto response = USBReturnVariableResponse {USBResponse::Variable::Mode, static_cast<uint8_t>(gimbalMode)};
-					usb::write(response.getBuffer(), response.getLength());
+				case (HostCommand::Variable::Mode): {
+					auto response = HostReturnVariableResponse {HostResponse::Variable::Mode, static_cast<uint8_t>(gimbalMode)};
+					sendToHost(response.getBuffer(), response.getLength());
 					break;
 				}
-				case (USBCommand::Variable::BatteryVoltage): {
+				case (HostCommand::Variable::BatteryVoltage): {
 					adc::measureBattery([](uint16_t value) {
 						uint8_t voltage = util::scale(
 						    util::clamp(value, MIN_VOLTAGE, MAX_VOLTAGE),
@@ -200,8 +217,8 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 						    static_cast<uint16_t>(255)
 						);
 
-						auto response = USBReturnVariableResponse {USBResponse::Variable::BatteryVoltage, voltage};
-						usb::write(response.getBuffer(), response.getLength());
+						auto response = HostReturnVariableResponse {HostResponse::Variable::BatteryVoltage, voltage};
+						sendToHost(response.getBuffer(), response.getLength());
 					});
 					break;
 				}
@@ -210,17 +227,17 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			}
 			break;
 		}
-		case (USBCommand::CommandType::SetVariable): {
-			switch (static_cast<USBCommand::Variable>(request.bData[0])) {
-				case (USBCommand::Variable::Orientation): {
+		case (HostCommand::CommandType::SetVariable): {
+			switch (static_cast<HostCommand::Variable>(buf[1])) {
+				case (HostCommand::Variable::Orientation): {
 					for (uint8_t i {0}; i < 3; ++i) {
-						offsetAngles[i] = static_cast<int16_t>(__REV16(reinterpret_cast<const int16_t*>(request.bData + 1)[i]))
-						                / intScalingFactor;
+						offsetAngles[i] =
+						    static_cast<int16_t>(__REV16(reinterpret_cast<const int16_t*>(buf + 2)[i])) / intScalingFactor;
 					}
 					break;
 				}
-				case (USBCommand::Variable::Mode): {
-					gimbalMode = static_cast<GimbalMode>(util::min(request.bData[1], static_cast<uint8_t>(4)));
+				case (HostCommand::Variable::Mode): {
+					gimbalMode = static_cast<GimbalMode>(util::min(buf[2], static_cast<uint8_t>(4)));
 					showMode();
 					break;
 				}
@@ -229,15 +246,24 @@ void processUSBCommand(const usb::usb_device_endpoint1_request& request, uint16_
 			}
 			break;
 		}
-		case (USBCommand::CommandType::MotorPassthrough): {
-			usbPassthrough = true;
-			usbPassthroughTime = util::getTime();
-			motor::send(request.bData, len - 1);
+		case (HostCommand::CommandType::MotorPassthrough): {
+			motorPassthrough = true;
+			motorPassthroughTime = util::getTime();
+			motor::send(buf + 1, len - 1);
 			break;
 		}
 		default:
 			break;
 	}
+}
+
+void processHostMessage(const host::DefaultCallback::buffer_type& buffer) {
+	processHostCommand(buffer.buffer + 1, buffer.transferred - 1);
+}
+
+// CAUTION: This function is called in an interrupt, no long-running operations allowed here!
+void processUSBMessage(const usb::usb_device_endpoint1_request& request, uint16_t len) {
+	processHostCommand(&request.bRequest, len);
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
@@ -348,10 +374,11 @@ bool triggerAction() {
 
 void sleep() {
 	WDT_REGS->WDT_CTRLA = WDT_CTRLA_ENABLE(0);
-	while (uart::busy() || i2c::busy()) {
+	while (uart::busy() || host::busy() || i2c::busy()) {
 		__WFI();
 	}
 	uart::disable();
+	host::disable();
 	PM_REGS->PM_SLEEPCFG = PM_SLEEPCFG_SLEEPMODE_STANDBY;
 	while (PM_REGS->PM_SLEEPCFG != PM_SLEEPCFG_SLEEPMODE_STANDBY);
 	do {
@@ -368,14 +395,21 @@ int main() {
 	pwm::init();
 	i2c::init();
 	uart::init();
+	host::init();
 	usb::init();
 
-	uart::setCallback(processMotorResponse);
 	eic::setButtonCallback(processButtons);
 	eic::setSensor1Callback(processSensor);
-	usb::setCallback(processUSBCommand);
+	eic::setHostCallback([]() {
+		host::enable();
+	});
+	uart::setCallback(processMotorMessage);
+	host::setCallback(processHostMessage);
+	usb::setCallback(processUSBMessage);
 
 	PORT_REGS->GROUP[0].PORT_DIRSET = 0x1 | (0x1 << 27u);
+	PORT_REGS->GROUP[0].PORT_OUTSET = 0x1;  // Charging always enabled for now
+
 	WDT_REGS->WDT_CONFIG = WDT_CONFIG_PER_CYC64;
 
 	usb::setSuspendCallback([](bool suspended) {
@@ -511,6 +545,7 @@ int main() {
 				if (!usb::isActive() && wokenByUSB) {
 					powerMode = PowerMode::Sleep;
 					uart::disable();
+					host::disable();
 					wokenByUSB = false;
 				}
 
@@ -532,11 +567,11 @@ int main() {
 			}
 		}
 
-		if (usb::isActive() && usbPassthrough && util::getTime() - usbPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
-			uint8_t buf[1] {static_cast<uint8_t>(USBResponse::ResponseType::MotorPassthrough)};
+		if (usb::isActive() && motorPassthrough && util::getTime() - motorPassthroughTime > USB_PASSTHROUGH_TIMEOUT) {
+			uint8_t buf[1] {static_cast<uint8_t>(HostResponse::ResponseType::MotorPassthrough)};
 
-			usb::write(buf, sizeof(buf));
-			usbPassthrough = false;
+			sendToHost(buf, sizeof(buf));
+			motorPassthrough = false;
 		}
 
 		if (displayState == DisplayState::BatteryLevel) {

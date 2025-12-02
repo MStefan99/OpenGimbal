@@ -5,14 +5,14 @@
  * Created on June 22, 2023, 17:58 PM
  */
 
-#ifndef USB_COMMAND_HPP
-#define USB_COMMAND_HPP
+#ifndef HOST_RESPONSE_HPP
+#define HOST_RESPONSE_HPP
 
 #include "device.h"
 
 #include "util.hpp"
 
-namespace USBCommand {
+namespace HostCommand {
 	enum class CommandType : uint8_t {
 		Disable = 0x0,
 		Enable = 0x1,
@@ -29,12 +29,12 @@ namespace USBCommand {
 	};
 }
 
-class USBResponse {
+class HostResponse {
 public:
 	using buffer_type = uint8_t[16];
 	using size_type = uint8_t;
 
-	using Variable = USBCommand::Variable;
+	using Variable = HostCommand::Variable;
 
 	enum class ResponseType : uint8_t {
 		ReturnVariable = 0xe,
@@ -52,8 +52,8 @@ public:
 		int16_t angularRates[3];   // Yaw - pitch - roll
 	};
 
-	USBResponse() = default;
-	USBResponse(ResponseType type, uint8_t dataLength);
+	HostResponse() = default;
+	HostResponse(ResponseType type, uint8_t dataLength);
 
 	buffer_type& getBuffer();
 	size_type    getLength();
@@ -63,16 +63,16 @@ protected:
 	size_type   _length {0};
 };
 
-class USBReturnVariableResponse: public USBResponse {
+class HostReturnVariableResponse: public HostResponse {
 public:
 	template <class T>
-	USBReturnVariableResponse(USBResponse::Variable variable, T value);
-	USBReturnVariableResponse(USBResponse::Variable variable, uint8_t* data = nullptr, uint8_t len = 0);
+	HostReturnVariableResponse(HostResponse::Variable variable, T value);
+	HostReturnVariableResponse(HostResponse::Variable variable, uint8_t* data = nullptr, uint8_t len = 0);
 };
 
 template <class T>
-USBReturnVariableResponse::USBReturnVariableResponse(USBResponse::Variable variable, T value):
-  USBResponse {ResponseType::ReturnVariable, 1 + sizeof(T)} {
+HostReturnVariableResponse::HostReturnVariableResponse(HostResponse::Variable variable, T value):
+  HostResponse {ResponseType::ReturnVariable, 1 + sizeof(T)} {
 	this->_buffer[1] = static_cast<uint8_t>(variable);
 
 	for (size_type i {0}; i < sizeof(T); ++i) {
