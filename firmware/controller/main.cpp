@@ -12,6 +12,7 @@ constexpr static float    joystickFactor {F_DEG_TO_RAD * (F_PI / 100.0f)};
 constexpr static uint16_t deltaTime {1000 / updateRate};
 constexpr static float    maxVelocityPerStep {maxRestoringVelocity / updateRate};
 
+const static auto       controlBoardQuat {Quaternion::fromEuler(0, controlBoardAngle, 0)};
 static Mahony           mahony {};
 static AnalyticIKSolver ikSolver {};
 
@@ -137,14 +138,6 @@ void processMotorMessage(const uart::DefaultCallback::buffer_type& buffer) {
 		return;
 	}
 
-	if ((buffer.buffer[1] & 0xf0) == 0xf0) {  // Discovery command
-		if ((buffer.buffer[0] & 0xf) == 0xf) {
-			MotorCommand command {0xf, 0x0, static_cast<MotorCommand::CommandType>(1)};
-
-			host::send(command.getBuffer(), command.getLength());
-		}
-	}
-
 	if ((buffer.buffer[0] & 0xf) != 0) {
 		return;  // Command intended for another device
 	}
@@ -169,6 +162,11 @@ void processHostCommand(const uint8_t* buf, uint8_t len) {
 			disable();
 			break;
 		}
+		case (HostCommand::CommandType::Discovery): {
+			auto response = HostResponse {HostResponse::ResponseType::Discovery, 0};
+			sendToHost(response.getBuffer(), response.getLength());
+			break;
+		}
 		case (HostCommand::CommandType::GetVariable): {
 			switch (static_cast<HostCommand::Variable>(buf[1])) {
 				case (HostCommand::Variable::Orientation): {
@@ -187,7 +185,7 @@ void processHostCommand(const uint8_t* buf, uint8_t len) {
 				}
 				case (HostCommand::Variable::HandleOrientation): {
 					int16_t    data[3];
-					Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
+					Quaternion handleOrientation {mahony.getQuat() * controlBoardQuat};
 					auto       handleAngles {handleOrientation.toEuler()};
 
 					for (uint8_t i {0}; i < 3; ++i) {
@@ -466,7 +464,7 @@ int main() {
 					offsetAngles[1] += x / 40000.0f;
 				});
 
-				Quaternion handleOrientation {mahony.getQuat() * Quaternion::fromEuler(0, controlBoardAngle, 0)};
+				Quaternion handleOrientation {mahony.getQuat() * controlBoardQuat};
 				auto       handleAngles {handleOrientation.toEuler()};
 
 				float yawTarget {handleAngles[0][0] + offsetAngles[0]};

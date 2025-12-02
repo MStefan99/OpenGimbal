@@ -22,6 +22,7 @@
 #include "motor.hpp"
 #include "MotorCommand.hpp"
 #include "pwm.hpp"
+#include "Quaternion.hpp"
 #include "uart.hpp"
 #include "usb.hpp"
 #include "util.hpp"
@@ -57,7 +58,7 @@ constexpr uint16_t USB_PASSTHROUGH_TIMEOUT {2};
 constexpr uint16_t MOTOR_REQUEST_TIMEOUT {8};
 
 constexpr uint16_t updateRate {100};                           // Hz
-constexpr float    controlBoardAngle {-30.0f * F_DEG_TO_RAD};  // rad
+constexpr float    controlBoardAngle {-15.0f * F_DEG_TO_RAD};  // rad
 constexpr float    maxRestoringVelocity {F_PI};                // Half revolution per second
 constexpr uint16_t softStartDuration {1500};                   // ms
 

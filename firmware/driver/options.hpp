@@ -31,9 +31,9 @@ constexpr static uint8_t  deviceAddress {1};
  */
 
 // Enter sleep mode if no commands received in idle mode for a specified time
-constexpr static uint32_t idleCommandTimeout {1000};
+constexpr static uint32_t idleCommandTimeout {2000};
 // Enter sleep mode if no commands received even in active mode
-constexpr static uint32_t activeCommandTimeout {5000};
+constexpr static uint32_t activeCommandTimeout {60000};
 
 // Full state feedback gain matrix
 constexpr auto K = Matrix<float, uint8_t, 1, 2> {

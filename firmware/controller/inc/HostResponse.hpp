@@ -16,6 +16,7 @@ namespace HostCommand {
 	enum class CommandType : uint8_t {
 		Disable = 0x0,
 		Enable = 0x1,
+		Discovery = 0x0c,
 		SetVariable = 0x0d,
 		GetVariable = 0x0e,
 		MotorPassthrough = 0x0f
@@ -37,6 +38,7 @@ public:
 	using Variable = HostCommand::Variable;
 
 	enum class ResponseType : uint8_t {
+		Discovery = 0xd,
 		ReturnVariable = 0xe,
 		MotorPassthrough = 0xf
 	};
