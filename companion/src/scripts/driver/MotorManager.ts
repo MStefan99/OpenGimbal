@@ -1,8 +1,8 @@
 import {IMotor, Motor, MotorOptions} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
-import {ISerialInterface} from './serial/SerialInterface';
-import {MotorCommand} from './serial/MotorCommand';
-import {MotorResponse} from './serial/MotorResponse';
+import {ISerialInterface} from './motor/SerialInterface';
+import {MotorCommand} from './motor/MotorCommand';
+import {MotorResponse} from './motor/MotorResponse';
 
 export interface IMotorControl {
 	readonly vendorId: number | undefined;
@@ -26,6 +26,9 @@ export interface IMotorControl {
 export interface IMotorManager {
 	readonly vendorId: number | undefined;
 	readonly productId: number | undefined;
+	readonly manufacturerName?: string | undefined;
+	readonly productName?: string | undefined;
+	readonly serialNumber?: string | undefined;
 
 	get motors(): IMotorControl;
 

@@ -1,4 +1,4 @@
-import {MotorResponseType, MotorVariable, SerialMessage} from './SerialMessage';
+import {MotorResponseType, MotorVariable, MotorMessage} from './MotorMessage';
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'
@@ -17,7 +17,7 @@ export const returnVariableResponses: Record<
 	[MotorVariable.Position]: (buffer) => new ReturnPositionVariableResponse(buffer)
 };
 
-export class MotorResponse extends SerialMessage {
+export class MotorResponse extends MotorMessage {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
 	}

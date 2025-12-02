@@ -27,7 +27,7 @@ export enum GimbalMode {
 	Tilt = 0x03
 }
 
-export class USBMessage extends Message {
+export class ControllerMessage extends Message {
 	constructor(buffer: Uint8Array);
 	constructor(type: GimbalCommandType | GimbalResponseType, data?: Uint8Array);
 

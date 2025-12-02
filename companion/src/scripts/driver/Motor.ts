@@ -4,7 +4,7 @@ import {
 	ReturnOptionsVariableResponse,
 	ReturnOffsetVariableResponse,
 	ReturnPositionVariableResponse
-} from './serial/MotorResponse';
+} from './motor/MotorResponse';
 import {
 	AdjustOffsetCommand,
 	GetVariableCommand,
@@ -17,9 +17,9 @@ import {
 	SleepCommand,
 	ToneCommand,
 	WakeCommand
-} from './serial/MotorCommand';
-import {ISerialInterface} from './serial/SerialInterface';
-import {MotorVariable} from './serial/SerialMessage';
+} from './motor/MotorCommand';
+import {ISerialInterface} from './motor/SerialInterface';
+import {MotorVariable} from './motor/MotorMessage';
 
 export type MotorOptions = {
 	calibrated: boolean;
@@ -121,7 +121,7 @@ export class Motor implements IMotor {
 	}
 
 	move(position: number = 0, torque: number = 15): Promise<void> {
-		return this._hardwareInterface.send(new MoveCommand(0, this._address, torque, position));
+		return this._hardwareInterface.send(new MoveCommand(0, this._address, torque, position), true);
 	}
 
 	tone(frequency: number): Promise<void> {

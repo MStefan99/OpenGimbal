@@ -6,7 +6,7 @@ import {createApp} from 'vue';
 import App from './App.vue';
 import router from './scripts/routes';
 import {crashCourse} from './scripts/analytics';
-import {addUSBCompatibilityClasses} from './scripts/driver/usb/compatibility';
+import {addUSBCompatibilityClasses} from './scripts/driver/controller/compatibility';
 
 addUSBCompatibilityClasses();
 

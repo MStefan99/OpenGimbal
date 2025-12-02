@@ -10,11 +10,11 @@
 				button.mt-2.ml-2(type="button" @click="commandEntries = []") Clear history
 		p.text-red.font-bold.my-2.
 			Warning: This tool allows to execute any command on the device,
-			and sending an invalid or malformed command could lead to unpredictable behavior or damage to the device
+			and sending an invalid or malformed command could lead to unpredictable behavior or damage the device
 		h3.my-4.text-xl.font-bold History
 		.command.card.my-4(v-for="entry in commandEntries" :key="entry.id")
 			div(v-if="entry.message")
-				template(v-if="entry.message instanceof GimbalCommand")
+				template(v-if="entry.message instanceof ControllerCommand")
 					p.whitespace-pre-wrap {{parser.parseCommand(entry.message.buffer)}}
 					button.mt-2(@click="sendCommand(entry.message.buffer)") Re-send
 				template(v-else)
@@ -28,21 +28,24 @@
 import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {connectedDevice} from '../scripts/driver/driver';
 import RangeSlider from '../components/RangeSlider.vue';
-import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
-import {GetVariableCommand, GimbalCommand} from '../scripts/driver/usb/GimbalCommand';
-import {USBMessage} from '../scripts/driver/usb/USBMessage';
+import {MotorResponse} from '../scripts/driver/motor/MotorResponse';
+import {
+	GetVariableCommand,
+	ControllerCommand
+} from '../scripts/driver/controller/ControllerCommand';
+import {ControllerMessage} from '../scripts/driver/controller/ControllerMessage';
 import {Gimbal} from '../scripts/driver/Gimbal';
-import {USBParser} from '../scripts/driver/usb/USBParser';
+import {ControllerParser} from '../scripts/driver/controller/ControllerParser';
 
 type CommandEntry = {
 	time: number;
-	message: USBMessage;
+	message: ControllerMessage;
 	id: number;
 };
 
 let lastID: number = 0;
 const commandEntries = ref<CommandEntry[]>([]);
-const parser = new USBParser();
+const parser = new ControllerParser();
 const historySize = ref<number>(20);
 const commandString = ref<string>('');
 

@@ -1,6 +1,6 @@
 import {IHardwareInterface} from '../HardwareInterface';
-import {USBMessage} from './USBMessage';
-import {IUSBParser} from './USBParser';
+import {ControllerMessage} from './ControllerMessage';
+import {IControllerParser} from './ControllerParser';
 
 export interface IUSBInterface extends IHardwareInterface {
 	readonly usbVersionMajor: number;
@@ -18,20 +18,20 @@ export interface IUSBInterface extends IHardwareInterface {
 	readonly productName?: string | undefined;
 	readonly serialNumber?: string | undefined;
 
-	send(message: USBMessage): Promise<void>;
+	send(message: ControllerMessage, isochronous?: boolean): Promise<void>;
 
-	request(message: USBMessage): Promise<USBMessage>;
+	request(message: ControllerMessage): Promise<ControllerMessage>;
 
 	close(): Promise<void>;
 }
 
 export class USBInterface implements IHardwareInterface {
-	_transferPromise: Promise<void | USBMessage> = Promise.resolve();
+	_transferQueue = new Array<ControllerMessage>();
 	_usbDevice: USBDevice;
-	_parser: IUSBParser;
+	_parser: IControllerParser;
 	readonly _verbose: boolean;
 
-	constructor(usbDevice: USBDevice, parser: IUSBParser, verbose: boolean = false) {
+	constructor(usbDevice: USBDevice, parser: IControllerParser, verbose: boolean = false) {
 		this._usbDevice = usbDevice;
 		this._parser = parser;
 		this._verbose = verbose;
@@ -93,23 +93,41 @@ export class USBInterface implements IHardwareInterface {
 		return this._usbDevice.serialNumber;
 	}
 
-	async send(message: USBMessage): Promise<void> {
-		this._verbose && console.log('Sending', message.toString(), '\n', message);
+	async _sendNext(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const message = this._transferQueue.shift();
 
-		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>))
-			.catch((err) => {
-				console.error('Send failed:', err);
-				return Promise.reject(err);
-			})
-			.then(() => Promise.resolve())) as Promise<void>;
+			this._usbDevice
+				.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>)
+				.then(() => resolve())
+				.catch((err) => {
+					console.error('Send failed:', err);
+					return Promise.reject(err);
+				})
+				.then(() => {
+					this._sendNext();
+				});
+		});
 	}
 
-	async request(message: USBMessage): Promise<USBMessage> {
+	async send(message: ControllerMessage, isochronous?: boolean): Promise<void> {
+		if (isochronous && this._transferQueue.length > 20) {
+			console.warn('Send failed: queue full', message.toString(), '\n', message);
+			return Promise.reject('Send failed1`');
+		}
+
+		this._verbose && console.log('Sending', message.toString(), '\n', message);
+		this._transferQueue.push(message);
+		if (this._transferQueue.length === 1) {
+			return this._sendNext();
+		}
+	}
+
+	async request(message: ControllerMessage): Promise<ControllerMessage> {
 		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
-		return (this._transferPromise = this._transferPromise
-			.then(() => this._usbDevice.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>))
+		return this._usbDevice
+			.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>)
 			.then(() => this._usbDevice.transferIn(1, 0xff))
 			.then((r) => {
 				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer));
@@ -120,7 +138,7 @@ export class USBInterface implements IHardwareInterface {
 			.catch((err) => {
 				console.error('Send failed:', err);
 				return Promise.reject(err);
-			})) as Promise<USBMessage>;
+			}) as Promise<ControllerMessage>;
 	}
 
 	async close(): Promise<void> {

@@ -23,7 +23,7 @@ export enum MotorVariable {
 	Position = 0x2
 }
 
-export class SerialMessage extends Message {
+export class MotorMessage extends Message {
 	constructor(buffer: Uint8Array);
 	constructor(
 		srcAddr: number,

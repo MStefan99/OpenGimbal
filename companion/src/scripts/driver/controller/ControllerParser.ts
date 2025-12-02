@@ -1,30 +1,30 @@
 import {
-	GimbalCommand,
+	ControllerCommand,
 	gimbalCommands,
 	MotorPassthroughCommand,
 	SetVariableCommand,
 	setVariableCommands
-} from './GimbalCommand';
+} from './ControllerCommand';
 import {
 	gimbalResponses,
-	GimbalResponse,
+	ControllerResponse,
 	ReturnVariableResponse,
 	returnVariableResponses
-} from './GimbalResponse';
+} from './ControllerResponse';
 
-export interface IUSBParser {
-	parseCommand(data: Uint8Array): GimbalCommand | null;
+export interface IControllerParser {
+	parseCommand(data: Uint8Array): ControllerCommand | null;
 
-	parseResponse(data: Uint8Array): GimbalResponse | null;
+	parseResponse(data: Uint8Array): ControllerResponse | null;
 }
 
-export class USBParser implements IUSBParser {
-	parseCommand(data: Uint8Array): GimbalCommand | null {
+export class ControllerParser implements IControllerParser {
+	parseCommand(data: Uint8Array): ControllerCommand | null {
 		if (!data.length) {
 			return null;
 		}
 
-		const genericCommand = new GimbalCommand(data);
+		const genericCommand = new ControllerCommand(data);
 		const command = gimbalCommands[genericCommand.type](data);
 
 		if (command instanceof SetVariableCommand) {
@@ -34,12 +34,12 @@ export class USBParser implements IUSBParser {
 		}
 	}
 
-	parseResponse(data: Uint8Array): GimbalResponse | null {
+	parseResponse(data: Uint8Array): ControllerResponse | null {
 		if (!data.length) {
 			return null;
 		}
 
-		const genericResponse = new GimbalResponse(data);
+		const genericResponse = new ControllerResponse(data);
 		const response = gimbalResponses[genericResponse.type](data);
 
 		if (response instanceof ReturnVariableResponse) {

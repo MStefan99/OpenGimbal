@@ -1,7 +1,12 @@
-import {GimbalMode, GimbalResponseType, GimbalVariable, USBMessage} from './USBMessage';
-import {MotorCommand} from '../serial/MotorCommand';
-import {exposeSerialMessage} from './USBSerialEncapsulator';
-import {MotorResponse} from '../serial/MotorResponse';
+import {
+	GimbalMode,
+	GimbalResponseType,
+	GimbalVariable,
+	ControllerMessage
+} from './ControllerMessage';
+import {MotorCommand} from '../motor/MotorCommand';
+import {exposeSerialMessage} from './ControllerUSBEncapsulator';
+import {MotorResponse} from '../motor/MotorResponse';
 import {RAD_TO_COUNTS} from '../../types';
 import {scale} from '../../util';
 
@@ -10,7 +15,10 @@ export const gimbalCommandNames: Record<GimbalResponseType, string> = {
 	[GimbalResponseType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const gimbalResponses: Record<GimbalResponseType, (buffer: Uint8Array) => GimbalResponse> = {
+export const gimbalResponses: Record<
+	GimbalResponseType,
+	(buffer: Uint8Array) => ControllerResponse
+> = {
 	[GimbalResponseType.ReturnVariable]: (buffer: Uint8Array) => new ReturnVariableResponse(buffer),
 	[GimbalResponseType.MotorPassthrough]: (buffer: Uint8Array) =>
 		new MotorPassthroughResponse(buffer)
@@ -26,7 +34,7 @@ export const returnVariableResponses: Record<
 	[GimbalVariable.BatteryVoltage]: (buffer) => new ReturnBatteryVoltageVariableResponse(buffer)
 };
 
-export class GimbalResponse extends USBMessage {
+export class ControllerResponse extends ControllerMessage {
 	get type(): GimbalResponseType {
 		return this.view.getUint8(0);
 	}
@@ -43,7 +51,7 @@ export class GimbalResponse extends USBMessage {
 	}
 }
 
-export class ReturnVariableResponse extends GimbalResponse {
+export class ReturnVariableResponse extends ControllerResponse {
 	constructor(buffer: Uint8Array) {
 		super(buffer);
 	}
@@ -124,7 +132,7 @@ export class ReturnBatteryVoltageVariableResponse extends ReturnVariableResponse
 	}
 }
 
-export class MotorPassthroughResponse extends GimbalResponse {
+export class MotorPassthroughResponse extends ControllerResponse {
 	constructor(buffer: Uint8Array);
 	constructor(motorCommand: MotorCommand);
 

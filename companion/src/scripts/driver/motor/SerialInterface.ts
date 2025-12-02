@@ -1,7 +1,7 @@
 import {IHardwareInterface} from '../HardwareInterface';
-import {SerialMessage} from './SerialMessage';
+import {MotorMessage} from './MotorMessage';
 import {MotorResponse} from './MotorResponse';
-import {ISerialParser} from './SerialParser';
+import {ISerialParser} from './MotorParser';
 
 const timeout = 20;
 
@@ -11,9 +11,9 @@ export interface ISerialInterface extends IHardwareInterface {
 
 	get open(): Promise<void>;
 
-	send(message: SerialMessage, baudRate?: number): Promise<void>;
+	send(message: MotorMessage, isochronous?: boolean): Promise<void>;
 
-	request(message: SerialMessage, baudRate?: number): Promise<SerialMessage>;
+	request(message: MotorMessage): Promise<MotorMessage>;
 
 	close(): Promise<void>;
 }
@@ -53,7 +53,7 @@ export class SerialInterface implements ISerialInterface {
 		return this._openPromise;
 	}
 
-	send(message: SerialMessage, baudRate?: number): Promise<void> {
+	send(message: MotorMessage, isochronous?: boolean): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
@@ -73,7 +73,7 @@ export class SerialInterface implements ISerialInterface {
 		});
 	}
 
-	request(message: SerialMessage, baudRate?: number): Promise<SerialMessage> {
+	request(message: MotorMessage): Promise<MotorMessage> {
 		return new Promise((resolve, reject) => {
 			const writeBuffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);

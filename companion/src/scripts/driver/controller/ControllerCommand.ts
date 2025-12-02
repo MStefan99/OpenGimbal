@@ -1,6 +1,11 @@
-import {GimbalCommandType, GimbalMode, GimbalVariable, USBMessage} from './USBMessage';
-import {exposeSerialMessage} from './USBSerialEncapsulator';
-import {MotorCommand} from '../serial/MotorCommand';
+import {
+	GimbalCommandType,
+	GimbalMode,
+	GimbalVariable,
+	ControllerMessage
+} from './ControllerMessage';
+import {exposeSerialMessage} from './ControllerUSBEncapsulator';
+import {MotorCommand} from '../motor/MotorCommand';
 import {RAD_TO_COUNTS} from '../../types';
 import {clamp} from '../../util';
 
@@ -12,13 +17,15 @@ export const gimbalCommandNames: Record<GimbalCommandType, string> = {
 	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const gimbalCommands: Record<GimbalCommandType, (buffer: Uint8Array) => GimbalCommand> = {
-	[GimbalCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
-	[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
-	[GimbalCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
-	[GimbalCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
-	[GimbalCommandType.MotorPassthrough]: (buffer: Uint8Array) => new MotorPassthroughCommand(buffer)
-};
+export const gimbalCommands: Record<GimbalCommandType, (buffer: Uint8Array) => ControllerCommand> =
+	{
+		[GimbalCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
+		[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
+		[GimbalCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
+		[GimbalCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
+		[GimbalCommandType.MotorPassthrough]: (buffer: Uint8Array) =>
+			new MotorPassthroughCommand(buffer)
+	};
 
 export const setVariableCommands: Record<
 	GimbalVariable,
@@ -34,7 +41,7 @@ export const setVariableCommands: Record<
 	}
 };
 
-export class GimbalCommand extends USBMessage {
+export class ControllerCommand extends ControllerMessage {
 	get type(): GimbalCommandType {
 		return this.view.getUint8(0);
 	}
@@ -51,7 +58,7 @@ export class GimbalCommand extends USBMessage {
 	}
 }
 
-export class DisableCommand extends GimbalCommand {
+export class DisableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor();
 
@@ -64,7 +71,7 @@ export class DisableCommand extends GimbalCommand {
 	}
 }
 
-export class EnableCommand extends GimbalCommand {
+export class EnableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor();
 
@@ -77,7 +84,7 @@ export class EnableCommand extends GimbalCommand {
 	}
 }
 
-export class GetVariableCommand extends GimbalCommand {
+export class GetVariableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor(variable: GimbalVariable);
 
@@ -106,7 +113,7 @@ export class GetVariableCommand extends GimbalCommand {
 	}
 }
 
-export class SetVariableCommand extends GimbalCommand {
+export class SetVariableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor(variable: GimbalVariable, value: Uint8Array);
 	constructor(variable: GimbalVariable, value: number, length: number);
@@ -229,7 +236,7 @@ export class SetModeVariableCommand extends SetVariableCommand {
 	}
 }
 
-export class MotorPassthroughCommand extends GimbalCommand {
+export class MotorPassthroughCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor(motorCommand: MotorCommand);
 

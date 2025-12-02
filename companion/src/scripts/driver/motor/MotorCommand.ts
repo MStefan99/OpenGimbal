@@ -1,5 +1,5 @@
 import {clamp, mod} from '../../util';
-import {MotorCommandType, MotorVariable, SerialMessage} from './SerialMessage';
+import {MotorCommandType, MotorVariable, MotorMessage} from './MotorMessage';
 
 export enum MotorCommandError {
 	NoError,
@@ -52,7 +52,7 @@ export const motorErrorDescriptions: Record<MotorCommandError, string> = {
 	[MotorCommandError.NonExistentType]: 'This command type does not exist'
 };
 
-export class MotorCommand extends SerialMessage {
+export class MotorCommand extends MotorMessage {
 	get type(): MotorCommandType {
 		return this.view.getUint8(1) & 0xf;
 	}
@@ -60,7 +60,7 @@ export class MotorCommand extends SerialMessage {
 	get error(): MotorCommandError {
 		if (this.length < 2) {
 			return MotorCommandError.TooShort;
-		} else if (this.srcAddr) {
+		} else if (this.srcAddr && this.srcAddr < 15 && this.destAddr && this.destAddr < 15) {
 			return MotorCommandError.SourceAddressInvalid;
 		} else if (!this.destAddr) {
 			return MotorCommandError.DestinationAddressInvalid;

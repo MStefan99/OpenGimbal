@@ -25,7 +25,7 @@ import {connectedDevice} from '../scripts/driver/driver';
 import JoystickControl from '../components/JoystickControl.vue';
 import {Gimbal} from '../scripts/driver/Gimbal';
 import {ref} from 'vue';
-import {GimbalMode} from '../scripts/driver/usb/USBMessage';
+import {GimbalMode} from '../scripts/driver/controller/ControllerMessage';
 
 type Orientation = {yaw: number; pitch: number; roll: number};
 const joystick = ref();

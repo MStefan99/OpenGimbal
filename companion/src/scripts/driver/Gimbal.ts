@@ -1,21 +1,21 @@
-import {IUSBInterface} from './usb/USBInterface';
+import {IUSBInterface} from './controller/USBInterface';
 import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
-import {USBSerialEncapsulator} from './usb/USBSerialEncapsulator';
+import {ControllerUSBEncapsulator} from './controller/ControllerUSBEncapsulator';
 import {
-	GimbalResponse,
+	ControllerResponse,
 	ReturnBatteryVoltageVariableResponse,
 	ReturnModeVariableResponse,
 	ReturnOrientationVariableResponse
-} from './usb/GimbalResponse';
+} from './controller/ControllerResponse';
 import {
 	DisableCommand,
 	EnableCommand,
 	GetVariableCommand,
-	GimbalCommand,
+	ControllerCommand,
 	SetModeVariableCommand,
 	SetOrientationVariableCommand
-} from './usb/GimbalCommand';
-import {GimbalMode, GimbalVariable} from './usb/USBMessage';
+} from './controller/ControllerCommand';
+import {GimbalMode, GimbalVariable} from './controller/ControllerMessage';
 
 export type Orientation = {
 	yaw: number;
@@ -35,13 +35,10 @@ export interface IGimbal extends IMotorManager {
 	readonly deviceVersionMajor: number;
 	readonly deviceVersionMinor: number;
 	readonly deviceVersionSubminor: number;
-	readonly manufacturerName?: string | undefined;
-	readonly productName?: string | undefined;
-	readonly serialNumber?: string | undefined;
 
-	send(command: GimbalCommand): Promise<void>;
+	send(command: ControllerCommand): Promise<void>;
 
-	request(command: GimbalCommand): Promise<GimbalResponse | null>;
+	request(command: ControllerCommand): Promise<ControllerResponse | null>;
 
 	enable(): Promise<void>;
 
@@ -52,7 +49,7 @@ export class Gimbal implements IGimbal {
 	_hardwareInterface: IUSBInterface;
 	motorManager: MotorManager;
 
-	constructor(hardwareInterface: IUSBInterface, encapsulator: USBSerialEncapsulator) {
+	constructor(hardwareInterface: IUSBInterface, encapsulator: ControllerUSBEncapsulator) {
 		this._hardwareInterface = hardwareInterface;
 		this.motorManager = new MotorManager(encapsulator);
 	}
@@ -117,12 +114,12 @@ export class Gimbal implements IGimbal {
 		return this.motorManager.motors;
 	}
 
-	send(command: GimbalCommand): Promise<void> {
+	send(command: ControllerCommand): Promise<void> {
 		return this._hardwareInterface.send(command);
 	}
 
-	request(command: GimbalCommand): Promise<GimbalResponse | null> {
-		return this._hardwareInterface.request(command) as Promise<GimbalResponse | null>;
+	request(command: ControllerCommand): Promise<ControllerResponse | null> {
+		return this._hardwareInterface.request(command) as Promise<ControllerResponse | null>;
 	}
 
 	enable(): Promise<void> {

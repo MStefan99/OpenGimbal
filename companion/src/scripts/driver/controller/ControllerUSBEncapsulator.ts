@@ -1,21 +1,21 @@
-import {SerialMessage} from '../serial/SerialMessage';
-import {GimbalCommandType, USBMessage} from './USBMessage';
+import {MotorMessage} from '../motor/MotorMessage';
+import {GimbalCommandType, ControllerMessage} from './ControllerMessage';
 import {USBInterface} from './USBInterface';
-import {ISerialInterface} from '../serial/SerialInterface';
-import {USBParser} from './USBParser';
-import {SerialParser} from '../serial/SerialParser';
+import {ISerialInterface} from '../motor/SerialInterface';
+import {ControllerParser} from './ControllerParser';
+import {MotorParser} from '../motor/MotorParser';
 
-export function encapsulateSerialMessage(message: SerialMessage): USBMessage {
+export function encapsulateSerialMessage(message: MotorMessage): ControllerMessage {
 	const buffer = new Uint8Array(message.buffer.byteLength + 1);
 	const view = new DataView(buffer.buffer);
 
 	view.setUint8(0, GimbalCommandType.MotorPassthrough);
 	buffer.set(message.buffer, 1);
 
-	return new USBParser().parseCommand(buffer);
+	return new ControllerParser().parseCommand(buffer);
 }
 
-export function exposeSerialMessage(message: USBMessage): SerialMessage | null {
+export function exposeSerialMessage(message: ControllerMessage): MotorMessage | null {
 	if (message.buffer.byteLength <= 1) {
 		return null;
 	}
@@ -24,12 +24,12 @@ export function exposeSerialMessage(message: USBMessage): SerialMessage | null {
 		throw new Error('Invalid message type');
 	}
 
-	return new SerialParser().parse(
+	return new MotorParser().parse(
 		new Uint8Array(message.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
 	);
 }
 
-export class USBSerialEncapsulator implements ISerialInterface {
+export class ControllerUSBEncapsulator implements ISerialInterface {
 	_usbInterface: USBInterface;
 
 	constructor(usbInterface: USBInterface) {
@@ -48,11 +48,11 @@ export class USBSerialEncapsulator implements ISerialInterface {
 		return Promise.resolve();
 	}
 
-	send(message: SerialMessage): Promise<void> {
+	send(message: MotorMessage): Promise<void> {
 		return this._usbInterface.send(encapsulateSerialMessage(message));
 	}
 
-	async request(message: SerialMessage): Promise<SerialMessage> {
+	async request(message: MotorMessage): Promise<MotorMessage> {
 		return exposeSerialMessage(await this._usbInterface.request(encapsulateSerialMessage(message)));
 	}
 

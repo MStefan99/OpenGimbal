@@ -5,15 +5,15 @@ import {
 	MotorResponse,
 	ReturnVariableResponse
 } from './MotorResponse';
-import {SerialMessage} from './SerialMessage';
+import {MotorMessage} from './MotorMessage';
 import {IParser} from '../Parser';
 
 export interface ISerialParser extends IParser {
-	parse(data: Uint8Array): SerialMessage | null;
+	parse(data: Uint8Array): MotorMessage | null;
 }
 
-export class SerialParser implements ISerialParser {
-	parse(data: Uint8Array): SerialMessage | null {
+export class MotorParser implements ISerialParser {
+	parse(data: Uint8Array): MotorMessage | null {
 		let bytesRemaining = 0;
 		let bytesProcessed = 0;
 		const view = new DataView(data.buffer);

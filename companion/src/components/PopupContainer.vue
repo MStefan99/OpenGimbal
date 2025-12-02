@@ -125,4 +125,16 @@ form input {
 input:focus {
 	@apply outline-2;
 }
+
+.move,
+.popup-enter-active,
+.popup-leave-active {
+	transition: all 0.5s ease;
+}
+
+.popup-enter-from,
+.popup-leave-to {
+	transform: translateY(-50%);
+	opacity: 0;
+}
 </style>

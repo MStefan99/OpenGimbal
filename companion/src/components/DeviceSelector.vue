@@ -8,8 +8,8 @@
 		div(v-else)
 			p.font-semibold.text-lg Connect
 			.flex.my-2
-				button.rounded-r-none(v-if="'usb' in navigator" @click="connect()") Connect over USB
-				button.rounded-l-none(@click="connect(true)") Connect over UART
+				button.rounded-r-none(v-if="'usb' in navigator" @click="connect('usb')") Connect over USB
+				button.rounded-l-none(@click="connect('serial')") Connect over Serial
 			button.w-full.mt-2(@click="$emit('close')") Close
 			.text-red-500.mt-4(v-if="!('usb' in navigator)")
 				p(v-if="!window.isSecureContext").
@@ -37,10 +37,9 @@ import {connectDevice, connectedDevice, disconnectDevice} from '../scripts/drive
 
 const emit = defineEmits<{(e: 'close'): void}>();
 const viewedDevice = ref<MotorManager | Gimbal | null>(null);
-const type = ref<'usb' | 'serial'>('usb');
 
-function connect(demo?: boolean): void {
-	connectDevice(type.value, demo)
+function connect(type: 'usb' | 'serial'): void {
+	connectDevice(type)
 		.then(() => emit('close'))
 		.catch((e) => {
 			if (e.name === 'NotFoundError') {
@@ -54,7 +53,7 @@ function connect(demo?: boolean): void {
 
 function formatConnectedDevice(): string {
 	if (connectedDevice.value instanceof Gimbal) {
-		return `OpenGimbal v${connectedDevice.value.deviceVersionMajor}.${connectedDevice.value.deviceVersionMinor}.${connectedDevice.value.deviceVersionSubminor}`;
+		return `${connectedDevice.value.productName ?? 'Unknown'} v${connectedDevice.value.deviceVersionMajor}.${connectedDevice.value.deviceVersionMinor}.${connectedDevice.value.deviceVersionSubminor}`;
 	}
 	return 'Unknown device';
 }

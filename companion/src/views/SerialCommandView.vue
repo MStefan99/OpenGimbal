@@ -8,7 +8,7 @@
 			button.mt-2.ml-2(type="button" @click="commandEntries = []") Clear history
 	p.text-red-500.font-bold.my-2.
 		Warning: This tool allows to execute any command on the device,
-		and sending an invalid or malformed command could lead to unpredictable behavior or damage to the device
+		and sending an invalid or malformed command could lead to unpredictable behavior or damage the device
 	h3.my-4.text-xl.font-bold History
 	.command.card.my-4(v-for="entry in commandEntries" :key="entry.id")
 		div(v-if="entry.message")
@@ -25,26 +25,26 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 import {connectedDevice} from '../scripts/driver/driver';
-import {SerialParser} from '../scripts/driver/serial/SerialParser';
-import {SerialMessage} from '../scripts/driver/serial/SerialMessage';
+import {MotorParser} from '../scripts/driver/motor/MotorParser';
+import {MotorMessage} from '../scripts/driver/motor/MotorMessage';
 import {
 	GetVariableCommand,
 	MotorCommand,
 	MotorCommandError,
 	motorErrorDescriptions
-} from '../scripts/driver/serial/MotorCommand';
-import {MotorResponse} from '../scripts/driver/serial/MotorResponse';
+} from '../scripts/driver/motor/MotorCommand';
+import {MotorResponse} from '../scripts/driver/motor/MotorResponse';
 import {alert, PopupColor} from '../scripts/popups';
 
 type CommandEntry = {
 	time: number;
-	message: SerialMessage;
+	message: MotorMessage;
 	id: number;
 };
 
 let lastID: number = 0;
 const commandEntries = ref<CommandEntry[]>([]);
-const parser = new SerialParser();
+const parser = new MotorParser();
 const historySize = ref<number>(20);
 const commandString = ref<string>('');
 
