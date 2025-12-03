@@ -14,8 +14,8 @@
 
 namespace HostCommand {
 	enum class CommandType : uint8_t {
-		Disable = 0x0,
-		Enable = 0x1,
+		Sleep = 0x0,
+		Wake = 0x1,
 		Discovery = 0x0c,
 		SetVariable = 0x0d,
 		GetVariable = 0x0e,

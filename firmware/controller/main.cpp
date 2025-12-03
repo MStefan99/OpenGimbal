@@ -154,12 +154,12 @@ void processMotorMessage(const uart::DefaultCallback::buffer_type& buffer) {
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processHostCommand(const uint8_t* buf, uint8_t len) {
 	switch (static_cast<HostCommand::CommandType>(buf[0])) {
-		case (HostCommand::CommandType::Enable): {
-			enable();
+		case (HostCommand::CommandType::Sleep): {
+			disable();
 			break;
 		}
-		case (HostCommand::CommandType::Disable): {
-			disable();
+		case (HostCommand::CommandType::Wake): {
+			enable();
 			break;
 		}
 		case (HostCommand::CommandType::Discovery): {
@@ -289,7 +289,10 @@ void processHostCommand(const uint8_t* buf, uint8_t len) {
 }
 
 void processHostMessage(const host::DefaultCallback::buffer_type& buffer) {
-	processHostCommand(buffer.buffer + 1, buffer.transferred - 1);
+	uint8_t buf[buffer.transferred - 1];
+	util::copy(buf, buffer.buffer + 1, buffer.transferred - 1);  // Avoids unaligned access
+
+	processHostCommand(buf, buffer.transferred - 1);
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
