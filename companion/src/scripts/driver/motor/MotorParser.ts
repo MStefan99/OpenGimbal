@@ -1,9 +1,9 @@
-import {motorCommands, setVariableCommands, MotorCommand, SetVariableCommand} from './MotorCommand';
+import {motorCommands, setVariableCommands, SetVariableCommand} from './MotorCommand';
 import {
 	motorResponses,
 	returnVariableResponses,
-	MotorResponse,
-	ReturnVariableResponse
+	ReturnVariableResponse,
+	MotorResponse
 } from './MotorResponse';
 import {MotorMessage} from './MotorMessage';
 import {IParser} from '../Parser';
@@ -29,7 +29,7 @@ export class MotorParser implements ISerialParser {
 				const buffer = new Uint8Array(bytesProcessed).fill(0).map((v, i) => data[i]);
 
 				if ((view.getUint8(0) & 0xf) !== 0) {
-					const genericCommand = new MotorCommand(buffer);
+					const genericCommand = new MotorResponse(buffer);
 					const command = motorCommands[genericCommand.type](buffer);
 
 					if (command instanceof SetVariableCommand) {

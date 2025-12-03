@@ -1,31 +1,25 @@
-import {IHardwareInterface} from '../HardwareInterface';
-import {ControllerMessage} from './ControllerMessage';
+import {IControllerInterface, IHardwareInterface} from '../HardwareInterface';
+import {ControllerMessage, ControllerResponseType} from './ControllerMessage';
 import {IControllerParser} from './ControllerParser';
+import {ControllerCommand} from './ControllerCommand';
+import {ControllerResponse} from './ControllerResponse';
 
-export interface IUSBInterface extends IHardwareInterface {
+export interface IUSBInterface extends IControllerInterface {
 	readonly usbVersionMajor: number;
 	readonly usbVersionMinor: number;
 	readonly usbVersionSubminor: number;
 	readonly deviceClass: number;
 	readonly deviceSubclass: number;
 	readonly deviceProtocol: number;
-	readonly vendorId: number;
-	readonly productId: number;
-	readonly deviceVersionMajor: number;
-	readonly deviceVersionMinor: number;
-	readonly deviceVersionSubminor: number;
-	readonly manufacturerName?: string | undefined;
-	readonly productName?: string | undefined;
-	readonly serialNumber?: string | undefined;
 
-	send(message: ControllerMessage, isochronous?: boolean): Promise<void>;
+	send(message: ControllerCommand, isochronous?: boolean): Promise<void>;
 
-	request(message: ControllerMessage): Promise<ControllerMessage>;
+	request(message: ControllerCommand): Promise<ControllerResponse>;
 
 	close(): Promise<void>;
 }
 
-export class USBInterface implements IHardwareInterface {
+export class USBInterface implements IUSBInterface {
 	_transferQueue = new Array<ControllerMessage>();
 	_usbDevice: USBDevice;
 	_parser: IControllerParser;
@@ -97,6 +91,10 @@ export class USBInterface implements IHardwareInterface {
 		return new Promise((resolve, reject) => {
 			const message = this._transferQueue.shift();
 
+			if (!message) {
+				return;
+			}
+
 			this._usbDevice
 				.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>)
 				.then(() => resolve())
@@ -123,7 +121,7 @@ export class USBInterface implements IHardwareInterface {
 		}
 	}
 
-	async request(message: ControllerMessage): Promise<ControllerMessage> {
+	async request(message: ControllerCommand): Promise<ControllerResponse> {
 		this._verbose && console.log('Sending', message.toString(), '\n', message);
 
 		return this._usbDevice
@@ -138,7 +136,7 @@ export class USBInterface implements IHardwareInterface {
 			.catch((err) => {
 				console.error('Send failed:', err);
 				return Promise.reject(err);
-			}) as Promise<ControllerMessage>;
+			}) as Promise<ControllerResponse>;
 	}
 
 	async close(): Promise<void> {

@@ -1,32 +1,41 @@
 import {IHardwareInterface} from '../HardwareInterface';
-import {MotorMessage} from './MotorMessage';
 import {MotorResponse} from './MotorResponse';
-import {ISerialParser} from './MotorParser';
+import {ISerialParser, MotorParser} from './MotorParser';
+import {Message} from '../Message';
+import {MotorMessage} from './MotorMessage';
+import {ControllerSerialCommand} from '../controller/ControllerSerialCommand';
+import {
+	ControllerSerialParser,
+	IControllerSerialParser
+} from '../controller/ControllerSerialParser';
 
 const timeout = 20;
 
-export interface ISerialInterface extends IHardwareInterface {
-	readonly vendorId: number | undefined;
-	readonly productId: number | undefined;
-
+export interface ISerialInterface<
+	CommandType extends Message,
+	ResponseType extends Message
+> extends IHardwareInterface {
 	get open(): Promise<void>;
 
-	send(message: MotorMessage, isochronous?: boolean): Promise<void>;
+	send(message: CommandType, isochronous?: boolean): Promise<void>;
 
-	request(message: MotorMessage): Promise<MotorMessage>;
+	request(message: CommandType): Promise<ResponseType>;
 
 	close(): Promise<void>;
 }
 
-export class SerialInterface implements ISerialInterface {
+export class SerialInterface<
+	CommandType extends Message,
+	ResponseType extends Message
+> implements ISerialInterface<CommandType, ResponseType> {
 	private _port: SerialPort;
-	private _parser: ISerialParser;
+	private _parser: ISerialParser | IControllerSerialParser;
 	private readonly _verbose: boolean;
 	private readonly _openPromise: Promise<void>;
 
 	constructor(
 		port: SerialPort,
-		parser: ISerialParser,
+		parser: ISerialParser | IControllerSerialParser,
 		baudRate = 115200,
 		verbose: boolean = false
 	) {
@@ -41,19 +50,11 @@ export class SerialInterface implements ISerialInterface {
 		});
 	}
 
-	get vendorId(): number | undefined {
-		return this._port.getInfo().usbVendorId;
-	}
-
-	get productId(): number | undefined {
-		return this._port.getInfo().usbProductId;
-	}
-
 	get open(): Promise<void> {
 		return this._openPromise;
 	}
 
-	send(message: MotorMessage, isochronous?: boolean): Promise<void> {
+	send(message: CommandType, isochronous?: boolean): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			const buffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
@@ -73,7 +74,7 @@ export class SerialInterface implements ISerialInterface {
 		});
 	}
 
-	request(message: MotorMessage): Promise<MotorMessage> {
+	request(message: CommandType): Promise<ResponseType> {
 		return new Promise((resolve, reject) => {
 			const writeBuffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
@@ -103,25 +104,44 @@ export class SerialInterface implements ISerialInterface {
 
 					try {
 						while (true) {
-							const {value, done} = await reader.read();
+							const {value: data, done} = await reader.read();
 							if (done) {
 								await reader.cancel();
 								return;
 							}
-							readBuffer.set(value, readBytes);
-							readBytes += value.byteLength;
-							const serialMessage = this._parser.parse(value);
+							readBuffer.set(data, readBytes);
+							readBytes += data.byteLength;
 
-							if (serialMessage && serialMessage instanceof MotorResponse) {
-								this._verbose &&
-									console.log('Received', serialMessage.toString(), '\n', serialMessage);
+							if (this._parser instanceof MotorParser) {
+								const motorMessage = this._parser.parse(data);
 
-								await reader.cancel();
-								resolve(serialMessage);
-								return;
-							} else {
-								readBytes = 0;
+								if (motorMessage) {
+									this._verbose &&
+										console.log('Received', motorMessage.toString(), '\n', motorMessage);
+									await reader.cancel();
+
+									resolve(motorMessage as unknown as ResponseType);
+									return;
+								}
+							} else if (this._parser instanceof ControllerSerialParser) {
+								const controllerSerialMessage = this._parser.parseResponse(data);
+
+								if (controllerSerialMessage) {
+									this._verbose &&
+										console.log(
+											'Received',
+											controllerSerialMessage.toString(),
+											'\n',
+											controllerSerialMessage
+										);
+									await reader.cancel();
+
+									resolve(controllerSerialMessage as unknown as ResponseType);
+									return;
+								}
 							}
+
+							readBytes = 0;
 						}
 					} finally {
 						await reader.cancel();

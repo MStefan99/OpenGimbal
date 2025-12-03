@@ -1,6 +1,6 @@
 import {IUSBInterface} from './controller/USBInterface';
 import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
-import {ControllerUSBEncapsulator} from './controller/ControllerUSBEncapsulator';
+import {ControllerEncapsulator} from './controller/ControllerEncapsulator';
 import {
 	ControllerResponse,
 	ReturnBatteryVoltageVariableResponse,
@@ -15,7 +15,11 @@ import {
 	SetModeVariableCommand,
 	SetOrientationVariableCommand
 } from './controller/ControllerCommand';
-import {GimbalMode, GimbalVariable} from './controller/ControllerMessage';
+import {GimbalMode, ControllerVariable} from './controller/ControllerMessage';
+import {IHardwareInterface} from './HardwareInterface';
+import {ISerialInterface} from './motor/SerialInterface';
+import {MotorMessage} from './motor/MotorMessage';
+import {Message} from './Message';
 
 export type Orientation = {
 	yaw: number;
@@ -24,18 +28,6 @@ export type Orientation = {
 };
 
 export interface IGimbal extends IMotorManager {
-	readonly usbVersionMajor: number;
-	readonly usbVersionMinor: number;
-	readonly usbVersionSubminor: number;
-	readonly deviceClass: number;
-	readonly deviceSubclass: number;
-	readonly deviceProtocol: number;
-	readonly vendorId: number;
-	readonly productId: number;
-	readonly deviceVersionMajor: number;
-	readonly deviceVersionMinor: number;
-	readonly deviceVersionSubminor: number;
-
 	send(command: ControllerCommand): Promise<void>;
 
 	request(command: ControllerCommand): Promise<ControllerResponse | null>;
@@ -46,68 +38,15 @@ export interface IGimbal extends IMotorManager {
 }
 
 export class Gimbal implements IGimbal {
-	_hardwareInterface: IUSBInterface;
+	_hardwareInterface: IHardwareInterface;
 	motorManager: MotorManager;
 
-	constructor(hardwareInterface: IUSBInterface, encapsulator: ControllerUSBEncapsulator) {
+	constructor(
+		hardwareInterface: IHardwareInterface,
+		encapsulator: ISerialInterface<MotorMessage, MotorMessage>
+	) {
 		this._hardwareInterface = hardwareInterface;
 		this.motorManager = new MotorManager(encapsulator);
-	}
-
-	get usbVersionMajor(): number {
-		return this._hardwareInterface.usbVersionMajor;
-	}
-
-	get usbVersionMinor(): number {
-		return this._hardwareInterface.usbVersionMinor;
-	}
-
-	get usbVersionSubminor(): number {
-		return this._hardwareInterface.usbVersionSubminor;
-	}
-
-	get deviceClass(): number {
-		return this._hardwareInterface.deviceClass;
-	}
-
-	get deviceSubclass(): number {
-		return this._hardwareInterface.deviceSubclass;
-	}
-
-	get deviceProtocol(): number {
-		return this._hardwareInterface.deviceProtocol;
-	}
-
-	get vendorId(): number {
-		return this._hardwareInterface.vendorId;
-	}
-
-	get productId(): number {
-		return this._hardwareInterface.productId;
-	}
-
-	get deviceVersionMajor(): number {
-		return this._hardwareInterface.deviceVersionMajor;
-	}
-
-	get deviceVersionMinor(): number {
-		return this._hardwareInterface.deviceVersionMinor;
-	}
-
-	get deviceVersionSubminor(): number {
-		return this._hardwareInterface.deviceVersionSubminor;
-	}
-
-	get manufacturerName(): string | undefined {
-		return this._hardwareInterface.manufacturerName;
-	}
-
-	get productName(): string | undefined {
-		return this._hardwareInterface.productName;
-	}
-
-	get serialNumber(): string | undefined {
-		return this._hardwareInterface.serialNumber;
 	}
 
 	get motors(): IMotorControl {
@@ -136,7 +75,7 @@ export class Gimbal implements IGimbal {
 
 	async getOrientation(): Promise<Orientation> {
 		const response = (await this._hardwareInterface.request(
-			new GetVariableCommand(GimbalVariable.Orientation)
+			new GetVariableCommand(ControllerVariable.Orientation)
 		)) as ReturnOrientationVariableResponse;
 
 		return {
@@ -148,7 +87,7 @@ export class Gimbal implements IGimbal {
 
 	async getHandleOrientation(): Promise<Orientation> {
 		const response = (await this._hardwareInterface.request(
-			new GetVariableCommand(GimbalVariable.HandleOrientation)
+			new GetVariableCommand(ControllerVariable.HandleOrientation)
 		)) as ReturnOrientationVariableResponse;
 
 		return {
@@ -173,7 +112,7 @@ export class Gimbal implements IGimbal {
 	async getVoltage(): Promise<number> {
 		return (
 			(await this._hardwareInterface.request(
-				new GetVariableCommand(GimbalVariable.BatteryVoltage)
+				new GetVariableCommand(ControllerVariable.BatteryVoltage)
 			)) as ReturnBatteryVoltageVariableResponse
 		).voltage;
 	}

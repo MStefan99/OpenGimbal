@@ -1,13 +1,11 @@
 import {IMotor, Motor, MotorOptions} from './Motor';
 import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './motor/SerialInterface';
+import {MotorMessage, MotorVariable} from './motor/MotorMessage';
 import {MotorCommand} from './motor/MotorCommand';
 import {MotorResponse} from './motor/MotorResponse';
 
 export interface IMotorControl {
-	readonly vendorId: number | undefined;
-	readonly productId: number | undefined;
-
 	get active(): IMotor[];
 
 	get all(): IMotor;
@@ -24,12 +22,6 @@ export interface IMotorControl {
 }
 
 export interface IMotorManager {
-	readonly vendorId: number | undefined;
-	readonly productId: number | undefined;
-	readonly manufacturerName?: string | undefined;
-	readonly productName?: string | undefined;
-	readonly serialNumber?: string | undefined;
-
 	get motors(): IMotorControl;
 
 	close(): Promise<void>;
@@ -42,23 +34,15 @@ export type MotorEntry = {
 };
 
 class MotorControl implements IMotorControl {
-	readonly _hardwareInterface: ISerialInterface;
+	readonly _hardwareInterface: ISerialInterface<MotorMessage, MotorMessage>;
 	readonly _motorEntries: MotorEntry[];
 
-	constructor(serialInterface: ISerialInterface) {
+	constructor(serialInterface: ISerialInterface<MotorMessage, MotorMessage>) {
 		this._hardwareInterface = serialInterface;
 		this._motorEntries = Array.from({length: 14}, (v, i) => ({
 			motor: new Motor(serialInterface, i + 1),
 			active: false
 		}));
-	}
-
-	get vendorId(): number | undefined {
-		return this._hardwareInterface.vendorId;
-	}
-
-	get productId(): number | undefined {
-		return this._hardwareInterface.productId;
 	}
 
 	get active(): Motor[] {
@@ -107,16 +91,8 @@ class MotorControl implements IMotorControl {
 export class MotorManager implements IMotorManager {
 	readonly _control: MotorControl;
 
-	constructor(serialInterface: ISerialInterface) {
+	constructor(serialInterface: ISerialInterface<MotorMessage, MotorMessage>) {
 		this._control = new MotorControl(serialInterface);
-	}
-
-	get vendorId(): number | undefined {
-		return this._control.vendorId;
-	}
-
-	get productId(): number | undefined {
-		return this._control.productId;
 	}
 
 	get motors(): IMotorControl {

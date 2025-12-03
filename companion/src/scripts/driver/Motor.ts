@@ -10,7 +10,6 @@ import {
 	GetVariableCommand,
 	HapticCommand,
 	IdleCommand,
-	MotorCommand,
 	MoveCommand,
 	SetOffsetVariableCommand,
 	SetOptionsVariableCommand,
@@ -19,7 +18,7 @@ import {
 	WakeCommand
 } from './motor/MotorCommand';
 import {ISerialInterface} from './motor/SerialInterface';
-import {MotorVariable} from './motor/MotorMessage';
+import {MotorMessage, MotorVariable} from './motor/MotorMessage';
 
 export type MotorOptions = {
 	calibrated: boolean;
@@ -32,9 +31,9 @@ export interface IMotor {
 
 	toString(): string;
 
-	send(command: MotorCommand): Promise<void>;
+	send(command: MotorResponse): Promise<void>;
 
-	request(command: MotorCommand): Promise<MotorResponse | null>;
+	request(command: MotorResponse): Promise<MotorResponse | null>;
 
 	idle(): Promise<void>;
 
@@ -81,9 +80,12 @@ export interface IMotor {
 
 export class Motor implements IMotor {
 	readonly _address: number;
-	_hardwareInterface: ISerialInterface;
+	_hardwareInterface: ISerialInterface<MotorMessage, MotorMessage>;
 
-	constructor(hardwareInterface: ISerialInterface, address: number = 15) {
+	constructor(
+		hardwareInterface: ISerialInterface<MotorMessage, MotorMessage>,
+		address: number = 15
+	) {
 		this._hardwareInterface = hardwareInterface;
 		this._address = address;
 	}
@@ -96,11 +98,11 @@ export class Motor implements IMotor {
 		return `Motor ${this._address}`;
 	}
 
-	send(command: MotorCommand): Promise<void> {
+	send(command: MotorResponse): Promise<void> {
 		return this._hardwareInterface.send(command);
 	}
 
-	request(command: MotorCommand): Promise<MotorResponse> {
+	request(command: MotorResponse): Promise<MotorResponse> {
 		return this._hardwareInterface.request(command) as Promise<MotorResponse>;
 	}
 

@@ -1,48 +1,65 @@
 import {
-	GimbalCommandType,
+	ControllerCommandType,
 	GimbalMode,
-	GimbalVariable,
+	ControllerVariable,
 	ControllerMessage
 } from './ControllerMessage';
-import {exposeSerialMessage} from './ControllerUSBEncapsulator';
 import {MotorCommand} from '../motor/MotorCommand';
 import {RAD_TO_COUNTS} from '../../types';
 import {clamp} from '../../util';
+import {MotorParser} from '../motor/MotorParser';
 
-export const gimbalCommandNames: Record<GimbalCommandType, string> = {
-	[GimbalCommandType.Disable]: 'Disable',
-	[GimbalCommandType.Enable]: 'Enable',
-	[GimbalCommandType.GetVariable]: 'Get variable',
-	[GimbalCommandType.SetVariable]: 'Set variable',
-	[GimbalCommandType.MotorPassthrough]: 'Motor passthrough'
+export const controllerCommandNames: Record<ControllerCommandType, string> = {
+	[ControllerCommandType.Disable]: 'Disable',
+	[ControllerCommandType.Enable]: 'Enable',
+	[ControllerCommandType.Discovery]: 'Discovery',
+	[ControllerCommandType.GetVariable]: 'Get variable',
+	[ControllerCommandType.SetVariable]: 'Set variable',
+	[ControllerCommandType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const gimbalCommands: Record<GimbalCommandType, (buffer: Uint8Array) => ControllerCommand> =
-	{
-		[GimbalCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
-		[GimbalCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
-		[GimbalCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
-		[GimbalCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
-		[GimbalCommandType.MotorPassthrough]: (buffer: Uint8Array) =>
-			new MotorPassthroughCommand(buffer)
-	};
+export const controllerCommands: Record<
+	ControllerCommandType,
+	(buffer: Uint8Array) => ControllerCommand
+> = {
+	[ControllerCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
+	[ControllerCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
+	[ControllerCommandType.Discovery]: (buffer: Uint8Array) => new DiscoveryCommand(buffer),
+	[ControllerCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
+	[ControllerCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
+	[ControllerCommandType.MotorPassthrough]: (buffer: Uint8Array) =>
+		new MotorPassthroughCommand(buffer)
+};
 
 export const setVariableCommands: Record<
-	GimbalVariable,
+	ControllerVariable,
 	(buffer: Uint8Array) => SetVariableCommand
 > = {
-	[GimbalVariable.Orientation]: (buffer: Uint8Array) => new SetOrientationVariableCommand(buffer),
-	[GimbalVariable.HandleOrientation]: () => {
+	[ControllerVariable.Orientation]: (buffer: Uint8Array) =>
+		new SetOrientationVariableCommand(buffer),
+	[ControllerVariable.HandleOrientation]: () => {
 		throw new Error('Handle orientation is a read-only variable');
 	},
-	[GimbalVariable.Mode]: (buffer) => new SetModeVariableCommand(buffer),
-	[GimbalVariable.BatteryVoltage]: () => {
+	[ControllerVariable.Mode]: (buffer) => new SetModeVariableCommand(buffer),
+	[ControllerVariable.BatteryVoltage]: () => {
 		throw new Error('Battery voltage is a read-only variable');
+	},
+	[ControllerVariable.DeviceVersion]: () => {
+		throw new Error('Device version is a read-only variable');
+	},
+	[ControllerVariable.VendorName]: () => {
+		throw new Error('Vendor name is a read-only variable');
+	},
+	[ControllerVariable.ProductName]: () => {
+		throw new Error('Product name is a read-only variable');
+	},
+	[ControllerVariable.SerialNumber]: () => {
+		throw new Error('Serial number is a read-only variable');
 	}
 };
 
 export class ControllerCommand extends ControllerMessage {
-	get type(): GimbalCommandType {
+	get type(): ControllerCommandType {
 		return this.view.getUint8(0);
 	}
 
@@ -53,7 +70,7 @@ export class ControllerCommand extends ControllerMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${gimbalCommandNames[this.view.getUint8(0) as GimbalCommandType]} command`;
+			return `${controllerCommandNames[this.view.getUint8(0) as ControllerCommandType]} command`;
 		}
 	}
 }
@@ -66,7 +83,7 @@ export class DisableCommand extends ControllerCommand {
 		if (buffer) {
 			super(buffer);
 		} else {
-			super(GimbalCommandType.Disable);
+			super(ControllerCommandType.Disable);
 		}
 	}
 }
@@ -79,16 +96,29 @@ export class EnableCommand extends ControllerCommand {
 		if (buffer) {
 			super(buffer);
 		} else {
-			super(GimbalCommandType.Enable);
+			super(ControllerCommandType.Enable);
+		}
+	}
+}
+
+export class DiscoveryCommand extends ControllerCommand {
+	constructor(buffer: Uint8Array);
+	constructor();
+
+	constructor(buffer?: Uint8Array) {
+		if (buffer) {
+			super(buffer);
+		} else {
+			super(ControllerCommandType.Discovery);
 		}
 	}
 }
 
 export class GetVariableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
-	constructor(variable: GimbalVariable);
+	constructor(variable: ControllerVariable);
 
-	constructor(variable: Uint8Array | GimbalVariable) {
+	constructor(variable: Uint8Array | ControllerVariable) {
 		if (variable instanceof Uint8Array) {
 			super(variable);
 		} else {
@@ -96,11 +126,11 @@ export class GetVariableCommand extends ControllerCommand {
 			const view = new DataView(buffer.buffer);
 			view.setUint8(0, variable);
 
-			super(GimbalCommandType.GetVariable, buffer);
+			super(ControllerCommandType.GetVariable, buffer);
 		}
 	}
 
-	get variable(): GimbalVariable {
+	get variable(): ControllerVariable {
 		return this.view.getUint8(1);
 	}
 
@@ -108,17 +138,21 @@ export class GetVariableCommand extends ControllerCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${GimbalVariable[this.variable] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${ControllerVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }
 
 export class SetVariableCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
-	constructor(variable: GimbalVariable, value: Uint8Array);
-	constructor(variable: GimbalVariable, value: number, length: number);
+	constructor(variable: ControllerVariable, value: Uint8Array);
+	constructor(variable: ControllerVariable, value: number, length: number);
 
-	constructor(variable: Uint8Array | GimbalVariable, value?: number | Uint8Array, length?: number) {
+	constructor(
+		variable: Uint8Array | ControllerVariable,
+		value?: number | Uint8Array,
+		length?: number
+	) {
 		if (variable instanceof Uint8Array) {
 			super(variable);
 		} else if (!(value instanceof Uint8Array)) {
@@ -134,7 +168,7 @@ export class SetVariableCommand extends ControllerCommand {
 				value >>= 8;
 			}
 
-			super(GimbalCommandType.SetVariable, buffer);
+			super(ControllerCommandType.SetVariable, buffer);
 		} else {
 			const buffer = new Uint8Array(value.byteLength + 1);
 			const view = new DataView(buffer.buffer);
@@ -142,11 +176,11 @@ export class SetVariableCommand extends ControllerCommand {
 			view.setUint8(0, variable);
 			buffer.set(value, 1);
 
-			super(GimbalCommandType.SetVariable, buffer);
+			super(ControllerCommandType.SetVariable, buffer);
 		}
 	}
 
-	get variable(): GimbalVariable {
+	get variable(): ControllerVariable {
 		return this.view.getUint8(1);
 	}
 
@@ -154,7 +188,7 @@ export class SetVariableCommand extends ControllerCommand {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${GimbalVariable[this.variable] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${ControllerVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }
@@ -174,7 +208,7 @@ export class SetOrientationVariableCommand extends SetVariableCommand {
 			view.setInt16(2, pitch * RAD_TO_COUNTS, false);
 			view.setInt16(4, roll * RAD_TO_COUNTS, false);
 
-			super(GimbalVariable.Orientation, buf);
+			super(ControllerVariable.Orientation, buf);
 		}
 	}
 
@@ -218,7 +252,7 @@ export class SetModeVariableCommand extends SetVariableCommand {
 
 			view.setUint8(0, buffer);
 
-			super(GimbalVariable.Mode, buf);
+			super(ControllerVariable.Mode, buf);
 		}
 	}
 
@@ -244,17 +278,29 @@ export class MotorPassthroughCommand extends ControllerCommand {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr.buffer);
+			const buffer = new Uint8Array(srcAddr.buffer.byteLength + 1);
+			const view = new DataView(buffer.buffer);
+
+			view.setUint8(0, ControllerCommandType.MotorPassthrough);
+			buffer.set(srcAddr.buffer, 1);
+
+			super(buffer);
 		}
 	}
 
 	get motorCommand(): MotorCommand | null {
-		const message = exposeSerialMessage(this);
+		const message = new MotorParser().parse(
+			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
+		);
 
 		if (message === null) {
 			return null;
 		} else if (!(message instanceof MotorCommand)) {
 			throw new Error('Could not parse motor passthrough command');
+		}
+
+		if (message.view.getUint8(0) !== ControllerCommandType.MotorPassthrough) {
+			throw new Error('Invalid message type');
 		}
 
 		return message;

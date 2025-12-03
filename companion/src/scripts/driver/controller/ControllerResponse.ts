@@ -1,41 +1,52 @@
 import {
 	GimbalMode,
-	GimbalResponseType,
-	GimbalVariable,
-	ControllerMessage
+	ControllerResponseType,
+	ControllerVariable,
+	ControllerMessage,
+	ControllerCommandType
 } from './ControllerMessage';
-import {MotorCommand} from '../motor/MotorCommand';
-import {exposeSerialMessage} from './ControllerUSBEncapsulator';
 import {MotorResponse} from '../motor/MotorResponse';
 import {RAD_TO_COUNTS} from '../../types';
 import {scale} from '../../util';
+import {MotorParser} from '../motor/MotorParser';
+import {MotorCommand} from '../motor/MotorCommand';
 
-export const gimbalCommandNames: Record<GimbalResponseType, string> = {
-	[GimbalResponseType.ReturnVariable]: 'Return variable',
-	[GimbalResponseType.MotorPassthrough]: 'Motor passthrough'
+export const controllerResponseNames: Record<ControllerResponseType, string> = {
+	[ControllerResponseType.MotorDiscovery]: 'Motor discovery',
+	[ControllerResponseType.Discovery]: 'Discovery',
+	[ControllerResponseType.ReturnVariable]: 'Return variable',
+	[ControllerResponseType.MotorPassthrough]: 'Motor passthrough'
 };
 
-export const gimbalResponses: Record<
-	GimbalResponseType,
+export const controllerResponses: Record<
+	ControllerResponseType,
 	(buffer: Uint8Array) => ControllerResponse
 > = {
-	[GimbalResponseType.ReturnVariable]: (buffer: Uint8Array) => new ReturnVariableResponse(buffer),
-	[GimbalResponseType.MotorPassthrough]: (buffer: Uint8Array) =>
+	[ControllerResponseType.MotorDiscovery]: (buffer: Uint8Array) =>
+		new MotorDiscoveryResponse(buffer),
+	[ControllerResponseType.Discovery]: (buffer: Uint8Array) => new DiscoveryResponse(buffer),
+	[ControllerResponseType.ReturnVariable]: (buffer: Uint8Array) =>
+		new ReturnVariableResponse(buffer),
+	[ControllerResponseType.MotorPassthrough]: (buffer: Uint8Array) =>
 		new MotorPassthroughResponse(buffer)
 };
 
 export const returnVariableResponses: Record<
-	GimbalVariable,
+	ControllerVariable,
 	(buffer: Uint8Array) => ReturnVariableResponse
 > = {
-	[GimbalVariable.Orientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
-	[GimbalVariable.HandleOrientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
-	[GimbalVariable.Mode]: (buffer) => new ReturnModeVariableResponse(buffer),
-	[GimbalVariable.BatteryVoltage]: (buffer) => new ReturnBatteryVoltageVariableResponse(buffer)
+	[ControllerVariable.Orientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
+	[ControllerVariable.HandleOrientation]: (buffer) => new ReturnOrientationVariableResponse(buffer),
+	[ControllerVariable.Mode]: (buffer) => new ReturnModeVariableResponse(buffer),
+	[ControllerVariable.BatteryVoltage]: (buffer) => new ReturnBatteryVoltageVariableResponse(buffer),
+	[ControllerVariable.DeviceVersion]: (buffer) => new ReturnBCDVariableResponse(buffer),
+	[ControllerVariable.VendorName]: (buffer) => new ReturnStringVariableResponse(buffer),
+	[ControllerVariable.ProductName]: (buffer) => new ReturnStringVariableResponse(buffer),
+	[ControllerVariable.SerialNumber]: (buffer) => new ReturnStringVariableResponse(buffer)
 };
 
 export class ControllerResponse extends ControllerMessage {
-	get type(): GimbalResponseType {
+	get type(): ControllerResponseType {
 		return this.view.getUint8(0);
 	}
 
@@ -46,8 +57,20 @@ export class ControllerResponse extends ControllerMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${gimbalCommandNames[this.view.getUint8(0) as GimbalResponseType]} command`;
+			return `${controllerResponseNames[this.view.getUint8(0) as ControllerResponseType]} command`;
 		}
+	}
+}
+
+export class MotorDiscoveryResponse extends ControllerResponse {
+	constructor(buffer: Uint8Array) {
+		super(buffer);
+	}
+}
+
+export class DiscoveryResponse extends ControllerResponse {
+	constructor(buffer: Uint8Array) {
+		super(buffer);
 	}
 }
 
@@ -56,7 +79,7 @@ export class ReturnVariableResponse extends ControllerResponse {
 		super(buffer);
 	}
 
-	get variable(): GimbalVariable {
+	get variable(): ControllerVariable {
 		return this.view.getUint8(1);
 	}
 
@@ -64,7 +87,7 @@ export class ReturnVariableResponse extends ControllerResponse {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return super.toString() + `\n  Variable: ${GimbalVariable[this.variable] ?? 'unknown'}`;
+			return super.toString() + `\n  Variable: ${ControllerVariable[this.variable] ?? 'unknown'}`;
 		}
 	}
 }
@@ -132,25 +155,69 @@ export class ReturnBatteryVoltageVariableResponse extends ReturnVariableResponse
 	}
 }
 
+export class ReturnBCDVariableResponse extends ReturnVariableResponse {
+	get value(): string {
+		const bcd = this.view.getUint16(2, false);
+		return `${bcd >> 8}.${bcd & 0xf0}.${bcd & 0x0f}`;
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Value: ${this.value}`;
+		}
+	}
+}
+
+export class ReturnStringVariableResponse extends ReturnVariableResponse {
+	get string(): string {
+		const arr = new Array<number>((this.view.byteLength - 2) / 2)
+			.fill(0)
+			.map((v, i) => this.view.getUint16(2 + 2 * i, true));
+		return arr.map((v) => String.fromCharCode(v)).join('');
+	}
+
+	override toString(type?: 'hex'): string {
+		if (type === 'hex') {
+			return super.toString(type);
+		} else {
+			return super.toString() + `\n  Value: ${this.string}`;
+		}
+	}
+}
+
 export class MotorPassthroughResponse extends ControllerResponse {
 	constructor(buffer: Uint8Array);
-	constructor(motorCommand: MotorCommand);
+	constructor(motorCommand: MotorResponse);
 
-	constructor(srcAddr: Uint8Array | MotorCommand) {
+	constructor(srcAddr: Uint8Array | MotorResponse) {
 		if (srcAddr instanceof Uint8Array) {
 			super(srcAddr);
 		} else {
-			super(srcAddr.buffer);
+			const buffer = new Uint8Array(srcAddr.buffer.byteLength + 1);
+			const view = new DataView(buffer.buffer);
+
+			view.setUint8(0, ControllerResponseType.MotorPassthrough);
+			buffer.set(srcAddr.buffer, 1);
+
+			super(buffer);
 		}
 	}
 
 	get motorResponse(): MotorResponse | null {
-		const message = exposeSerialMessage(this);
+		const message = new MotorParser().parse(
+			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
+		);
 
 		if (message === null) {
 			return null;
 		} else if (!(message instanceof MotorResponse)) {
-			throw new Error('Could not parse motor passthrough response');
+			throw new Error('Could not parse motor passthrough command');
+		}
+
+		if (message.view.getUint8(0) !== ControllerResponseType.MotorPassthrough) {
+			throw new Error('Invalid message type');
 		}
 
 		return message;

@@ -53,7 +53,8 @@ function connect(type: 'usb' | 'serial'): void {
 
 function formatConnectedDevice(): string {
 	if (connectedDevice.value instanceof Gimbal) {
-		return `${connectedDevice.value.productName ?? 'Unknown'} v${connectedDevice.value.deviceVersionMajor}.${connectedDevice.value.deviceVersionMinor}.${connectedDevice.value.deviceVersionSubminor}`;
+		// return `${connectedDevice.value.productName ?? 'Unknown'} v${connectedDevice.value.deviceVersionMajor}.${connectedDevice.value.deviceVersionMinor}.${connectedDevice.value.deviceVersionSubminor}`;
+		return 'Device';
 	}
 	return 'Unknown device';
 }

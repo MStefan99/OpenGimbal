@@ -1,23 +1,30 @@
 import {Message} from '../Message';
 
-export enum GimbalCommandType {
+export enum ControllerCommandType {
 	Disable = 0x00,
 	Enable = 0x01,
+	Discovery = 0xc,
 	SetVariable = 0xd,
 	GetVariable = 0xe,
 	MotorPassthrough = 0x0f
 }
 
-export enum GimbalResponseType {
+export enum ControllerResponseType {
+	MotorDiscovery = 0xc, // Produced as a loopback of a Discovery command
+	Discovery = 0xd,
 	ReturnVariable = 0xe,
 	MotorPassthrough = 0xf
 }
 
-export enum GimbalVariable {
+export enum ControllerVariable {
 	Orientation = 0x00,
 	HandleOrientation = 0x01,
 	Mode = 0x02,
-	BatteryVoltage = 0x03
+	BatteryVoltage = 0x03,
+	DeviceVersion = 0x10,
+	VendorName = 0x11,
+	ProductName = 0x12,
+	SerialNumber = 0x13
 }
 
 export enum GimbalMode {
@@ -29,9 +36,12 @@ export enum GimbalMode {
 
 export class ControllerMessage extends Message {
 	constructor(buffer: Uint8Array);
-	constructor(type: GimbalCommandType | GimbalResponseType, data?: Uint8Array);
+	constructor(type: ControllerCommandType | ControllerResponseType, data?: Uint8Array);
 
-	constructor(buffer: Uint8Array | GimbalCommandType | GimbalResponseType, data?: Uint8Array) {
+	constructor(
+		buffer: Uint8Array | ControllerCommandType | ControllerResponseType,
+		data?: Uint8Array
+	) {
 		if (buffer instanceof Uint8Array) {
 			super(buffer);
 		} else {

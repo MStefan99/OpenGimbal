@@ -3,9 +3,9 @@ import {alert, PopupColor} from '../../popups';
 import {Gimbal, IGimbal} from '../Gimbal';
 import {USBInterface} from './USBInterface';
 import {ControllerParser} from './ControllerParser';
-import {ControllerUSBEncapsulator} from './ControllerUSBEncapsulator';
+import {ControllerEncapsulator} from './ControllerEncapsulator';
 
-export const connectedUSBDevice = ref<IGimbal | null>(null);
+export const connectedControllerDevice = ref<IGimbal | null>(null);
 let connectedDevice: USBDevice | null = null;
 
 export async function connectUSBDevice(verbose: boolean = false): Promise<IGimbal | null> {
@@ -25,8 +25,8 @@ export async function connectUSBDevice(verbose: boolean = false): Promise<IGimba
 			.then(() => usbDevice.claimInterface(0))
 			.then(() => {
 				const usbInterface = new USBInterface(usbDevice, new ControllerParser(), verbose);
-				const device = new Gimbal(usbInterface, new ControllerUSBEncapsulator(usbInterface));
-				connectedUSBDevice.value = device;
+				const device = new Gimbal(usbInterface, new ControllerEncapsulator(usbInterface));
+				connectedControllerDevice.value = device;
 				connectedDevice = usbDevice;
 
 				resolve(device);
@@ -49,7 +49,7 @@ export async function connectUSBDevice(verbose: boolean = false): Promise<IGimba
 export function disconnectUSBDevice(device: IGimbal): void {
 	device.close();
 
-	connectedUSBDevice.value = connectedDevice = null;
+	connectedControllerDevice.value = connectedDevice = null;
 }
 
 if ('usb' in navigator) {
@@ -57,7 +57,7 @@ if ('usb' in navigator) {
 		const device = (e as USBConnectionEvent).device;
 
 		if (device === connectedDevice) {
-			connectedUSBDevice.value = connectedDevice = null;
+			connectedControllerDevice.value = connectedDevice = null;
 		}
 	});
 }

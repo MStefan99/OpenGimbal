@@ -33,8 +33,8 @@ import {
 	MotorCommandError,
 	motorErrorDescriptions
 } from '../scripts/driver/motor/MotorCommand';
-import {MotorResponse} from '../scripts/driver/motor/MotorResponse';
 import {alert, PopupColor} from '../scripts/popups';
+import {MotorResponse} from '../scripts/driver/motor/MotorResponse';
 
 type CommandEntry = {
 	time: number;

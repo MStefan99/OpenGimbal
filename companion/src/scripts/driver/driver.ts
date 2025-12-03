@@ -2,14 +2,18 @@ import {computed} from 'vue';
 import {Gimbal, IGimbal} from './Gimbal';
 import {IMotorManager} from './MotorManager';
 import {
-	connectedSerialDevice,
+	connectedMotorDevice,
 	connectSerialDevice,
 	disconnectSerialDevice
 } from './motor/serialDriver';
-import {connectedUSBDevice, connectUSBDevice, disconnectUSBDevice} from './controller/usbDriver';
+import {
+	connectedControllerDevice,
+	connectUSBDevice,
+	disconnectUSBDevice
+} from './controller/usbDriver';
 
 export const connectedDevice = computed<IGimbal | IMotorManager | null>(
-	() => connectedUSBDevice.value ?? connectedSerialDevice.value
+	() => connectedControllerDevice.value ?? connectedMotorDevice.value
 );
 
 export async function connectDevice(

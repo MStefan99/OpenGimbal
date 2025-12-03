@@ -1,16 +1,17 @@
 import {
 	ControllerCommand,
-	gimbalCommands,
+	controllerCommands,
 	MotorPassthroughCommand,
 	SetVariableCommand,
 	setVariableCommands
 } from './ControllerCommand';
 import {
-	gimbalResponses,
+	controllerResponses,
 	ControllerResponse,
 	ReturnVariableResponse,
 	returnVariableResponses
 } from './ControllerResponse';
+import {ControllerMessage} from './ControllerMessage';
 
 export interface IControllerParser {
 	parseCommand(data: Uint8Array): ControllerCommand | null;
@@ -25,7 +26,7 @@ export class ControllerParser implements IControllerParser {
 		}
 
 		const genericCommand = new ControllerCommand(data);
-		const command = gimbalCommands[genericCommand.type](data);
+		const command = controllerCommands[genericCommand.type](data);
 
 		if (command instanceof SetVariableCommand) {
 			return setVariableCommands[command.variable](data);
@@ -40,7 +41,7 @@ export class ControllerParser implements IControllerParser {
 		}
 
 		const genericResponse = new ControllerResponse(data);
-		const response = gimbalResponses[genericResponse.type](data);
+		const response = controllerResponses[genericResponse.type](data);
 
 		if (response instanceof ReturnVariableResponse) {
 			return returnVariableResponses[response.variable](data);
