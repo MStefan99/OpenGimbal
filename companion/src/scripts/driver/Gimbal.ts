@@ -66,21 +66,29 @@ export class Gimbal implements IGimbal {
 		this.motorManager = new MotorManager(encapsulator);
 
 		if (this._hardwareInterface instanceof USBInterface) {
+			this._productVersion = `${this._hardwareInterface.deviceVersionMajor}.${this._hardwareInterface.deviceVersionMinor}.${this._hardwareInterface.deviceVersionSubminor}`;
+			this._vendorName = this._hardwareInterface.manufacturerName;
+			this._productName = this._hardwareInterface.productName;
+			this._serialNumber = this._hardwareInterface.serialNumber;
 			this._usbVersion = `${this._hardwareInterface.usbVersionMajor}.${this._hardwareInterface.usbVersionMinor}.${this._hardwareInterface.usbVersionSubminor}`;
 			this._connectedOver = 'usb';
 		}
 	}
 
 	enumerate(): Promise<IMotor[] | void> {
-		return this.request(new GetVariableCommand(ControllerVariable.DeviceVersion))
-			.then((res) => (this._productVersion = (res as ReturnBCDVariableResponse).value))
-			.then(() => this.request(new GetVariableCommand(ControllerVariable.VendorName)))
-			.then((res) => (this._vendorName = (res as ReturnStringVariableResponse).string))
-			.then(() => this.request(new GetVariableCommand(ControllerVariable.ProductName)))
-			.then((res) => (this._productName = (res as ReturnStringVariableResponse).string))
-			.then(() => this.request(new GetVariableCommand(ControllerVariable.SerialNumber)))
-			.then((res) => (this._serialNumber = (res as ReturnStringVariableResponse).string))
-			.then(() => this.motors.enumerate());
+		const stringPromise =
+			this._hardwareInterface instanceof USBInterface
+				? Promise.resolve()
+				: this.request(new GetVariableCommand(ControllerVariable.DeviceVersion))
+						.then((res) => (this._productVersion = (res as ReturnBCDVariableResponse).value))
+						.then(() => this.request(new GetVariableCommand(ControllerVariable.VendorName)))
+						.then((res) => (this._vendorName = (res as ReturnStringVariableResponse).string))
+						.then(() => this.request(new GetVariableCommand(ControllerVariable.ProductName)))
+						.then((res) => (this._productName = (res as ReturnStringVariableResponse).string))
+						.then(() => this.request(new GetVariableCommand(ControllerVariable.SerialNumber)))
+						.then((res) => (this._serialNumber = (res as ReturnStringVariableResponse).string));
+
+		return stringPromise.then(() => this.motors.enumerate());
 	}
 
 	get productVersion(): string {
