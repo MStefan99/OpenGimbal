@@ -28,8 +28,8 @@ namespace host {
 		using callback_type = void (*)(const Buffer<size_type, C>&);
 	};
 
-	using DefaultCallback = Callback<uint8_t, 16>;
-	using DefaultQueue = RingBuffer<Buffer<uint8_t, 16>, uint8_t, 4>;
+	using DefaultCallback = Callback<uint8_t, 32>;
+	using DefaultQueue = RingBuffer<Buffer<uint8_t, 128>, uint8_t, 1>;
 
 	void init();
 	void enable();

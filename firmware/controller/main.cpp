@@ -220,6 +220,39 @@ void processHostCommand(const uint8_t* buf, uint8_t len) {
 					});
 					break;
 				}
+				case (HostCommand::Variable::DeviceVersion): {
+					auto response =
+					    HostReturnVariableResponse {HostResponse::Variable::DeviceVersion, usb::DESCRIPTOR_DEVICE.bcdDevice};
+					sendToHost(response.getBuffer(), response.getLength());
+					break;
+				}
+				case (HostCommand::Variable::VendorName): {
+					auto response = HostReturnVariableResponse {
+					  HostResponse::Variable::VendorName,
+					  reinterpret_cast<uint8_t*>(usb::DESCRIPTOR_STRING[1].bString),
+					  static_cast<uint8_t>(usb::DESCRIPTOR_STRING[1].bLength - 2)
+					};
+					sendToHost(response.getBuffer(), response.getLength());
+					break;
+				}
+				case (HostCommand::Variable::ProductName): {
+					auto response = HostReturnVariableResponse {
+					  HostResponse::Variable::ProductName,
+					  reinterpret_cast<uint8_t*>(usb::DESCRIPTOR_STRING[2].bString),
+					  static_cast<uint8_t>(usb::DESCRIPTOR_STRING[2].bLength - 2)
+					};
+					sendToHost(response.getBuffer(), response.getLength());
+					break;
+				}
+				case (HostCommand::Variable::SerialNumber): {
+					auto response = HostReturnVariableResponse {
+					  HostResponse::Variable::SerialNumber,
+					  reinterpret_cast<uint8_t*>(usb::DESCRIPTOR_STRING[3].bString),
+					  static_cast<uint8_t>(usb::DESCRIPTOR_STRING[3].bLength - 2)
+					};
+					sendToHost(response.getBuffer(), response.getLength());
+					break;
+				}
 				default:
 					break;
 			}

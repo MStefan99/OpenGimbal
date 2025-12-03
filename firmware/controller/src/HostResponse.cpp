@@ -13,7 +13,11 @@ HostResponse::size_type HostResponse::getLength() {
 	return this->_length;
 }
 
-HostReturnVariableResponse::HostReturnVariableResponse(HostResponse::Variable variable, uint8_t* data, uint8_t len):
+HostReturnVariableResponse::HostReturnVariableResponse(
+    HostResponse::Variable variable,
+    const uint8_t*         data,
+    uint8_t                len
+):
   HostResponse {ResponseType::ReturnVariable, static_cast<HostResponse::size_type>(1 + len)} {
 	this->_buffer[1] = static_cast<uint8_t>(variable);
 

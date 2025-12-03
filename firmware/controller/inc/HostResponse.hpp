@@ -26,13 +26,17 @@ namespace HostCommand {
 		Orientation = 0x00,
 		HandleOrientation = 0x01,
 		Mode = 0x02,
-		BatteryVoltage = 0x03
+		BatteryVoltage = 0x03,
+		DeviceVersion = 0x10,
+		VendorName = 0x11,
+		ProductName = 0x12,
+		SerialNumber = 0x13
 	};
 }
 
 class HostResponse {
 public:
-	using buffer_type = uint8_t[16];
+	using buffer_type = uint8_t[128];
 	using size_type = uint8_t;
 
 	using Variable = HostCommand::Variable;
@@ -69,7 +73,7 @@ class HostReturnVariableResponse: public HostResponse {
 public:
 	template <class T>
 	HostReturnVariableResponse(HostResponse::Variable variable, T value);
-	HostReturnVariableResponse(HostResponse::Variable variable, uint8_t* data = nullptr, uint8_t len = 0);
+	HostReturnVariableResponse(HostResponse::Variable variable, const uint8_t* data = nullptr, uint8_t len = 0);
 };
 
 template <class T>
