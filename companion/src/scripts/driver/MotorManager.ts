@@ -1,7 +1,6 @@
 import {IMotor, Motor, MotorOptions} from './Motor';
-import {BitwiseRegister} from './BitwiseRegister';
 import {ISerialInterface} from './motor/SerialInterface';
-import {MotorMessage, MotorVariable} from './motor/MotorMessage';
+import {MotorMessage} from './motor/MotorMessage';
 import {MotorCommand} from './motor/MotorCommand';
 import {MotorResponse} from './motor/MotorResponse';
 

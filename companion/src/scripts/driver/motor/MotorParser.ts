@@ -1,9 +1,9 @@
-import {motorCommands, setVariableCommands, SetVariableCommand} from './MotorCommand';
+import {motorCommands, SetVariableCommand, setVariableCommands} from './MotorCommand';
 import {
+	MotorResponse,
 	motorResponses,
-	returnVariableResponses,
 	ReturnVariableResponse,
-	MotorResponse
+	returnVariableResponses
 } from './MotorResponse';
 import {MotorMessage} from './MotorMessage';
 import {IParser} from '../Parser';

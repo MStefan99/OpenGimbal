@@ -1,11 +1,5 @@
 import {ControllerSerialCommand} from './ControllerSerialCommand';
 import {ControllerSerialResponse} from './ControllerSerialResponse';
-import {controllerCommands, SetVariableCommand, setVariableCommands} from './ControllerCommand';
-import {
-	controllerResponses,
-	ReturnVariableResponse,
-	returnVariableResponses
-} from './ControllerResponse';
 
 export interface IControllerSerialParser {
 	parseCommand(data: Uint8Array): ControllerSerialCommand | null;

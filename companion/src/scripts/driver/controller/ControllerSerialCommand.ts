@@ -1,9 +1,5 @@
 import {Message} from '../Message';
-import {
-	ControllerCommandType,
-	ControllerMessage,
-	ControllerResponseType
-} from './ControllerMessage';
+import {ControllerCommandType} from './ControllerMessage';
 import {
 	ControllerCommand,
 	controllerCommandNames,

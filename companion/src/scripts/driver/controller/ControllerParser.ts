@@ -1,17 +1,15 @@
 import {
 	ControllerCommand,
 	controllerCommands,
-	MotorPassthroughCommand,
 	SetVariableCommand,
 	setVariableCommands
 } from './ControllerCommand';
 import {
-	controllerResponses,
 	ControllerResponse,
+	controllerResponses,
 	ReturnVariableResponse,
 	returnVariableResponses
 } from './ControllerResponse';
-import {ControllerMessage} from './ControllerMessage';
 
 export interface IControllerParser {
 	parseCommand(data: Uint8Array): ControllerCommand | null;

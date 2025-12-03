@@ -1,8 +1,8 @@
 import {
 	ControllerCommandType,
-	GimbalMode,
+	ControllerMessage,
 	ControllerVariable,
-	ControllerMessage
+	GimbalMode
 } from './ControllerMessage';
 import {MotorCommand} from '../motor/MotorCommand';
 import {RAD_TO_COUNTS} from '../../types';

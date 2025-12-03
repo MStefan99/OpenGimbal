@@ -1,4 +1,4 @@
-import {reactive, ref} from 'vue';
+import {ref} from 'vue';
 import {alert, PopupColor} from '../../popups';
 import {Gimbal, IGimbal} from '../Gimbal';
 import {USBInterface} from './USBInterface';

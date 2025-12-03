@@ -2,14 +2,13 @@ import {IHardwareInterface} from '../HardwareInterface';
 import {MotorResponse} from './MotorResponse';
 import {ISerialParser, MotorParser} from './MotorParser';
 import {Message} from '../Message';
-import {MotorMessage} from './MotorMessage';
-import {ControllerSerialCommand} from '../controller/ControllerSerialCommand';
 import {
 	ControllerSerialParser,
 	IControllerSerialParser
 } from '../controller/ControllerSerialParser';
 
 const timeout = 40;
+
 function delay(ms: number): Promise<null> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

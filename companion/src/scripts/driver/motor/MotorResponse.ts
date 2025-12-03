@@ -1,4 +1,4 @@
-import {MotorResponseType, MotorVariable, MotorMessage} from './MotorMessage';
+import {MotorMessage, MotorResponseType, MotorVariable} from './MotorMessage';
 
 export const motorResponseNames: Record<MotorResponseType, string> = {
 	[MotorResponseType.ReturnVariable]: 'Return variable'

@@ -1,8 +1,7 @@
-import {BitwiseRegister} from './BitwiseRegister';
 import {
 	MotorResponse,
-	ReturnOptionsVariableResponse,
 	ReturnOffsetVariableResponse,
+	ReturnOptionsVariableResponse,
 	ReturnPositionVariableResponse
 } from './motor/MotorResponse';
 import {

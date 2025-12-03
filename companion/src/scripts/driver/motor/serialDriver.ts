@@ -11,8 +11,6 @@ import {DiscoveryCommand} from '../controller/ControllerCommand';
 import {ControllerSerialCommand} from '../controller/ControllerSerialCommand';
 import {ControllerSerialResponse} from '../controller/ControllerSerialResponse';
 import {DiscoveryResponse} from '../controller/ControllerResponse';
-import {Message} from '../Message';
-import {connectedDevice} from '../driver';
 import {connectedControllerDevice} from '../controller/usbDriver';
 import {MotorCommand} from './MotorCommand';
 import {MotorResponse} from './MotorResponse';

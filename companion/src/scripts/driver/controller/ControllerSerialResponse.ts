@@ -1,10 +1,5 @@
 import {Message} from '../Message';
-import {
-	ControllerCommandType,
-	ControllerMessage,
-	ControllerResponseType
-} from './ControllerMessage';
-import {ControllerCommand, controllerCommandNames, controllerCommands} from './ControllerCommand';
+import {ControllerResponseType} from './ControllerMessage';
 import {
 	ControllerResponse,
 	controllerResponseNames,

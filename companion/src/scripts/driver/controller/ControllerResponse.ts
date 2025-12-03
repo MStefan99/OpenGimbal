@@ -1,15 +1,13 @@
 import {
-	GimbalMode,
+	ControllerMessage,
 	ControllerResponseType,
 	ControllerVariable,
-	ControllerMessage,
-	ControllerCommandType
+	GimbalMode
 } from './ControllerMessage';
 import {MotorResponse} from '../motor/MotorResponse';
 import {RAD_TO_COUNTS} from '../../types';
 import {scale} from '../../util';
 import {MotorParser} from '../motor/MotorParser';
-import {MotorCommand} from '../motor/MotorCommand';
 
 export const controllerResponseNames: Record<ControllerResponseType, string> = {
 	[ControllerResponseType.MotorDiscovery]: 'Motor discovery',

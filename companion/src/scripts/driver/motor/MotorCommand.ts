@@ -1,5 +1,5 @@
 import {clamp, mod} from '../../util';
-import {MotorCommandType, MotorVariable, MotorMessage} from './MotorMessage';
+import {MotorCommandType, MotorMessage, MotorVariable} from './MotorMessage';
 
 export enum MotorCommandError {
 	NoError,

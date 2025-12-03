@@ -1,4 +1,4 @@
-import {IControllerInterface, IHardwareInterface} from '../HardwareInterface';
+import {IControllerInterface} from '../HardwareInterface';
 import {IControllerParser} from './ControllerParser';
 import {ControllerCommand} from './ControllerCommand';
 import {ControllerResponse} from './ControllerResponse';

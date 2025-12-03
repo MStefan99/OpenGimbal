@@ -1,8 +1,8 @@
 import {MotorCommand} from '../motor/MotorCommand';
 import {MotorResponse} from '../motor/MotorResponse';
-import {IControllerInterface, IHardwareInterface, IMotorInterface} from '../HardwareInterface';
-import {ControllerCommand, MotorPassthroughCommand} from './ControllerCommand';
-import {ControllerResponse, MotorPassthroughResponse} from './ControllerResponse';
+import {IControllerInterface, IMotorInterface} from '../HardwareInterface';
+import {MotorPassthroughCommand} from './ControllerCommand';
+import {MotorPassthroughResponse} from './ControllerResponse';
 
 export class ControllerEncapsulator implements IMotorInterface {
 	_hardwareInterface: IControllerInterface;
