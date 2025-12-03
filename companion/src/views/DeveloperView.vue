@@ -1,8 +1,8 @@
 <template lang="pug">
 nav
 	RouterLink(:to="{name: 'device'}") Device
-	RouterLink(:to="{name: 'usb'}") USB
-	RouterLink(:to="{name: 'serial'}") Serial
+	RouterLink(:to="{name: 'controller'}") Controller
+	RouterLink(:to="{name: 'motor'}") Motor
 RouterView
 </template>
 

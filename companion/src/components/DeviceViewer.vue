@@ -56,7 +56,7 @@ defineEmits<{(e: 'close'): void}>();
 }
 
 .device-viewer {
-	@apply relative card mx-auto max-w-fit top-1/2 -translate-y-1/2 shadow-xl backdrop-blur-lg dark:border-zinc-500 bg-white/70  dark:bg-zinc-500/60;
+	@apply relative card rounded-xl mx-auto max-w-fit top-1/2 -translate-y-1/2 shadow-xl backdrop-blur-lg dark:border-zinc-500 bg-white/70  dark:bg-zinc-500/60;
 }
 
 b {
