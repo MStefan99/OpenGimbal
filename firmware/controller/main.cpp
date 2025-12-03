@@ -36,14 +36,14 @@ volatile static uint8_t  voltageBars {0};
 volatile static uint8_t  shortPresses {0};
 volatile static uint32_t eventTime {0};
 volatile static bool     buttonPressed {false};
-volatile static bool     leftButton {true};
+volatile static bool     primaryButton {true};
 
 volatile static bool     motorPassthrough {false};
 volatile static uint32_t motorPassthroughTime {0};
 
 volatile static bool wokenByUSB {false};
 
-float normalize(float difference) {
+float clampAngle(float difference) {
 	if (difference > F_PI) {
 		difference -= F_2_PI;
 	} else if (difference < -F_PI) {
@@ -270,7 +270,7 @@ void processSensor() {
 }
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
-void processButtons(bool left, bool pressed) {
+void processButtons(bool primary, bool pressed) {
 	if (pressed) {
 		if (powerMode == PowerMode::Sleep) {
 			powerMode = PowerMode::Idle;
@@ -284,7 +284,7 @@ void processButtons(bool left, bool pressed) {
 
 	eventTime = util::getTime();
 	buttonPressed = pressed;
-	leftButton = left;
+	primaryButton = primary;
 
 	if (powerMode == PowerMode::Idle) {
 		if (!buttonPressed) {
@@ -326,7 +326,7 @@ bool triggerAction() {
 		} else {
 			return true;
 		}
-	} else if (shortPresses == 1 && (!leftButton || isOff)) {
+	} else if (shortPresses == 1 && (!primaryButton || isOff)) {
 		adc::measureBattery([](uint16_t value) {
 			if (powerMode == PowerMode::Sleep) {
 				powerMode = PowerMode::Idle;
@@ -335,7 +335,7 @@ bool triggerAction() {
 			showBattery(value);
 		});
 	} else if (!isOff) {
-		if (leftButton) {
+		if (primaryButton) {
 			if (shortPresses == 1) {
 				offsetAngles[0] = resetAngles[0];
 				offsetAngles[1] = 0;
@@ -462,6 +462,10 @@ int main() {
 						offsetAngles[2] -= y / 40000.0f;
 					}
 					offsetAngles[1] += x / 40000.0f;
+
+					for (uint8_t i {0}; i < 3; ++i) {
+						offsetAngles[i] = clampAngle(offsetAngles[i]);
+					}
 				});
 
 				Quaternion handleOrientation {mahony.getQuat() * controlBoardQuat};
@@ -479,14 +483,18 @@ int main() {
 				  (gimbalMode <= GimbalMode::Follow ? 0 : cy * handleAngles[2][0] + sy * handleAngles[1][0]) - offsetAngles[2]
 				};
 
+				for (uint8_t i {0}; i < 3; ++i) {
+					currentAngles[i] = clampAngle(currentAngles[i]);
+				}
+
 				currentAngles[0] +=
-				    util::clamp(normalize(yawTarget - currentAngles[0]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
+				    util::clamp(clampAngle(yawTarget - currentAngles[0]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
 				currentAngles[1] +=
-				    util::clamp(normalize(pitchTarget - currentAngles[1]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
+				    util::clamp(clampAngle(pitchTarget - currentAngles[1]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
 				currentAngles[2] +=
-				    util::clamp(normalize(rollTarget - currentAngles[2]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
+				    util::clamp(clampAngle(rollTarget - currentAngles[2]) / 50.0f, -maxVelocityPerStep, maxVelocityPerStep);
 
 				Quaternion cameraOrientation {Quaternion::fromEuler(currentAngles[0], currentAngles[1], currentAngles[2])};
 				Quaternion gimbalRotation {handleOrientation.conjugate() * cameraOrientation};
@@ -496,7 +504,7 @@ int main() {
 
 				if (softStartActive) {
 					for (uint8_t i {0}; i < motorPositionRequest; ++i) {
-						motorAngles[i] += normalize(calculatedAngles[i][0] - motorAngles[i])
+						motorAngles[i] += clampAngle(calculatedAngles[i][0] - motorAngles[i])
 						                / static_cast<float>(softStartDuration - (util::getTime() - softStartTime))
 						                * (deltaTime * 2);
 

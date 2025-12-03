@@ -239,7 +239,7 @@ uint16_t measureAngle() {
 	return (currentAngle = __REV16(rawAngle));
 }
 
-int16_t normalize(int16_t difference) {
+int16_t clampAngle(int16_t difference) {
 	difference %= fullRevolution;
 
 	if (difference > halfRevolution) {
@@ -268,7 +268,7 @@ void moveToTarget(uint16_t target) {
 	// Calculating difference between current and target angle
 	auto angle {measureAngle()};
 
-	float dAngle {countsToRad(normalize(target - angle))};
+	float dAngle {countsToRad(clampAngle(target - angle))};
 	float velocity {(dAngle - prevDAngle) * 1000.0f};
 	prevDAngle = dAngle;
 
@@ -305,7 +305,7 @@ int16_t checkCalibration(uint16_t phaseOffset, uint8_t polePairs, bool countercl
 		uint16_t eAngle = (polePairs * (fullRevolution + angle - phaseOffset)) % fullRevolution;
 		uint16_t eAngleSigned = counterclockwise ? eAngle : fullRevolution - eAngle;
 
-		int16_t  difference = normalize(target - angle);
+		int16_t  difference = clampAngle(target - angle);
 		uint16_t absDifference = util::abs(difference);
 		bldc::applyTorque(
 		    (difference > 0) == counterclockwise ? eAngleSigned + quarterRevolution
@@ -393,7 +393,7 @@ bool calibrate() {
 		bldc::applyTorque(torqueAngle, 255);
 		angle = measureAngle();
 
-		if (util::abs(normalize(angle - checkpoint)) > fullRevolution / 32) {
+		if (util::abs(clampAngle(angle - checkpoint)) > fullRevolution / 32) {
 			checkpoint = angle;
 			timeout = 0;
 		}

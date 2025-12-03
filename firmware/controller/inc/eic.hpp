@@ -13,7 +13,7 @@
 #include "util.hpp"
 
 namespace eic {
-	using ButtonCallback = void (*)(bool left, bool pressed);
+	using ButtonCallback = void (*)(bool primary, bool pressed);
 	using Callback = void       (*)();
 
 	void init();

@@ -17,10 +17,10 @@ extern "C" {
 		}
 
 		if ((EIC_REGS->EIC_INTFLAG & (0x3 << 6)) && buttonCallback) {
-			bool    left = EIC_REGS->EIC_INTFLAG & (0x1 << 6);
+			bool    primary = EIC_REGS->EIC_INTFLAG & (0x1 << 6);
 			uint8_t state = (~(PORT_REGS->GROUP[0].PORT_IN >> 22u)) & 0x3;
 
-			buttonCallback(left, left ? state & 0x1 : state & 0x2);
+			buttonCallback(primary, primary ? state & 0x1 : state & 0x2);
 		}
 
 		if (EIC_REGS->EIC_INTFLAG & (0x1 << 11) && hostCallback) {
