@@ -1,18 +1,18 @@
 import {createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw} from 'vue-router';
 import MotorView from '../views/MotorView.vue';
-import SerialCommandView from '../views/SerialCommandView.vue';
+import MotorCommandView from '../views/MotorCommandView.vue';
 import {crashCourse} from './analytics';
 import DeveloperView from '../views/DeveloperView.vue';
-import ControlView from '../views/ControlView.vue';
+import GimbalView from '../views/GimbalView.vue';
 import TimelineView from '../views/TimelineView.vue';
 import DeviceView from '../views/DeviceView.vue';
-import USBCommandView from '../views/USBCommandView.vue';
+import ControllerCommandView from '../views/ControllerCommandView.vue';
 
 const routes: Array<RouteRecordRaw> = [
 	{
-		path: '/control',
-		name: 'control',
-		component: ControlView
+		path: '/gimbal',
+		name: 'gimbal',
+		component: GimbalView
 	},
 	{
 		path: '/timeline',
@@ -31,19 +31,19 @@ const routes: Array<RouteRecordRaw> = [
 		redirect: {name: 'device'},
 		children: [
 			{
-				path: '/device',
+				path: 'device',
 				name: 'device',
 				component: DeviceView
 			},
 			{
-				path: '/usb',
-				name: 'usb',
-				component: USBCommandView
+				path: 'controller',
+				name: 'controller',
+				component: ControllerCommandView
 			},
 			{
-				path: '/serial',
-				name: 'serial',
-				component: SerialCommandView
+				path: 'motor',
+				name: 'motor',
+				component: MotorCommandView
 			}
 		]
 	},

@@ -9,21 +9,30 @@
 		div(v-else)
 			p.font-semibold.text-lg Connect
 			.flex.my-2
-				button.rounded-r-none(v-if="'usb' in navigator" @click="connect('usb')") Connect over USB
-				button.rounded-l-none(@click="connect('serial')") Connect over Serial
+				button.grow(
+					v-if="supportsUSB"
+					:class="{'rounded-r-none': supportsSerial}"
+					@click="connect('usb')") Connect over USB
+				button.grow(
+					v-if="supportsSerial"
+					:class="{'rounded-l-none': supportsUSB}"
+					@click="connect('serial')") Connect over Serial
+				p(v-if="!secureContext || (!supportsUSB && !supportsSerial)") Not supported
 			button.w-full.mt-2(@click="$emit('close')") Close
-			.text-red-500.mt-4(v-if="!('usb' in navigator)")
-				p(v-if="!window.isSecureContext").
-					This page cannot access USB devices because it is using an insecure connection.
-					Please open this page securely (over HTTPS) to connect your device.
-				p(v-else).
-					It looks like your browser does not support USB devices. Please try another browser.
-			.text-red-500.mt-4(v-if="!('serial' in navigator)")
-				p(v-if="!window.isSecureContext").
-					This page cannot access serial devices because it is using an insecure connection.
-					Please open this page securely (over HTTPS) to connect your device.
-				p(v-else).
-					It looks like your browser does not support serial devices. Please try another browser.
+			.text-red-500.mt-4.text-center
+				template(v-if="!secureContext")
+					p OpenGimbal only works over secure connections.
+					p Please connect over HTTPS and try again.
+				div(v-else-if="!supportsUSB && !supportsSerial")
+					p Your browser does not support USB or serial connections.
+					p Please try another browser.
+				template(v-else)
+					template(v-if="!supportsUSB")
+						p Your browser does not support USB connections.
+						p Please try another browser.
+					template(v-if="!supportsSerial")
+						p Your browser does not support serial connections.
+						p Please try another browser.
 	Transition
 		DeviceViewer(v-if="viewingDevice" @close="viewingDevice = false")
 </template>
@@ -39,6 +48,10 @@ import {connectDevice, connectedDevice, disconnectDevice} from '../scripts/drive
 const emit = defineEmits<{(e: 'close'): void}>();
 const viewingDevice = ref<boolean>(false);
 const connecting = ref<boolean>(false);
+
+const secureContext = window.isSecureContext;
+const supportsUSB = 'usb' in navigator;
+const supportsSerial = 'serial' in navigator;
 
 function connect(type: 'usb' | 'serial'): void {
 	connecting.value = true;

@@ -8,7 +8,7 @@
 				input.block(type="text" v-model="commandString")
 				button.mt-2(type="submit") Send
 				button.mt-2.ml-2(type="button" @click="commandEntries = []") Clear history
-		p.text-red.font-bold.my-2.
+		p.text-red-500.font-bold.my-2.
 			Warning: This tool allows to execute any command on the device,
 			and sending an invalid or malformed command could lead to unpredictable behavior or damage the device
 		h3.my-4.text-xl.font-bold History
