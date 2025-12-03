@@ -289,21 +289,21 @@ export class MotorPassthroughCommand extends ControllerCommand {
 	}
 
 	get motorCommand(): MotorCommand | null {
-		const message = new MotorParser().parse(
-			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
+		if (this.type !== ControllerCommandType.MotorPassthrough) {
+			throw new Error('Invalid command type');
+		}
+
+		const command = new MotorParser().parse(
+			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => this.buffer[i + 1])
 		);
 
-		if (message === null) {
+		if (command === null) {
 			return null;
-		} else if (!(message instanceof MotorCommand)) {
+		} else if (!(command instanceof MotorCommand)) {
 			throw new Error('Could not parse motor passthrough command');
 		}
 
-		if (message.view.getUint8(0) !== ControllerCommandType.MotorPassthrough) {
-			throw new Error('Invalid message type');
-		}
-
-		return message;
+		return command;
 	}
 
 	override toString(type?: 'hex'): string {

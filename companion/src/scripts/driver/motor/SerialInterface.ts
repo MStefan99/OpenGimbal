@@ -10,6 +10,9 @@ import {
 } from '../controller/ControllerSerialParser';
 
 const timeout = 20;
+function delay(ms: number): Promise<null> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export interface ISerialInterface<
 	CommandType extends Message,
@@ -31,7 +34,8 @@ export class SerialInterface<
 	private _port: SerialPort;
 	private _parser: ISerialParser | IControllerSerialParser;
 	private readonly _verbose: boolean;
-	private readonly _openPromise: Promise<void>;
+	private readonly _baudRate: number;
+	private _openPromise: Promise<void>;
 	private _sendPromise: Promise<void> = Promise.resolve();
 
 	constructor(
@@ -42,16 +46,17 @@ export class SerialInterface<
 	) {
 		this._port = port;
 		this._parser = parser;
+		this._baudRate = baudRate;
 		this._verbose = verbose;
+	}
+
+	get open(): Promise<void> {
 		this._openPromise = this._port.open({
-			baudRate,
+			baudRate: this._baudRate,
 			dataBits: 8,
 			stopBits: 1,
 			parity: 'odd'
 		});
-	}
-
-	get open(): Promise<void> {
 		return this._openPromise;
 	}
 
@@ -63,10 +68,13 @@ export class SerialInterface<
 			this._sendPromise = this._sendPromise
 				.then(() => this._port.writable.getWriter())
 				.then((writer) =>
-					writer.write(buffer).then(() => {
-						writer.releaseLock();
-						resolve();
-					})
+					writer
+						.write(buffer)
+						.then(() => delay(5))
+						.then(() => {
+							writer.releaseLock();
+							resolve();
+						})
 				)
 				.catch((err) => {
 					console.error('Send failed:', err);
@@ -91,8 +99,10 @@ export class SerialInterface<
 				.then(() => this._port.writable.getWriter())
 				.then((writer) => writer.write(writeBuffer).then(() => writer.releaseLock()))
 				.then(async (): Promise<void> => {
-					const readBuffer = new Uint8Array(16);
+					const readBuffer = new Uint8Array(128);
+					const view = new DataView(readBuffer.buffer);
 					let readBytes = 0;
+					let startByte = 0;
 
 					const reader = this._port.readable.getReader();
 					setTimeout(() => {
@@ -114,42 +124,54 @@ export class SerialInterface<
 							readBytes += data.byteLength;
 
 							if (this._parser instanceof MotorParser) {
-								const motorMessage = this._parser.parse(data);
+								while (startByte < readBytes) {
+									const len = (view.getUint8(startByte) >> 4) + 1;
+									const buffer = new Uint8Array(len)
+										.fill(0)
+										.map((v, i) => readBuffer[startByte + i]);
+									const motorMessage = this._parser.parse(buffer);
 
-								if (motorMessage) {
-									this._verbose &&
-										console.log('Received', motorMessage.toString(), '\n', motorMessage);
-									await reader.cancel();
+									if (motorMessage instanceof MotorResponse) {
+										this._verbose &&
+											console.log('Received', motorMessage.toString(), '\n', motorMessage);
+										await reader.cancel();
 
-									resolve(motorMessage as unknown as ResponseType);
-									return;
+										resolve(motorMessage as unknown as ResponseType);
+										readBytes = startByte = 0;
+										return;
+									} else {
+										startByte += len;
+									}
 								}
 							} else if (this._parser instanceof ControllerSerialParser) {
-								const controllerSerialMessage = this._parser.parseResponse(data);
+								if (readBytes === view.getUint8(0) + 1) {
+									const controllerSerialMessage = this._parser.parseResponse(
+										new Uint8Array(readBytes).fill(0).map((v, i) => readBuffer[i])
+									);
 
-								if (controllerSerialMessage) {
-									this._verbose &&
-										console.log(
-											'Received',
-											controllerSerialMessage.toString(),
-											'\n',
-											controllerSerialMessage
-										);
-									await reader.cancel();
+									if (controllerSerialMessage) {
+										this._verbose &&
+											console.log(
+												'Received',
+												controllerSerialMessage.toString(),
+												'\n',
+												controllerSerialMessage
+											);
+										await reader.cancel();
 
-									resolve(controllerSerialMessage as unknown as ResponseType);
-									return;
+										resolve(controllerSerialMessage as unknown as ResponseType);
+										readBytes = 0;
+										return;
+									}
 								}
 							}
-
-							readBytes = 0;
 						}
 					} finally {
 						await reader.cancel();
 					}
 				})
 				.catch((err) => {
-					console.error('Send failed:', err);
+					console.error('Request failed:', err);
 					return reject(err);
 				});
 		});

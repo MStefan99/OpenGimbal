@@ -153,6 +153,11 @@ export class Motor implements IMotor {
 			this._hardwareInterface
 				.request(new GetVariableCommand(0, this._address, MotorVariable.Options))
 				.then((res) => {
+					if (!res) {
+						reject('Response is empty');
+						return;
+					}
+
 					const options = res as ReturnOptionsVariableResponse;
 
 					return resolve({

@@ -57,7 +57,7 @@ export class ControllerResponse extends ControllerMessage {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${controllerResponseNames[this.view.getUint8(0) as ControllerResponseType]} command`;
+			return `${controllerResponseNames[this.view.getUint8(0) as ControllerResponseType]} response`;
 		}
 	}
 }
@@ -206,28 +206,28 @@ export class MotorPassthroughResponse extends ControllerResponse {
 	}
 
 	get motorResponse(): MotorResponse | null {
-		const message = new MotorParser().parse(
-			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => message.buffer[i + 1])
+		if (this.type !== ControllerResponseType.MotorPassthrough) {
+			throw new Error('Invalid response type');
+		}
+
+		const response = new MotorParser().parse(
+			new Uint8Array(this.buffer.byteLength - 1).fill(0).map((v, i) => this.buffer[i + 1])
 		);
 
-		if (message === null) {
+		if (response === null) {
 			return null;
-		} else if (!(message instanceof MotorResponse)) {
-			throw new Error('Could not parse motor passthrough command');
+		} else if (!(response instanceof MotorResponse)) {
+			throw new Error('Could not parse motor passthrough response');
 		}
 
-		if (message.view.getUint8(0) !== ControllerResponseType.MotorPassthrough) {
-			throw new Error('Invalid message type');
-		}
-
-		return message;
+		return response;
 	}
 
 	override toString(type?: 'hex'): string {
 		if (type === 'hex') {
 			return super.toString(type);
 		} else {
-			return 'Encapsulated motor response\n' + (this.motorResponse?.toString(type) ?? 'Empty');
+			return 'Encapsulated motor response:\n' + (this.motorResponse?.toString(type) ?? 'Empty');
 		}
 	}
 }

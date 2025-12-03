@@ -22,46 +22,10 @@ export interface IControllerSerialParser {
 
 export class ControllerSerialParser {
 	parseCommand(data: Uint8Array): ControllerSerialCommand | null {
-		let bytesRemaining = 0;
-		let bytesProcessed = 0;
-		const view = new DataView(data.buffer);
-
-		for (const byte of data) {
-			if (!bytesRemaining) {
-				bytesRemaining = byte + 1;
-				bytesProcessed = 0;
-			}
-
-			view.setUint8(bytesProcessed++, byte);
-			if (--bytesRemaining === 0) {
-				return new ControllerSerialCommand(
-					new Uint8Array(bytesProcessed).fill(0).map((v, i) => data[i])
-				);
-			}
-		}
-
-		return null;
+		return new ControllerSerialCommand(data);
 	}
 
 	parseResponse(data: Uint8Array): ControllerSerialResponse | null {
-		let bytesRemaining = 0;
-		let bytesProcessed = 0;
-		const view = new DataView(data.buffer);
-
-		for (const byte of data) {
-			if (!bytesRemaining) {
-				bytesRemaining = byte + 1;
-				bytesProcessed = 0;
-			}
-
-			view.setUint8(bytesProcessed++, byte);
-			if (--bytesRemaining === 0) {
-				return new ControllerSerialResponse(
-					new Uint8Array(bytesProcessed).fill(0).map((v, i) => data[i])
-				);
-			}
-		}
-
-		return null;
+		return new ControllerSerialResponse(data);
 	}
 }

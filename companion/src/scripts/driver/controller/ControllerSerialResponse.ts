@@ -44,7 +44,10 @@ export class ControllerSerialResponse extends Message {
 				.map((v, idx) => this.view.getUint8(idx).toString(16).padStart(2, '0'))
 				.join(' ');
 		} else {
-			return `${controllerResponseNames[this.view.getUint8(1) as ControllerResponseType]} response`;
+			return (
+				`${controllerResponseNames[this.view.getUint8(1) as ControllerResponseType]} response:` +
+				`\n${this.controllerResponse.toString()}`
+			);
 		}
 	}
 }

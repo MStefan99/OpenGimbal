@@ -1,8 +1,8 @@
 import {IControllerInterface, IHardwareInterface} from '../HardwareInterface';
-import {ControllerMessage, ControllerResponseType} from './ControllerMessage';
 import {IControllerParser} from './ControllerParser';
 import {ControllerCommand} from './ControllerCommand';
 import {ControllerResponse} from './ControllerResponse';
+import {ControllerMessage} from './ControllerMessage';
 
 export interface IUSBInterface extends IControllerInterface {
 	readonly usbVersionMajor: number;
@@ -17,6 +17,10 @@ export interface IUSBInterface extends IControllerInterface {
 	request(message: ControllerCommand): Promise<ControllerResponse>;
 
 	close(): Promise<void>;
+}
+
+function delay(ms: number): Promise<null> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class USBInterface implements IUSBInterface {
@@ -108,7 +112,7 @@ export class USBInterface implements IUSBInterface {
 		});
 	}
 
-	async send(message: ControllerMessage, isochronous?: boolean): Promise<void> {
+	async send(message: ControllerCommand, isochronous?: boolean): Promise<void> {
 		if (isochronous && this._transferQueue.length > 20) {
 			console.warn('Send failed: queue full', message.toString(), '\n', message);
 			return Promise.reject('Send failed1`');
@@ -126,6 +130,7 @@ export class USBInterface implements IUSBInterface {
 
 		return this._usbDevice
 			.transferOut(1, message.buffer as Uint8Array<ArrayBuffer>)
+			.then(() => delay(5))
 			.then(() => this._usbDevice.transferIn(1, 0xff))
 			.then((r) => {
 				const message = this._parser.parseResponse(new Uint8Array(r.data.buffer));

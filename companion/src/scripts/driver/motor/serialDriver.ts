@@ -14,6 +14,8 @@ import {DiscoveryResponse} from '../controller/ControllerResponse';
 import {Message} from '../Message';
 import {connectedDevice} from '../driver';
 import {connectedControllerDevice} from '../controller/usbDriver';
+import {MotorCommand} from './MotorCommand';
+import {MotorResponse} from './MotorResponse';
 
 export const connectedMotorDevice = ref<IMotorManager | null>(null);
 let connectedPort: SerialPort | null = null;
@@ -48,7 +50,14 @@ export async function connectSerialDevice(verbose: boolean = false): Promise<IMo
 						return true;
 					} else {
 						connectedPort = port;
-						const manager = new MotorManager(controllerEncapsulator);
+						const serialInterface = new SerialInterface<MotorCommand, MotorResponse>(
+							port,
+							new MotorParser(),
+							115200,
+							verbose
+						);
+						// Port already open, no need to re-open
+						const manager = new MotorManager(serialInterface);
 						connectedMotorDevice.value = manager;
 
 						resolve(manager);
