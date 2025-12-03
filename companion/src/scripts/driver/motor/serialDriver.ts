@@ -43,12 +43,15 @@ export async function connectSerialDevice(verbose: boolean = false): Promise<IMo
 				return gimbal.request(new DiscoveryCommand()).then((res) => {
 					if (res instanceof DiscoveryResponse) {
 						// Detected controller over serial
-						connectedPort = port;
-						connectedControllerDevice.value = gimbal;
 
-						resolve(gimbal);
+						gimbal.enumerate().then(() => {
+							connectedPort = port;
+							connectedControllerDevice.value = gimbal;
+							resolve(gimbal);
+						});
 						return true;
 					} else {
+						// No controller, falling back to motors
 						connectedPort = port;
 						const serialInterface = new SerialInterface<MotorCommand, MotorResponse>(
 							port,
@@ -58,9 +61,11 @@ export async function connectSerialDevice(verbose: boolean = false): Promise<IMo
 						);
 						// Port already open, no need to re-open
 						const manager = new MotorManager(serialInterface);
-						connectedMotorDevice.value = manager;
 
-						resolve(manager);
+						manager.motors.enumerate().then(() => {
+							connectedMotorDevice.value = manager;
+							resolve(manager);
+						});
 						return false;
 					}
 				});

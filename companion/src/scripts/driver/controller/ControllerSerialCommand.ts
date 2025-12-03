@@ -4,7 +4,13 @@ import {
 	ControllerMessage,
 	ControllerResponseType
 } from './ControllerMessage';
-import {ControllerCommand, controllerCommandNames, controllerCommands} from './ControllerCommand';
+import {
+	ControllerCommand,
+	controllerCommandNames,
+	controllerCommands,
+	SetVariableCommand,
+	setVariableCommands
+} from './ControllerCommand';
 
 export class ControllerSerialCommand extends Message {
 	constructor(buffer: Uint8Array);
@@ -29,7 +35,14 @@ export class ControllerSerialCommand extends Message {
 		const command = new ControllerCommand(
 			new Uint8Array(this.length - 1).fill(0).map((v, i) => this.buffer[i + 1])
 		);
-		return controllerCommands[command.type](command.buffer);
+
+		const controllerCommand = controllerCommands[command.type](command.buffer);
+
+		if (controllerCommand instanceof SetVariableCommand) {
+			return setVariableCommands[controllerCommand.variable](controllerCommand.buffer);
+		} else {
+			return controllerCommand;
+		}
 	}
 
 	toString(type?: 'hex'): string {

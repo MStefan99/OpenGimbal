@@ -9,7 +9,7 @@ import {
 	IControllerSerialParser
 } from '../controller/ControllerSerialParser';
 
-const timeout = 20;
+const timeout = 40;
 function delay(ms: number): Promise<null> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

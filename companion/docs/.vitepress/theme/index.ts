@@ -14,7 +14,6 @@ export default {
 	},
 	enhanceApp({app, router, siteData}): void {
 		watch(router.route, () => {
-			console.log('New route', router.route.path);
 			crashCourse?.value?.sendHit();
 		});
 	}

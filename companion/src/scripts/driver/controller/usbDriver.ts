@@ -25,11 +25,13 @@ export async function connectUSBDevice(verbose: boolean = false): Promise<IGimba
 			.then(() => usbDevice.claimInterface(0))
 			.then(() => {
 				const usbInterface = new USBInterface(usbDevice, new ControllerParser(), verbose);
-				const device = new Gimbal(usbInterface, new ControllerEncapsulator(usbInterface));
-				connectedControllerDevice.value = device;
-				connectedDevice = usbDevice;
+				const gimbal = new Gimbal(usbInterface, new ControllerEncapsulator(usbInterface));
 
-				resolve(device);
+				gimbal.enumerate().then(() => {
+					connectedControllerDevice.value = gimbal;
+					connectedDevice = usbDevice;
+					resolve(gimbal);
+				});
 			})
 			.catch((err) => {
 				if (err instanceof DOMException) {

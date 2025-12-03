@@ -7,9 +7,6 @@
 		option(value="4096")
 	h2.mb-4.text-xl.font-bold Motors
 	button.mb-4(@click="enumerate()" :disabled="enumerating") Find motors
-	.mb-2(v-if="!enumerating && motors.length")
-		label Extended ranges
-		input.ml-2(type="checkbox" v-model="extendedRanges")
 	.flex.flex-wrap.gap-2
 		.motor.min-w-48.card(v-for="motor in motors" :key="motor.address")
 			.border-b.border-accent.pt-2
@@ -19,8 +16,8 @@
 				p.accent.font-bold Movement
 				p Position
 				RangeSlider.mb-2(
-					:min="extendedRanges ? -4096 : -2048"
-					:max="extendedRanges ? 4096 : 2048"
+					:min="-2048"
+					:max="2048"
 					:scale="4096"
 					v-model="positions[motor.address]"
 					@update:model-value="motor.move(positions[motor.address], torques[motor.address])")
@@ -37,11 +34,7 @@
 				p Haptic intensity
 				RangeSlider.mb-2(:min="0" :max="15" :scale="15" v-model="hapticIntensities[motor.address]")
 				p Haptic duration
-				RangeSlider.mb-2(
-					:min="0"
-					:max="extendedRanges ? 4095 : 100"
-					:scale="extendedRanges ? 4095 : 100"
-					v-model="hapticDurations[motor.address]")
+				RangeSlider.mb-2(:min="0" :max="256" :scale="256" v-model="hapticDurations[motor.address]")
 				button.mb-2(
 					@click="motor.haptic(hapticIntensities[motor.address], hapticDurations[motor.address])") Start
 			.border-b.border-accent.pt-2
@@ -113,7 +106,6 @@ import {Gimbal} from '../scripts/driver/Gimbal';
 
 const motors = ref<IMotor[]>([]);
 const enumerating = ref<boolean>(false);
-const extendedRanges = ref<boolean>(false);
 
 const positions = ref<number[]>([]);
 const torques = ref<number[]>([]);
@@ -125,12 +117,17 @@ const options = ref<MotorOptions[]>([]);
 
 async function enumerate(): Promise<void> {
 	await connectedDevice.value.motors.all.disable();
+	await connectedDevice.value.motors.enumerate();
 
+	await populate();
+}
+
+async function populate(): Promise<void> {
 	enumerating.value = true;
 	motors.value = [];
 
-	const detectedMotors = await connectedDevice.value.motors.enumerate();
-	detectedMotors.length && detectedMotors.push(connectedDevice.value.motors.all);
+	const detectedMotors = connectedDevice.value.motors.active;
+	detectedMotors.length > 1 && detectedMotors.push(connectedDevice.value.motors.all);
 
 	positions.value = new Array(16).fill(0);
 	torques.value = new Array(16).fill(0);
@@ -224,7 +221,7 @@ async function invert(motor: IMotor): Promise<void> {
 	options.value[motor.address] = await motor.getOptions();
 }
 
-onMounted(enumerate);
+onMounted(populate);
 </script>
 
 <style scoped>

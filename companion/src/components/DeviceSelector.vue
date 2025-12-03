@@ -1,9 +1,10 @@
 <template lang="pug">
 .selector-wrapper(@click.self="$emit('close')")
 	.device-selector
-		template(v-if="connectedDevice")
+		span.mr-2.font-semibold.text-lg(v-if="connecting") Connecting...
+		template(v-else-if="connectedDevice")
 			span.mr-2.font-semibold.text-lg Connected to
-			button(@click="viewedDevice = connectedDevice") {{formatConnectedDevice()}}
+			button(@click="viewingDevice = connectedDevice") {{formatConnectedDevice()}}
 			button.mt-2.block.w-full(@click="disconnectDevice(connectedDevice)") Disconnect
 		div(v-else)
 			p.font-semibold.text-lg Connect
@@ -24,7 +25,7 @@
 				p(v-else).
 					It looks like your browser does not support serial devices. Please try another browser.
 	Transition
-		DeviceViewer(v-if="viewedDevice" :device="viewedDevice" @close="viewedDevice = null")
+		DeviceViewer(v-if="viewingDevice" @close="viewingDevice = false")
 </template>
 
 <script setup lang="ts">
@@ -36,12 +37,19 @@ import {Gimbal} from '../scripts/driver/Gimbal';
 import {connectDevice, connectedDevice, disconnectDevice} from '../scripts/driver/driver';
 
 const emit = defineEmits<{(e: 'close'): void}>();
-const viewedDevice = ref<MotorManager | Gimbal | null>(null);
+const viewingDevice = ref<boolean>(false);
+const connecting = ref<boolean>(false);
 
 function connect(type: 'usb' | 'serial'): void {
+	connecting.value = true;
+
 	connectDevice(type)
-		.then(() => emit('close'))
+		.then(() => {
+			connecting.value = false;
+		})
 		.catch((e) => {
+			connecting.value = false;
+
 			if (e.name === 'NotFoundError') {
 				return;
 			}
@@ -53,10 +61,9 @@ function connect(type: 'usb' | 'serial'): void {
 
 function formatConnectedDevice(): string {
 	if (connectedDevice.value instanceof Gimbal) {
-		// return `${connectedDevice.value.productName ?? 'Unknown'} v${connectedDevice.value.deviceVersionMajor}.${connectedDevice.value.deviceVersionMinor}.${connectedDevice.value.deviceVersionSubminor}`;
-		return 'Device';
+		return `${connectedDevice.value.productName ?? 'Unknown'} v${connectedDevice.value.productVersion} + ${connectedDevice.value.motors.active.length}x D1`;
 	}
-	return 'Unknown device';
+	return `${connectedDevice.value.motors.active.length}x D1`;
 }
 </script>
 

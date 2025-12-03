@@ -1,25 +1,26 @@
-import {IUSBInterface} from './controller/USBInterface';
 import {IMotorControl, IMotorManager, MotorManager} from './MotorManager';
-import {ControllerEncapsulator} from './controller/ControllerEncapsulator';
 import {
 	ControllerResponse,
 	ReturnBatteryVoltageVariableResponse,
+	ReturnBCDVariableResponse,
 	ReturnModeVariableResponse,
-	ReturnOrientationVariableResponse
+	ReturnOrientationVariableResponse,
+	ReturnStringVariableResponse
 } from './controller/ControllerResponse';
 import {
-	SleepCommand,
-	WakeCommand,
-	GetVariableCommand,
 	ControllerCommand,
+	GetVariableCommand,
 	SetModeVariableCommand,
-	SetOrientationVariableCommand
+	SetOrientationVariableCommand,
+	SleepCommand,
+	WakeCommand
 } from './controller/ControllerCommand';
-import {GimbalMode, ControllerVariable} from './controller/ControllerMessage';
+import {ControllerVariable, GimbalMode} from './controller/ControllerMessage';
 import {IHardwareInterface} from './HardwareInterface';
 import {ISerialInterface} from './motor/SerialInterface';
 import {MotorMessage} from './motor/MotorMessage';
-import {Message} from './Message';
+import {USBInterface} from './controller/USBInterface';
+import {IMotor} from './Motor';
 
 export type Orientation = {
 	yaw: number;
@@ -28,6 +29,15 @@ export type Orientation = {
 };
 
 export interface IGimbal extends IMotorManager {
+	productVersion: string;
+	vendorName: string;
+	productName: string;
+	serialNumber: string;
+	usbVersion: string | null;
+	connectedOver: 'usb' | 'serial';
+
+	enumerate(): Promise<IMotor[] | void>;
+
 	send(command: ControllerCommand): Promise<void>;
 
 	request(command: ControllerCommand): Promise<ControllerResponse | null>;
@@ -41,12 +51,60 @@ export class Gimbal implements IGimbal {
 	_hardwareInterface: IHardwareInterface;
 	motorManager: MotorManager;
 
+	_productVersion: string;
+	_vendorName: string;
+	_productName: string;
+	_serialNumber: string;
+	_usbVersion: string;
+	_connectedOver: IGimbal['connectedOver'] = 'serial';
+
 	constructor(
 		hardwareInterface: IHardwareInterface,
 		encapsulator: ISerialInterface<MotorMessage, MotorMessage>
 	) {
 		this._hardwareInterface = hardwareInterface;
 		this.motorManager = new MotorManager(encapsulator);
+
+		if (this._hardwareInterface instanceof USBInterface) {
+			this._usbVersion = `${this._hardwareInterface.usbVersionMajor}.${this._hardwareInterface.usbVersionMinor}.${this._hardwareInterface.usbVersionSubminor}`;
+			this._connectedOver = 'usb';
+		}
+	}
+
+	enumerate(): Promise<IMotor[] | void> {
+		return this.request(new GetVariableCommand(ControllerVariable.DeviceVersion))
+			.then((res) => (this._productVersion = (res as ReturnBCDVariableResponse).value))
+			.then(() => this.request(new GetVariableCommand(ControllerVariable.VendorName)))
+			.then((res) => (this._vendorName = (res as ReturnStringVariableResponse).string))
+			.then(() => this.request(new GetVariableCommand(ControllerVariable.ProductName)))
+			.then((res) => (this._productName = (res as ReturnStringVariableResponse).string))
+			.then(() => this.request(new GetVariableCommand(ControllerVariable.SerialNumber)))
+			.then((res) => (this._serialNumber = (res as ReturnStringVariableResponse).string))
+			.then(() => this.motors.enumerate());
+	}
+
+	get productVersion(): string {
+		return this._productVersion;
+	}
+
+	get vendorName(): string {
+		return this._vendorName;
+	}
+
+	get productName(): string {
+		return this._productName;
+	}
+
+	get serialNumber(): string {
+		return this._serialNumber;
+	}
+
+	get usbVersion(): string {
+		return this._usbVersion;
+	}
+
+	get connectedOver(): IGimbal['connectedOver'] {
+		return this._connectedOver;
 	}
 
 	get motors(): IMotorControl {

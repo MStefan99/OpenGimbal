@@ -8,7 +8,9 @@ import {ControllerCommand, controllerCommandNames, controllerCommands} from './C
 import {
 	ControllerResponse,
 	controllerResponseNames,
-	controllerResponses
+	controllerResponses,
+	ReturnVariableResponse,
+	returnVariableResponses
 } from './ControllerResponse';
 
 export class ControllerSerialResponse extends Message {
@@ -34,7 +36,14 @@ export class ControllerSerialResponse extends Message {
 		const response = new ControllerResponse(
 			new Uint8Array(this.length - 1).fill(0).map((v, i) => this.buffer[i + 1])
 		);
-		return controllerResponses[response.type](response.buffer);
+
+		const controllerResponse = controllerResponses[response.type](response.buffer);
+
+		if (controllerResponse instanceof ReturnVariableResponse) {
+			return returnVariableResponses[controllerResponse.variable](controllerResponse.buffer);
+		} else {
+			return controllerResponse;
+		}
 	}
 
 	toString(type?: 'hex'): string {
