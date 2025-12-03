@@ -78,6 +78,10 @@ void processWakeup() {
 
 // CAUTION: This function is called in an interrupt, no long-running operations allowed here!
 void processCommand(const uart::DefaultCallback::buffer_type& buffer) {
+	if (!(buffer.buffer[0] & 0xf0)) {
+		return;
+	}
+
 	uint8_t address = buffer.buffer[0] & 0x0f;
 	if (address != deviceAddress && address != 0xf) {
 		return;  // Command intended for another device
