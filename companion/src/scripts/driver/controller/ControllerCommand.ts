@@ -10,8 +10,8 @@ import {clamp} from '../../util';
 import {MotorParser} from '../motor/MotorParser';
 
 export const controllerCommandNames: Record<ControllerCommandType, string> = {
-	[ControllerCommandType.Disable]: 'Disable',
-	[ControllerCommandType.Enable]: 'Enable',
+	[ControllerCommandType.Sleep]: 'Disable',
+	[ControllerCommandType.Wake]: 'Enable',
 	[ControllerCommandType.Discovery]: 'Discovery',
 	[ControllerCommandType.GetVariable]: 'Get variable',
 	[ControllerCommandType.SetVariable]: 'Set variable',
@@ -22,8 +22,8 @@ export const controllerCommands: Record<
 	ControllerCommandType,
 	(buffer: Uint8Array) => ControllerCommand
 > = {
-	[ControllerCommandType.Disable]: (buffer: Uint8Array) => new DisableCommand(buffer),
-	[ControllerCommandType.Enable]: (buffer: Uint8Array) => new EnableCommand(buffer),
+	[ControllerCommandType.Sleep]: (buffer: Uint8Array) => new SleepCommand(buffer),
+	[ControllerCommandType.Wake]: (buffer: Uint8Array) => new WakeCommand(buffer),
 	[ControllerCommandType.Discovery]: (buffer: Uint8Array) => new DiscoveryCommand(buffer),
 	[ControllerCommandType.GetVariable]: (buffer: Uint8Array) => new GetVariableCommand(buffer),
 	[ControllerCommandType.SetVariable]: (buffer: Uint8Array) => new SetVariableCommand(buffer),
@@ -75,7 +75,7 @@ export class ControllerCommand extends ControllerMessage {
 	}
 }
 
-export class DisableCommand extends ControllerCommand {
+export class SleepCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor();
 
@@ -83,12 +83,12 @@ export class DisableCommand extends ControllerCommand {
 		if (buffer) {
 			super(buffer);
 		} else {
-			super(ControllerCommandType.Disable);
+			super(ControllerCommandType.Sleep);
 		}
 	}
 }
 
-export class EnableCommand extends ControllerCommand {
+export class WakeCommand extends ControllerCommand {
 	constructor(buffer: Uint8Array);
 	constructor();
 
@@ -96,7 +96,7 @@ export class EnableCommand extends ControllerCommand {
 		if (buffer) {
 			super(buffer);
 		} else {
-			super(ControllerCommandType.Enable);
+			super(ControllerCommandType.Wake);
 		}
 	}
 }

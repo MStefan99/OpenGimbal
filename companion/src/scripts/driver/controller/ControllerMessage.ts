@@ -1,8 +1,8 @@
 import {Message} from '../Message';
 
 export enum ControllerCommandType {
-	Disable = 0x00,
-	Enable = 0x01,
+	Sleep = 0x00,
+	Wake = 0x01,
 	Discovery = 0xc,
 	SetVariable = 0xd,
 	GetVariable = 0xe,

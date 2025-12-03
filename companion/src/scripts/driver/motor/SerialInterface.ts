@@ -32,6 +32,7 @@ export class SerialInterface<
 	private _parser: ISerialParser | IControllerSerialParser;
 	private readonly _verbose: boolean;
 	private readonly _openPromise: Promise<void>;
+	private _sendPromise: Promise<void> = Promise.resolve();
 
 	constructor(
 		port: SerialPort,
@@ -59,7 +60,7 @@ export class SerialInterface<
 			const buffer = new Uint8Array(message.length).fill(0).map((v, i) => message.buffer[i]);
 			this._verbose && console.log('Sending', message.toString(), '\n', message);
 
-			Promise.resolve()
+			this._sendPromise = this._sendPromise
 				.then(() => this._port.writable.getWriter())
 				.then((writer) =>
 					writer.write(buffer).then(() => {
@@ -85,7 +86,7 @@ export class SerialInterface<
 				return;
 			}
 
-			Promise.resolve()
+			this._sendPromise = this._sendPromise
 				.then(() => this._port.readable.cancel()) // Discard all previous data we're not interested in
 				.then(() => this._port.writable.getWriter())
 				.then((writer) => writer.write(writeBuffer).then(() => writer.releaseLock()))

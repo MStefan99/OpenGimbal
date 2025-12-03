@@ -5,8 +5,8 @@ p.text-red.font-bold.m-4(v-if="!(connectedDevice instanceof Gimbal)").
 	JoystickControl.mx-auto.mb-4(@move="update" ref="joystick")
 	p Power
 	.flex.flex-row.justify-evenly.gap-4.my-4
-		button(@click="connectedDevice.enable()") Turn on
-		button(@click="connectedDevice.disable()") Turn off
+		button(@click="connectedDevice.wake()") Turn on
+		button(@click="connectedDevice.sleep()") Turn off
 	p Mode
 	.flex.flex-row.justify-evenly.gap-4.my-4
 		button(@click="setMode(GimbalMode.Horizon)") Horizon

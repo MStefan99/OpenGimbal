@@ -186,7 +186,7 @@ namespace usb {
 		uint8_t bData[127];
 	} usb_device_endpoint1_request;
 
-	using callback_type = void         (*)(const usb_device_endpoint1_request&, uint16_t len);
+	using callback_type = void (*)(const usb_device_endpoint1_request&, uint16_t len);
 	using suspend_callback_type = void (*)(bool suspended);
 
 	void init();

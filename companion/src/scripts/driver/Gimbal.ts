@@ -8,8 +8,8 @@ import {
 	ReturnOrientationVariableResponse
 } from './controller/ControllerResponse';
 import {
-	DisableCommand,
-	EnableCommand,
+	SleepCommand,
+	WakeCommand,
 	GetVariableCommand,
 	ControllerCommand,
 	SetModeVariableCommand,
@@ -32,9 +32,9 @@ export interface IGimbal extends IMotorManager {
 
 	request(command: ControllerCommand): Promise<ControllerResponse | null>;
 
-	enable(): Promise<void>;
+	sleep(): Promise<void>;
 
-	disable(): Promise<void>;
+	wake(): Promise<void>;
 }
 
 export class Gimbal implements IGimbal {
@@ -61,12 +61,12 @@ export class Gimbal implements IGimbal {
 		return this._hardwareInterface.request(command) as Promise<ControllerResponse | null>;
 	}
 
-	enable(): Promise<void> {
-		return this._hardwareInterface.send(new EnableCommand());
+	sleep(): Promise<void> {
+		return this._hardwareInterface.send(new SleepCommand());
 	}
 
-	disable(): Promise<void> {
-		return this._hardwareInterface.send(new DisableCommand());
+	wake(): Promise<void> {
+		return this._hardwareInterface.send(new WakeCommand());
 	}
 
 	setOrientation(yaw: number, pitch: number, roll: number): Promise<void> {

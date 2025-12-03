@@ -14,7 +14,7 @@
 
 namespace eic {
 	using ButtonCallback = void (*)(bool primary, bool pressed);
-	using Callback = void       (*)();
+	using Callback = void (*)();
 
 	void init();
 

@@ -124,9 +124,7 @@ const hapticDurations = ref<number[]>([]);
 const options = ref<MotorOptions[]>([]);
 
 async function enumerate(): Promise<void> {
-	if (connectedDevice.value instanceof Gimbal) {
-		await connectedDevice.value.disable();
-	}
+	await connectedDevice.value.motors.all.disable();
 
 	enumerating.value = true;
 	motors.value = [];
