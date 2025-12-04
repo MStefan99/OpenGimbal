@@ -34,12 +34,14 @@ constexpr Matrix<float, uint8_t, 3, 3> NumericIKSolver::rot(Vector3<float, uint8
 	return rotZ(angles[2][0]) * rotY(angles[1][0]) * rotX(angles[0][0]);
 }
 
-constexpr static auto r12 {NumericIKSolver::rotY(-M_PI_4)};
-constexpr static auto r34 {NumericIKSolver::rotX(M_PI_2)};
-constexpr static auto r56 {NumericIKSolver::rotZ(-M_PI_4) * NumericIKSolver::rotX(-M_PI_2)};
+constexpr static auto r12 {NumericIKSolver::rotX(-F_PI_3)};
+constexpr static auto r34 {NumericIKSolver::rotY(75 * F_PI / 180)};
+constexpr static auto r56 {NumericIKSolver::rotY(F_PI_2)};
 
 Matrix<float, uint8_t, 3, 3> NumericIKSolver::propagate(Vector3<float, uint8_t> motorAngles) {
-	return rotZ(motorAngles[0][0]) * r12 * rotZ(motorAngles[1][0]) * r34 * rotZ(motorAngles[2][0]) * r56;
+	return propagateCallback
+	         ? propagateCallback(motorAngles)
+	         : rotZ(motorAngles[0][0]) * r12 * rotZ(motorAngles[1][0]) * r34 * rotZ(motorAngles[2][0]) * r56;
 }
 
 Vector3<float, uint8_t> NumericIKSolver::calculateGradient(
@@ -65,6 +67,10 @@ Vector3<float, uint8_t> NumericIKSolver::calculateGradient(
 	}
 
 	return result;
+}
+
+void NumericIKSolver::setCallback(PropagateCallback cb) {
+	propagateCallback = cb;
 }
 
 Vector3<float, uint8_t> NumericIKSolver::solve(const Vector3<float, uint8_t>& angles) {
