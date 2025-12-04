@@ -3,7 +3,7 @@
     "postinstall": "run-p install:*",
     "install:husky": "husky",
     "install:companion": "cd ./companion && npm install",
-    "install:generator": "cd ./firmware/register-generator && npm install",
+    "install:generator": "cd ./tools/register-generator && npm install",
     "fmt": "run-p fmt:*",
     "lint": "run-p lint:*",
     "fmt:companion": "cd ./companion && npm run fmt",
