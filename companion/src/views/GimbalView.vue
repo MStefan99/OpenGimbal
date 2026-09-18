@@ -2,6 +2,7 @@
 p.text-red.font-bold.m-4(v-if="!(connectedDevice instanceof Gimbal)").
 	This tool only works with a connected gimbal.
 .control.w-fit.max-w-screen-lg.my-4.mx-auto.px-4(v-else)
+	h2.mb-4.text-xl.font-bold Gimbal
 	JoystickControl.mx-auto.mb-4(@move="update" ref="joystick")
 	p Power
 	.flex.flex-row.justify-evenly.gap-4.my-4

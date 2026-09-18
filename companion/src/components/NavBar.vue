@@ -2,7 +2,7 @@
 .navbar
 	a.title(href="..") OpenGimbal
 	nav(v-if="connectedDevice")
-		RouterLink(:to="{name: 'control'}" v-if="connectedDevice instanceof Gimbal") Control
+		RouterLink(:to="{name: 'gimbal'}" v-if="connectedDevice instanceof Gimbal") Gimbal
 		RouterLink(:to="{name: 'motors'}") Motors
 		RouterLink(:to="{name: 'timeline'}" v-if="appState.developerMode") Timeline
 		RouterLink(:to="{name: 'developer'}" v-if="appState.developerMode") Developer
