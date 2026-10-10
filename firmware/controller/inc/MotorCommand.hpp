@@ -24,8 +24,8 @@ public:
 		Haptic = 0x5,
 		AdjustOffset = 0x6,
 		Calibrate = 0x7,
-		GetVariable = 0xe,
-		SetVariable = 0xf
+		SetVariable = 0xe,
+		GetVariable = 0xf
 	};
 
 	enum class Variable : uint8_t {

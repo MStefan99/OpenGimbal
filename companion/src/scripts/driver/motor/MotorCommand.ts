@@ -371,7 +371,7 @@ export class SetOptionsVariableCommand extends SetVariableCommand {
 	}
 
 	get inverted(): boolean {
-		return !!(this.view.getUint8(3) & 0x01);
+		return !!((this.view.getUint8(3) >> 1) & 0x01);
 	}
 
 	override toString(type?: 'hex'): string {
